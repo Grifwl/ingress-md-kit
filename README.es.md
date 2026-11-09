@@ -2,7 +2,7 @@
 
 Idiomas: [English](README.md) · [Català](README.ca.md) · **Español**
 
-Planifica un **Mission Day de Ingress** desde la idea hasta la solicitud: misiones candidatas y rutas, propuestas a los socios, imágenes de las misiones con la capa del socio, y las exportaciones que necesitas para la solicitud a Niantic y para la Mission Authoring Tool.
+Planifica un **Mission Day de Ingress** desde la idea hasta la solicitud: misiones candidatas y rutas, propuestas a las entidades colaboradoras, imágenes de las misiones con la capa del colaborador, y las exportaciones que necesitas para la solicitud a Niantic y para la Mission Authoring Tool.
 
 Autoalojado en **Cloudflare** (Workers + D1 + R2 + Access). Todo cabe dentro del nivel gratuito. Clónalo, despliégalo en tu (sub)dominio y planifica tu ciudad.
 
@@ -20,32 +20,32 @@ Una sola instancia puede alojar **varios Mission Days** (p. ej. `/example-2027`,
 | Ruta | Qué es |
 |---|---|
 | `/<md-slug>` | Página del Mission Day (vista para participantes, una vez publicada) |
-| `/<md-slug>/proposta-<token>` | Propuesta para un socio candidato (no listada). La palabra sigue el idioma de la carta: `proposta`, `propuesta`, `proposal`; las tres funcionan |
+| `/<md-slug>/proposta-<token>` | Propuesta para un colaborador candidato (no listada). La palabra sigue el idioma de la carta: `proposta`, `propuesta`, `proposal`; las tres funcionan |
 | `/admin` | Área privada (Cloudflare Access) |
 
 ### Parte pública (sin inicio de sesión)
-- **Propuestas a los socios**: una página para cada socio candidato (ayuntamiento, universidad, ente de turismo, museo…), accesible solo con un enlace imposible de adivinar. Contiene:
-  - una carta de presentación: quiénes somos, qué es Ingress, qué es un Mission Day, por qué esta ciudad, por qué este socio;
+- **Propuestas a las entidades colaboradoras**: una página para cada entidad colaboradora candidata (ayuntamiento, universidad, ente de turismo, museo…), accesible solo con un enlace imposible de adivinar. Contiene:
+  - una carta de presentación: quiénes somos, qué es Ingress, qué es un Mission Day, por qué esta ciudad, por qué este colaborador;
   - la propuesta completa de misiones: cada misión con nombre, descripción, foto y ruta;
-  - un **mosaico de 6 columnas** con las 18 o 24 imágenes de las misiones, con el logotipo del socio ya aplicado como ejemplo;
+  - un **mosaico de 6 columnas** con las 18 o 24 imágenes de las misiones, con el logotipo del colaborador ya aplicado como ejemplo;
   - el mapa de todas las misiones y la ruta de cada una, con líneas rectas entre sus portales y nunca entre misiones (mapa interactivo + imagen estática + enlace al Google My Maps compartido);
-  - la petición de permiso para usar el logotipo y las fotos del socio.
+  - la petición de permiso para usar el logotipo y las fotos del colaborador.
   - Una hoja de estilo de impresión para que la página se pueda guardar como PDF y adjuntar a un correo.
 - **Vista para participantes** (opcional, una vez aprobado el Mission Day): las mismas misiones, mapas y orden recomendado, sin la carta.
 
 Las páginas de propuesta son `noindex` y no están listadas: muestran logotipos que todavía no tienes permiso para usar.
 
 ### Parte privada (administración, detrás de Cloudflare Access)
-- **Mission Days**: puedes crear varios; cada uno tiene su dirección, ciudad, año, fecha, formato (18 / 24, o 6 para Lite), equipo (los puntos de contacto de ENL y RES), capa por defecto (sin socio) y textos compartidos de la carta.
+- **Mission Days**: puedes crear varios; cada uno tiene su dirección, ciudad, año, fecha, formato (18 / 24, o 6 para Lite), equipo (los puntos de contacto de ENL y RES), capa por defecto (sin colaborador) y textos compartidos de la carta.
 - **Textos por defecto de la carta**: textos de toda la instancia (quiénes somos, qué es Ingress…) que cada Mission Day nuevo copia al crearse y después puede adaptar.
 - **Organizadores**: cada Mission Day tiene sus propietarios y editores (por correo); cada organizador solo ve los Mission Days de los que forma parte.
 - **Gestor de misiones**: crea *todas las misiones candidatas que quieras* (más de 24): nombre, descripción, punto de interés o tema, foto, portales y ruta.
 - **Selección y orden**: elige qué 18 o 24 candidatas forman el conjunto final, arrástralas para fijar el orden recomendado y mira el mosaico de 6 columnas en directo.
-- **Gestor de socios**: socios candidatos con datos de contacto, logotipo, PNG de la capa, el texto «por qué vosotros», estado (sin contactar → contactado → en conversaciones → aceptado / rechazado) y el documento de permiso firmado.
-- **Compositor de imágenes**: construye cada PNG de 512×512: la foto de la misión (512×512) con una capa PNG encima (512×512, transparente donde debe verse la foto). La capa se prepara fuera de la herramienta a partir de la plantilla oficial del Mission Day: una por socio, más una por defecto sin socio. Puedes previsualizarlo para cada socio antes de pedirles nada.
+- **Gestor de colaboradores**: colaboradores candidatos con datos de contacto, logotipo, PNG de la capa, el texto «por qué vosotros», estado (sin contactar → contactado → en conversaciones → aceptado / rechazado) y el documento de permiso firmado.
+- **Compositor de imágenes**: construye cada PNG de 512×512: la foto de la misión (512×512) con una capa PNG encima (512×512, transparente donde debe verse la foto). La capa se prepara fuera de la herramienta a partir de la plantilla oficial del Mission Day: una por colaborador, más una por defecto sin colaborador. Puedes previsualizarlo para cada colaborador antes de pedirles nada.
 - **Validación**: comprueba el conjunto con las reglas de la guía (ver más abajo) y señala los problemas antes de exportar.
 - **Exportaciones**
-  - ZIP con el PNG final de 512×512 de cada misión seleccionada, para el socio elegido;
+  - ZIP con el PNG final de 512×512 de cada misión seleccionada, para el colaborador elegido;
   - **archivo UMM** para rellenar previamente cada misión en la Mission Authoring Tool con el complemento Ultimate Mission Maker;
   - hoja de misiones (CSV): nombres, descripciones, portales con coordenadas y enlaces de Intel, como lista de comprobación;
   - KML para importar en Google My Maps;
@@ -68,12 +68,12 @@ Las páginas de propuesta son `noindex` y no están listadas: muestran logotipos
 | Diseño | La misma capa de Mission Day en todas las misiones; **nunca diseñada como conjunto de banner** |
 | Recorrido | Las misiones no deben llevar a la siguiente; cualquier grupo de 6 debería poder hacerse en menos de 2 horas |
 | Solicitud | Puntos de contacto de ENL + RES, lista de atracciones, enlace al mapa, **un solo** diseño de logotipo/medalla |
-| Logotipo del socio | Se requiere una prueba escrita de la aprobación del socio |
+| Logotipo del colaborador | Se requiere una prueba escrita de la aprobación del colaborador |
 
 Notas:
 - El **orden recomendado** es solo una sugerencia para los agentes que quieran encadenar misiones. Nunca aparece dentro de las misiones.
 - El **mosaico** es solo una forma de mostrar el conjunto tal como lo ven los agentes en el escáner: la primera misión está abajo a la derecha. Cada imagen debe funcionar por sí sola: la herramienta te avisa si las imágenes parecen formar una sola imagen.
-- Para la solicitud, Niantic pide **solo un** logotipo/medalla terminado. La herramienta los genera todos porque la propuesta a los socios los muestra, pero presenta solo uno hasta que se apruebe la capa.
+- Para la solicitud, Niantic pide **solo un** logotipo/medalla terminado. La herramienta los genera todos porque la propuesta a las entidades colaboradoras los muestra, pero presenta solo uno hasta que se apruebe la capa.
 
 ---
 
@@ -81,7 +81,7 @@ Notas:
 
 ```
 Navegador (público + SPA de administración)  ─┬─►  Cloudflare Worker (API + archivos estáticos)
-                                              │       ├─ D1  (misiones, portales, socios, textos)
+                                              │       ├─ D1  (misiones, portales, colaboradores, textos)
                                               │       └─ R2  (fotos, capas, PNG generados, documentos)
 Cloudflare Access ────────────────────────────┘  protege /admin y /api/admin
 ```
@@ -89,7 +89,7 @@ Cloudflare Access ────────────────────�
 - **Worker**: TypeScript + Hono, sirve la API y el frontal compilado.
 - **Frontal**: Vite + TypeScript + Preact, Leaflet + OpenStreetMap para los mapas.
 - **Imágenes**: se componen en el navegador con `<canvas>` (no hace falta ningún servicio de imágenes) y se suben a R2.
-- **Traducciones**: catalán, castellano e inglés para la interfaz; las cartas se pueden escribir en cualquier idioma para cada socio.
+- **Traducciones**: catalán, castellano e inglés para la interfaz; las cartas se pueden escribir en cualquier idioma para cada colaborador.
 
 ---
 
@@ -145,11 +145,11 @@ npm run dev                 # después abre /admin
 
 1. Crea el Mission Day (ciudad, año, formato 18/24) y los textos compartidos de la carta.
 2. Esboza las misiones candidatas; elige los portales en IITC con Ultimate Mission Maker; sube una foto para cada una.
-3. Añade los socios candidatos con su logotipo y el PNG de la capa.
+3. Añade los colaboradores candidatos con su logotipo y el PNG de la capa.
 4. Selecciona las 18 o 24 misiones finales y su orden recomendado. Corrige los avisos de validación.
 5. Exporta el KML, impórtalo en Google My Maps, pega el enlace y sube una captura.
-6. Envía a cada socio el enlace de su propuesta (o el PDF). Haz el seguimiento de las respuestas.
-7. Cuando un socio diga que sí: sube su aprobación escrita, genera los PNG finales y la hoja de misiones, y rellena la solicitud de Niantic con el ayudante de solicitud.
+6. Envía a cada colaborador el enlace de su propuesta (o el PDF). Haz el seguimiento de las respuestas.
+7. Cuando un colaborador diga que sí: sube su aprobación escrita, genera los PNG finales y la hoja de misiones, y rellena la solicitud de Niantic con el ayudante de solicitud.
 8. Después de la aprobación: crea las misiones en la Mission Authoring Tool con el archivo UMM y el ZIP de PNG, y publica la vista para participantes.
 
 ---
@@ -193,11 +193,11 @@ La hoja de misiones (CSV) sigue disponible como lista de comprobación imprimibl
 ## Hoja de ruta
 
 - [x] v0.1 — Configuración del Mission Day, gestor de misiones, mapa, selección y orden, mosaico
-- [ ] v0.2 — Socios, compositor de capas, página pública de propuesta, impresión a PDF
+- [ ] v0.2 — Colaboradores, compositor de capas, página pública de propuesta, impresión a PDF
 - [ ] v0.3 — Importación/exportación UMM, otras exportaciones (ZIP de PNG, hoja de misiones, KML, ayudante de solicitud)
 - [ ] v0.4 — (opcional) complemento propio para IITC con sincronización en directo
 - [ ] v0.5 — Vista para participantes, varios organizadores por Mission Day
 
 ## Licencia
 
-MIT. Ingress, sus logotipos y las plantillas de Mission Day pertenecen a Niantic Spatial; los logotipos de los socios pertenecen a sus propietarios.
+MIT. Ingress, sus logotipos y las plantillas de Mission Day pertenecen a Niantic Spatial; los logotipos de los colaboradores pertenecen a sus propietarios.

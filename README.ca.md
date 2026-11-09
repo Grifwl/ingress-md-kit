@@ -2,7 +2,7 @@
 
 Idiomes: [English](README.md) · **Català** · [Español](README.es.md)
 
-Planifica un **Mission Day d'Ingress** des de la idea fins a la sol·licitud: missions candidates i rutes, propostes als socis, imatges de les missions amb la capa del soci, i les exportacions que necessites per a la sol·licitud a Niantic i per a la Mission Authoring Tool.
+Planifica un **Mission Day d'Ingress** des de la idea fins a la sol·licitud: missions candidates i rutes, propostes a les entitats col·laboradores, imatges de les missions amb la capa del col·laborador, i les exportacions que necessites per a la sol·licitud a Niantic i per a la Mission Authoring Tool.
 
 Autoallotjat a **Cloudflare** (Workers + D1 + R2 + Access). Tot cap dins del nivell gratuït. Clona'l, desplega'l al teu (sub)domini i planifica la teva ciutat.
 
@@ -20,32 +20,32 @@ Una sola instància pot allotjar **diversos Mission Days** (p. ex. `/example-202
 | Camí | Què és |
 |---|---|
 | `/<md-slug>` | Pàgina del Mission Day (vista per als participants, un cop publicada) |
-| `/<md-slug>/proposta-<token>` | Proposta per a un soci candidat (no llistada). La paraula segueix l'idioma de la carta: `proposta`, `propuesta`, `proposal`; totes tres funcionen |
+| `/<md-slug>/proposta-<token>` | Proposta per a un col·laborador candidat (no llistada). La paraula segueix l'idioma de la carta: `proposta`, `propuesta`, `proposal`; totes tres funcionen |
 | `/admin` | Àrea privada (Cloudflare Access) |
 
 ### Part pública (sense accés amb usuari)
-- **Propostes als socis**: una pàgina per a cada soci candidat (ajuntament, universitat, ens de turisme, museu…), accessible només amb un enllaç impossible d'endevinar. Conté:
-  - una carta de presentació: qui som, què és Ingress, què és un Mission Day, per què aquesta ciutat, per què aquest soci;
+- **Propostes a les entitats col·laboradores**: una pàgina per a cada entitat col·laboradora candidata (ajuntament, universitat, ens de turisme, museu…), accessible només amb un enllaç impossible d'endevinar. Conté:
+  - una carta de presentació: qui som, què és Ingress, què és un Mission Day, per què aquesta ciutat, per què aquest col·laborador;
   - la proposta completa de missions: cada missió amb nom, descripció, foto i ruta;
-  - un **mosaic de 6 columnes** amb les 18 o 24 imatges de les missions, amb el logotip del soci ja aplicat com a exemple;
+  - un **mosaic de 6 columnes** amb les 18 o 24 imatges de les missions, amb el logotip del col·laborador ja aplicat com a exemple;
   - el mapa de totes les missions i la ruta de cadascuna, amb línies rectes entre els seus portals i mai entre missions (mapa interactiu + imatge estàtica + enllaç al Google My Maps compartit);
-  - la petició de permís per fer servir el logotip i les fotos del soci.
+  - la petició de permís per fer servir el logotip i les fotos del col·laborador.
   - Un full d'estil d'impressió perquè la pàgina es pugui desar com a PDF i adjuntar a un correu.
 - **Vista per als participants** (opcional, un cop aprovat el Mission Day): les mateixes missions, mapes i ordre recomanat, sense la carta.
 
 Les pàgines de proposta són `noindex` i no estan llistades: mostren logotips que encara no tens permís per fer servir.
 
 ### Part privada (administració, darrere de Cloudflare Access)
-- **Mission Days**: en pots crear diversos; cadascun té la seva adreça, ciutat, any, data, format (18 / 24, o 6 per a Lite), equip (els punts de contacte d'ENL i RES), capa per defecte (sense soci) i textos compartits de la carta.
+- **Mission Days**: en pots crear diversos; cadascun té la seva adreça, ciutat, any, data, format (18 / 24, o 6 per a Lite), equip (els punts de contacte d'ENL i RES), capa per defecte (sense col·laborador) i textos compartits de la carta.
 - **Textos per defecte de la carta**: textos de tota la instància (qui som, què és Ingress…) que cada Mission Day nou copia en crear-se i després pot adaptar.
 - **Organitzadors**: cada Mission Day té els seus propietaris i editors (per correu); cada organitzador només veu els Mission Days dels quals forma part.
 - **Gestor de missions**: crea *totes les missions candidates que vulguis* (més de 24): nom, descripció, punt d'interès o tema, foto, portals i ruta.
 - **Selecció i ordre**: tria quines 18 o 24 candidates formen el conjunt final, arrossega-les per fixar l'ordre recomanat i mira el mosaic de 6 columnes en directe.
-- **Gestor de socis**: socis candidats amb dades de contacte, logotip, PNG de la capa, el text «per què vosaltres», estat (sense contactar → contactat → en converses → acceptat / rebutjat) i el document de permís signat.
-- **Compositor d'imatges**: construeix cada PNG de 512×512: la foto de la missió (512×512) amb una capa PNG al damunt (512×512, transparent on s'ha de veure la foto). La capa es prepara fora de l'eina a partir de la plantilla oficial del Mission Day: una per soci, més una per defecte sense soci. Pots previsualitzar-ho per a cada soci abans de demanar-los res.
+- **Gestor de col·laboradors**: col·laboradors candidats amb dades de contacte, logotip, PNG de la capa, el text «per què vosaltres», estat (sense contactar → contactat → en converses → acceptat / rebutjat) i el document de permís signat.
+- **Compositor d'imatges**: construeix cada PNG de 512×512: la foto de la missió (512×512) amb una capa PNG al damunt (512×512, transparent on s'ha de veure la foto). La capa es prepara fora de l'eina a partir de la plantilla oficial del Mission Day: una per col·laborador, més una per defecte sense col·laborador. Pots previsualitzar-ho per a cada col·laborador abans de demanar-los res.
 - **Validació**: comprova el conjunt amb les regles de la guia (vegeu més avall) i assenyala els problemes abans d'exportar.
 - **Exportacions**
-  - ZIP amb el PNG final de 512×512 de cada missió seleccionada, per al soci triat;
+  - ZIP amb el PNG final de 512×512 de cada missió seleccionada, per al col·laborador triat;
   - **fitxer UMM** per preomplir cada missió a la Mission Authoring Tool amb el connector Ultimate Mission Maker;
   - full de missions (CSV): noms, descripcions, portals amb coordenades i enllaços d'Intel, com a llista de comprovació;
   - KML per importar a Google My Maps;
@@ -68,12 +68,12 @@ Les pàgines de proposta són `noindex` i no estan llistades: mostren logotips q
 | Disseny | La mateixa capa de Mission Day a totes les missions; **mai dissenyada com a conjunt de bàner** |
 | Recorregut | Les missions no han de portar a la següent; qualsevol grup de 6 s'hauria de poder fer en menys de 2 hores |
 | Sol·licitud | Punts de contacte d'ENL + RES, llista d'atraccions, enllaç al mapa, **un sol** disseny de logotip/medalla |
-| Logotip del soci | Cal una prova escrita de l'aprovació del soci |
+| Logotip del col·laborador | Cal una prova escrita de l'aprovació del col·laborador |
 
 Notes:
 - L'**ordre recomanat** només és un suggeriment per als agents que vulguin encadenar missions. Mai apareix dins de les missions.
 - El **mosaic** és només una manera de mostrar el conjunt tal com el veuen els agents a l'escàner: la primera missió és a baix a la dreta. Cada imatge ha de funcionar per si sola: l'eina t'avisa si les imatges semblen formar una sola imatge.
-- Per a la sol·licitud, Niantic demana **només un** logotip/medalla acabat. L'eina els genera tots perquè la proposta als socis els mostra, però presenta'n només un fins que s'aprovi la capa.
+- Per a la sol·licitud, Niantic demana **només un** logotip/medalla acabat. L'eina els genera tots perquè la proposta a les entitats col·laboradores els mostra, però presenta'n només un fins que s'aprovi la capa.
 
 ---
 
@@ -81,7 +81,7 @@ Notes:
 
 ```
 Navegador (públic + SPA d'administració)  ─┬─►  Cloudflare Worker (API + fitxers estàtics)
-                                           │       ├─ D1  (missions, portals, socis, textos)
+                                           │       ├─ D1  (missions, portals, col·laboradors, textos)
                                            │       └─ R2  (fotos, capes, PNG generats, documents)
 Cloudflare Access ─────────────────────────┘  protegeix /admin i /api/admin
 ```
@@ -89,7 +89,7 @@ Cloudflare Access ────────────────────�
 - **Worker**: TypeScript + Hono, serveix l'API i el frontal compilat.
 - **Frontal**: Vite + TypeScript + Preact, Leaflet + OpenStreetMap per als mapes.
 - **Imatges**: es componen al navegador amb `<canvas>` (no cal cap servei d'imatges) i es pugen a R2.
-- **Traduccions**: català, castellà i anglès per a la interfície; les cartes es poden escriure en qualsevol idioma per a cada soci.
+- **Traduccions**: català, castellà i anglès per a la interfície; les cartes es poden escriure en qualsevol idioma per a cada col·laborador.
 
 ---
 
@@ -145,11 +145,11 @@ npm run dev                 # després obre /admin
 
 1. Crea el Mission Day (ciutat, any, format 18/24) i els textos compartits de la carta.
 2. Esbossa les missions candidates; tria els portals a IITC amb Ultimate Mission Maker; puja una foto per a cadascuna.
-3. Afegeix els socis candidats amb el seu logotip i el PNG de la capa.
+3. Afegeix els col·laboradors candidats amb el seu logotip i el PNG de la capa.
 4. Selecciona les 18 o 24 missions finals i el seu ordre recomanat. Corregeix els avisos de validació.
 5. Exporta el KML, importa'l a Google My Maps, enganxa l'enllaç i puja una captura.
-6. Envia a cada soci l'enllaç de la seva proposta (o el PDF). Fes el seguiment de les respostes.
-7. Quan un soci digui que sí: puja la seva aprovació escrita, genera els PNG finals i el full de missions, i omple la sol·licitud de Niantic amb l'ajudant de sol·licitud.
+6. Envia a cada col·laborador l'enllaç de la seva proposta (o el PDF). Fes el seguiment de les respostes.
+7. Quan un col·laborador digui que sí: puja la seva aprovació escrita, genera els PNG finals i el full de missions, i omple la sol·licitud de Niantic amb l'ajudant de sol·licitud.
 8. Després de l'aprovació: crea les missions a la Mission Authoring Tool amb el fitxer UMM i el ZIP de PNG, i publica la vista per als participants.
 
 ---
@@ -193,11 +193,11 @@ El full de missions (CSV) continua disponible com a llista de comprovació impri
 ## Full de ruta
 
 - [x] v0.1 — Configuració del Mission Day, gestor de missions, mapa, selecció i ordre, mosaic
-- [ ] v0.2 — Socis, compositor de capes, pàgina pública de proposta, impressió a PDF
+- [ ] v0.2 — Col·laboradors, compositor de capes, pàgina pública de proposta, impressió a PDF
 - [ ] v0.3 — Importació/exportació UMM, altres exportacions (ZIP de PNG, full de missions, KML, ajudant de sol·licitud)
 - [ ] v0.4 — (opcional) connector propi per a IITC amb sincronització en directe
 - [ ] v0.5 — Vista per als participants, diversos organitzadors per Mission Day
 
 ## Llicència
 
-MIT. Ingress, els seus logotips i les plantilles de Mission Day pertanyen a Niantic Spatial; els logotips dels socis pertanyen als seus propietaris.
+MIT. Ingress, els seus logotips i les plantilles de Mission Day pertanyen a Niantic Spatial; els logotips dels col·laboradors pertanyen als seus propietaris.
