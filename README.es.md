@@ -21,6 +21,7 @@ Una sola instancia puede alojar **varios Mission Days** (p. ej. `/example-2027`,
 |---|---|
 | `/<md-slug>` | Página del Mission Day (vista para participantes, una vez publicada) |
 | `/<md-slug>/proposta-<token>` | Propuesta para un colaborador candidato (no listada). La palabra sigue el idioma de la carta: `proposta`, `propuesta`, `proposal`; las tres funcionan |
+| `/<md-slug>/sample` | La única imagen de logotipo o medalla enlazada en la solicitud de Niantic, generada desde Exportaciones. Solo muestra el logotipo de un colaborador con su permiso firmado |
 | `/admin` | Área privada (Cloudflare Access) |
 
 ### Parte pública (sin inicio de sesión)

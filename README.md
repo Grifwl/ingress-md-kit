@@ -21,6 +21,7 @@ One instance can host **several Mission Days** (e.g. `/example-2027`, `/sample-t
 |---|---|
 | `/<md-slug>` | Mission Day page (participant view, once published) |
 | `/<md-slug>/proposta-<token>` | Proposal for one candidate partner (unlisted). The word follows the letter language: `proposta`, `propuesta`, `proposal` — all three work |
+| `/<md-slug>/sample` | The single logo/medal picture linked from the Niantic application, generated from Exports. It only shows a partner's logo with its signed permission |
 | `/admin` | Private area (Cloudflare Access) |
 
 ### Public side (no login)

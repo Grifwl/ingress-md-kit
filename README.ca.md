@@ -21,6 +21,7 @@ Una sola instància pot allotjar **diversos Mission Days** (p. ex. `/example-202
 |---|---|
 | `/<md-slug>` | Pàgina del Mission Day (vista per als participants, un cop publicada) |
 | `/<md-slug>/proposta-<token>` | Proposta per a un col·laborador candidat (no llistada). La paraula segueix l'idioma de la carta: `proposta`, `propuesta`, `proposal`; totes tres funcionen |
+| `/<md-slug>/sample` | L'única imatge de logotip o medalla enllaçada a la sol·licitud de Niantic, generada des d'Exportacions. Només mostra el logotip d'un col·laborador amb el seu permís signat |
 | `/admin` | Àrea privada (Cloudflare Access) |
 
 ### Part pública (sense accés amb usuari)
