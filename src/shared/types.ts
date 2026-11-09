@@ -60,6 +60,10 @@ export interface MissionDay {
   defaultOverlayVersion: number;
   hasMapScreenshot: boolean;
   mapScreenshotVersion: number;
+  /** Theme of the Mission Day, as asked by the application form. */
+  applicationTheme: string;
+  /** Where the finished logo can be seen; set once permission exists. */
+  logoUrl: string | null;
 }
 
 /** A Mission Day together with the role of the person requesting it. */

@@ -23,6 +23,7 @@ import {
   findMissionDayForOrganiser,
   findPhotoKey,
   getLetterDefaults,
+  getUmmManifest,
   listMissionDaysForOrganiser,
   listMissions,
   replaceWaypoints,
@@ -30,6 +31,7 @@ import {
   saveMissionDayFile,
   savePhoto,
   saveSelection,
+  saveUmmManifest,
   slugExists,
   updateMission,
   updateMissionDay,
@@ -262,6 +264,20 @@ scoped.put('/selection', async (c) => {
   }
   await saveSelection(c.env.DB, missionDayId, missionIds);
   return c.json(await listMissions(c.env.DB, missionDayId));
+});
+
+scoped.get('/umm-manifest', async (c) =>
+  c.json({ missionIds: await getUmmManifest(c.env.DB, c.get('missionDay').id) }),
+);
+
+scoped.put('/umm-manifest', async (c) => {
+  const { id: missionDayId } = c.get('missionDay');
+  const missionIds = parseSelection(await jsonBody(c));
+  if ((await countOwnMissions(c.env.DB, missionDayId, missionIds)) !== missionIds.length) {
+    throw new HTTPException(400, { message: 'invalid_selection' });
+  }
+  await saveUmmManifest(c.env.DB, missionDayId, missionIds);
+  return c.json({ missionIds });
 });
 
 scoped.get('/missions/:missionId', async (c) => c.json(await requireMission(c)));

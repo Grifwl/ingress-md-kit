@@ -9,7 +9,7 @@
  * organisers keep working. Only exports for Niantic refuse to run, and
  * only when there are issues of severity `error`.
  */
-import type { Mission, MissionDay } from './types';
+import type { Mission, MissionDay, Partner } from './types';
 
 /** Number of missions in the final set of each format. */
 export const MISSION_FORMATS = {
@@ -80,7 +80,17 @@ export type IssueCode =
   | 'selection.wrongCount'
   | 'selection.orderInvalid'
   | 'selection.duplicateName'
-  | 'selection.sharedPortal';
+  | 'selection.sharedPortal'
+  | 'mission.portalWithoutGuid'
+  | 'images.noOverlay'
+  | 'partner.noApproval'
+  | 'partner.notAccepted'
+  | 'partner.noOverlay'
+  | 'application.enlPocMissing'
+  | 'application.resPocMissing'
+  | 'application.mapLinkMissing'
+  | 'application.themeMissing'
+  | 'application.logoLinkMissing';
 
 /** A problem found by a validator. */
 export interface ValidationIssue {
@@ -329,6 +339,84 @@ export function validateSelection(
     issues.push({ code: 'selection.sharedPortal', severity: 'warning', missionId });
   }
 
+  return issues;
+}
+
+/** The exports that end up with Niantic, and so have to be complete. */
+export type NianticExport = 'umm' | 'images' | 'application';
+
+/** What the checks of an export for Niantic look at, beyond the selection. */
+export interface NianticContext {
+  missionDay: Pick<
+    MissionDay,
+    'hasDefaultOverlay' | 'team' | 'myMapsUrl' | 'applicationTheme' | 'logoUrl'
+  >;
+  selected: readonly Mission[];
+  partner: Pick<Partner, 'hasApproval' | 'status' | 'hasOverlay'> | null;
+}
+
+/**
+ * Checks what the images need: an overlay and, when they carry a partner's
+ * logo, that partner's accepted and signed permission.
+ *
+ * @param context - Data to check.
+ * @returns The problems found.
+ */
+function imageIssues({ missionDay, partner }: NianticContext): ValidationIssue[] {
+  if (partner === null) {
+    return missionDay.hasDefaultOverlay ? [] : [{ code: 'images.noOverlay', severity: 'error' }];
+  }
+  const issues: ValidationIssue[] = [];
+  if (!partner.hasOverlay) issues.push({ code: 'partner.noOverlay', severity: 'error' });
+  if (partner.status !== 'accepted')
+    issues.push({ code: 'partner.notAccepted', severity: 'error' });
+  if (!partner.hasApproval) issues.push({ code: 'partner.noApproval', severity: 'error' });
+  return issues;
+}
+
+/**
+ * Checks what an export for Niantic needs beyond a valid selection, which
+ * `validateSelection` covers.
+ *
+ * @param kind - Which export.
+ * @param context - Data to check.
+ * @returns The problems found.
+ */
+export function nianticExportIssues(
+  kind: NianticExport,
+  context: NianticContext,
+): ValidationIssue[] {
+  if (kind === 'umm') {
+    // The Mission Authoring Tool needs real portals, which only IITC can identify.
+    return context.selected
+      .filter((mission) => mission.waypoints.some((waypoint) => waypoint.portalGuid === null))
+      .map((mission) => ({
+        code: 'mission.portalWithoutGuid',
+        severity: 'error',
+        missionId: mission.id,
+      }));
+  }
+  if (kind === 'images') {
+    return imageIssues(context);
+  }
+
+  const { missionDay } = context;
+  const issues = imageIssues(context);
+  if (missionDay.team.enlPoc.codename.trim() === '') {
+    issues.push({ code: 'application.enlPocMissing', severity: 'error' });
+  }
+  if (missionDay.team.resPoc.codename.trim() === '') {
+    issues.push({ code: 'application.resPocMissing', severity: 'error' });
+  }
+  if (missionDay.myMapsUrl === null) {
+    issues.push({ code: 'application.mapLinkMissing', severity: 'error' });
+  }
+  if (missionDay.applicationTheme.trim() === '') {
+    issues.push({ code: 'application.themeMissing', severity: 'error' });
+  }
+  if (missionDay.logoUrl === null) {
+    issues.push({ code: 'application.logoLinkMissing', severity: 'error' });
+  }
   return issues;
 }
 

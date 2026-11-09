@@ -64,6 +64,8 @@ export interface MissionDayPatch {
   team?: Team;
   letter?: LetterSections;
   myMapsUrl?: string | null;
+  applicationTheme?: string;
+  logoUrl?: string | null;
 }
 
 /** Fields of a mission that can be edited. */
@@ -348,6 +350,10 @@ export function parseMissionDayPatch(body: unknown): MissionDayPatch {
   if (object.myMapsUrl !== undefined) {
     patch.myMapsUrl = optionalWebUrl(object.myMapsUrl, 'my_maps_url');
   }
+  if (object.applicationTheme !== undefined) {
+    patch.applicationTheme = text(object.applicationTheme, 'application_theme', MAX_LONG_TEXT);
+  }
+  if (object.logoUrl !== undefined) patch.logoUrl = optionalWebUrl(object.logoUrl, 'logo_url');
   return patch;
 }
 

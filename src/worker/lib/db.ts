@@ -35,6 +35,8 @@ interface MissionDayRow {
   default_overlay_version: number;
   map_screenshot_key: string | null;
   map_screenshot_version: number;
+  application_theme: string;
+  logo_url: string | null;
 }
 
 /** Row of `missions`. */
@@ -142,6 +144,8 @@ function toMissionDay(row: MissionDayRow): MissionDay {
     defaultOverlayVersion: row.default_overlay_version,
     hasMapScreenshot: row.map_screenshot_key !== null,
     mapScreenshotVersion: row.map_screenshot_version,
+    applicationTheme: row.application_theme,
+    logoUrl: row.logo_url,
   };
 }
 
@@ -396,7 +400,7 @@ export async function updateMissionDay(
     .prepare(
       `UPDATE mission_days
        SET city = ?, year = ?, date = ?, format = ?, status = ?,
-           team_json = ?, letter_json = ?, my_maps_url = ?
+           team_json = ?, letter_json = ?, my_maps_url = ?, application_theme = ?, logo_url = ?
        WHERE id = ?`,
     )
     .bind(
@@ -408,6 +412,8 @@ export async function updateMissionDay(
       JSON.stringify(next.team),
       JSON.stringify(next.letter),
       next.myMapsUrl,
+      next.applicationTheme,
+      next.logoUrl,
       missionDay.id,
     )
     .run();
@@ -664,6 +670,43 @@ export async function countOwnMissions(
     ).results.map((row) => row.id),
   );
   return missionIds.filter((id) => owned.has(id)).length;
+}
+
+/**
+ * Reads which mission occupied each position of the last exported
+ * Ultimate Mission Maker file.
+ *
+ * @param db - D1 binding.
+ * @param missionDayId - Mission Day to read.
+ * @returns The mission identifiers by position; empty if none was exported.
+ */
+export async function getUmmManifest(db: D1Database, missionDayId: string): Promise<string[]> {
+  const json = await db
+    .prepare('SELECT mission_ids_json FROM umm_manifests WHERE mission_day_id = ?')
+    .bind(missionDayId)
+    .first<string>('mission_ids_json');
+  return json === null ? [] : (JSON.parse(json) as string[]);
+}
+
+/**
+ * Remembers the positions of an exported Ultimate Mission Maker file.
+ *
+ * @param db - D1 binding.
+ * @param missionDayId - Mission Day being edited.
+ * @param missionIds - Mission identifiers by position.
+ */
+export async function saveUmmManifest(
+  db: D1Database,
+  missionDayId: string,
+  missionIds: readonly string[],
+): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO umm_manifests (mission_day_id, mission_ids_json) VALUES (?, ?)
+       ON CONFLICT (mission_day_id) DO UPDATE SET mission_ids_json = excluded.mission_ids_json`,
+    )
+    .bind(missionDayId, JSON.stringify(missionIds))
+    .run();
 }
 
 /**

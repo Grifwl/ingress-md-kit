@@ -9,6 +9,7 @@ import {
   fullMissionName,
   hasSequenceHint,
   isValidSlug,
+  nianticExportIssues,
   suggestSlug,
   validateMission,
   validateSelection,
@@ -184,6 +185,90 @@ describe('hasSequenceHint', () => {
 
   it.each(['Old Bridge', 'Plaça del 1 d’Octubre', 'Year 2027 walk'])('accepts "%s"', (text) => {
     expect(hasSequenceHint(text)).toBe(false);
+  });
+});
+
+describe('nianticExportIssues', () => {
+  const team = {
+    enlPoc: { codename: 'Green', contact: '' },
+    resPoc: { codename: 'Blue', contact: '' },
+    others: [],
+  };
+  const complete = {
+    hasDefaultOverlay: true,
+    team,
+    myMapsUrl: 'https://example.org/map',
+    applicationTheme: 'Heritage',
+    logoUrl: 'https://example.org/logo',
+  };
+  const approved = { hasApproval: true, status: 'accepted' as const, hasOverlay: true };
+
+  /**
+   * Lists the codes reported for an export.
+   *
+   * @param kind - Which export.
+   * @param overrides - Fields of the context to change.
+   * @returns The issue codes.
+   */
+  function issueCodes(
+    kind: Parameters<typeof nianticExportIssues>[0],
+    overrides: Partial<Parameters<typeof nianticExportIssues>[1]> = {},
+  ): string[] {
+    return nianticExportIssues(kind, {
+      missionDay: complete,
+      selected: [],
+      partner: null,
+      ...overrides,
+    }).map((issue) => issue.code);
+  }
+
+  it('accepts complete data for every export', () => {
+    expect(issueCodes('umm')).toEqual([]);
+    expect(issueCodes('images')).toEqual([]);
+    expect(issueCodes('application')).toEqual([]);
+    expect(issueCodes('images', { partner: approved })).toEqual([]);
+  });
+
+  it('refuses portals that IITC has not identified for the authoring tool', () => {
+    const manual = validMission({
+      waypoints: waypoints(WAYPOINTS_MIN).map((point) => ({ ...point, portalGuid: null })),
+    });
+    expect(issueCodes('umm', { selected: [manual] })).toEqual(['mission.portalWithoutGuid']);
+  });
+
+  it('needs an overlay when no partner is chosen', () => {
+    const missionDay = { ...complete, hasDefaultOverlay: false };
+    expect(issueCodes('images', { missionDay })).toEqual(['images.noOverlay']);
+  });
+
+  it('blocks images of a partner that has not given its permission', () => {
+    const partner = { hasApproval: false, status: 'in_talks' as const, hasOverlay: false };
+    expect(issueCodes('images', { partner }).sort()).toEqual([
+      'partner.noApproval',
+      'partner.noOverlay',
+      'partner.notAccepted',
+    ]);
+  });
+
+  it('applies the same partner checks to the application', () => {
+    const partner = { ...approved, hasApproval: false };
+    expect(issueCodes('application', { partner })).toEqual(['partner.noApproval']);
+  });
+
+  it('lists each answer missing from the application', () => {
+    const missionDay = {
+      ...complete,
+      team: { ...team, enlPoc: { codename: ' ', contact: '' } },
+      myMapsUrl: null,
+      applicationTheme: '',
+      logoUrl: null,
+    };
+    expect(issueCodes('application', { missionDay })).toEqual([
+      'application.enlPocMissing',
+      'application.mapLinkMissing',
+      'application.themeMissing',
+      'application.logoLinkMissing',
+    ]);
   });
 });
 

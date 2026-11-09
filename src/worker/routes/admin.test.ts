@@ -352,6 +352,43 @@ describe('missions', () => {
   });
 });
 
+describe('application answers', () => {
+  it('saves the theme and the logo link', async () => {
+    const path = '/mission-days/example-2027';
+    const body = { applicationTheme: 'Heritage', logoUrl: 'https://example.org/logo.png' };
+    await call(path, { method: 'PATCH', body });
+    expect(await (await call(path)).json()).toMatchObject(body);
+  });
+
+  it('refuses a logo link that is not a web address', async () => {
+    const response = await call('/mission-days/example-2027', {
+      method: 'PATCH',
+      body: { logoUrl: 'javascript:alert(1)' },
+    });
+    expect(response.status).toBe(400);
+  });
+});
+
+describe('UMM manifest', () => {
+  const path = '/mission-days/example-2027/umm-manifest';
+
+  it('starts empty and keeps the last export', async () => {
+    expect(await (await call(path)).json()).toEqual({ missionIds: [] });
+    const a = await createMission('example-2027', 'A');
+    const b = await createMission('example-2027', 'B');
+    await call(path, { method: 'PUT', body: { missionIds: [a.id, b.id] } });
+    await call(path, { method: 'PUT', body: { missionIds: [b.id] } });
+    expect(await (await call(path)).json()).toEqual({ missionIds: [b.id] });
+  });
+
+  it('refuses missions of another Mission Day', async () => {
+    await createMissionDay('other-2028');
+    const foreign = await createMission('other-2028');
+    const response = await call(path, { method: 'PUT', body: { missionIds: [foreign.id] } });
+    expect(response.status).toBe(400);
+  });
+});
+
 describe('selection', () => {
   it('stores order and membership, clearing what was selected before', async () => {
     const a = await createMission('example-2027', 'A');
