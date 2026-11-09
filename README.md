@@ -158,9 +158,9 @@ npm run dev                 # then open /admin
 
 Ingress MD Kit doesn't ship its own IITC plugin (for now); it works with **Ultimate Mission Maker**:
 
-1. **Admin → Missions → Export for UMM**: all candidate missions (or only the selected ones) in one UMM file.
+1. **Admin → Exports → UMM file to edit in IITC**: all candidate missions (or only the selected ones) in one UMM file.
 2. In IITC with UMM: *UMM Opt → Import*, then draw or edit routes ("mission mode", next/previous mission, undo).
-3. *UMM Opt → Export* and upload the file in **Admin → Missions → Import from UMM**. The tool shows the changes per mission (portals added/removed/reordered) before saving.
+3. *UMM Opt → Export* and upload the file in **Admin → Exports → Import from UMM**. The tool shows the changes per mission (portals added/removed/reordered) before saving.
 
 Tips:
 - Missions are matched by position in the file, and the names and descriptions stored in the tool always win, so it doesn't matter if UMM rewrites titles when you edit its "banner details".
@@ -194,7 +194,7 @@ The mission sheet (CSV) is still there as a printable checklist.
 
 - [x] v0.1 — Mission Day settings, mission manager, map, selection/order, mosaic
 - [x] v0.2 — Partners, overlay composer, public proposal page, PDF print
-- [ ] v0.3 — UMM import/export, other exports (PNG ZIP, mission sheet, KML, application helper)
+- [x] v0.3 — UMM import/export, other exports (PNG ZIP, mission sheet, KML, application helper)
 - [ ] v0.4 — (optional) own IITC plugin with live sync
 - [ ] v0.5 — Participant view, several organisers per Mission Day
 

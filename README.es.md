@@ -158,9 +158,9 @@ npm run dev                 # después abre /admin
 
 Ingress MD Kit no incluye (de momento) ningún complemento propio para IITC; funciona con **Ultimate Mission Maker**:
 
-1. **Admin → Misiones → Exportar para UMM**: todas las misiones candidatas (o solo las seleccionadas) en un solo archivo UMM.
+1. **Admin → Exportaciones → Archivo UMM para editar en IITC**: todas las misiones candidatas (o solo las seleccionadas) en un solo archivo UMM.
 2. En IITC con UMM: *UMM Opt → Import*, y después dibuja o edita las rutas («mission mode», misión siguiente/anterior, deshacer).
-3. *UMM Opt → Export* y sube el archivo en **Admin → Misiones → Importar desde UMM**. La herramienta muestra los cambios por misión (portales añadidos, eliminados o reordenados) antes de guardar.
+3. *UMM Opt → Export* y sube el archivo en **Admin → Exportaciones → Importar desde UMM**. La herramienta muestra los cambios por misión (portales añadidos, eliminados o reordenados) antes de guardar.
 
 Consejos:
 - Las misiones se emparejan por posición en el archivo, y siempre mandan los nombres y descripciones guardados en la herramienta, de modo que no importa si UMM reescribe los títulos cuando editas sus «banner details».
@@ -194,7 +194,7 @@ La hoja de misiones (CSV) sigue disponible como lista de comprobación imprimibl
 
 - [x] v0.1 — Configuración del Mission Day, gestor de misiones, mapa, selección y orden, mosaico
 - [x] v0.2 — Colaboradores, compositor de capas, página pública de propuesta, impresión a PDF
-- [ ] v0.3 — Importación/exportación UMM, otras exportaciones (ZIP de PNG, hoja de misiones, KML, ayudante de solicitud)
+- [x] v0.3 — Importación/exportación UMM, otras exportaciones (ZIP de PNG, hoja de misiones, KML, ayudante de solicitud)
 - [ ] v0.4 — (opcional) complemento propio para IITC con sincronización en directo
 - [ ] v0.5 — Vista para participantes, varios organizadores por Mission Day
 

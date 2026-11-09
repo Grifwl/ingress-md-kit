@@ -158,9 +158,9 @@ npm run dev                 # després obre /admin
 
 Ingress MD Kit no inclou (de moment) cap connector propi per a IITC; funciona amb **Ultimate Mission Maker**:
 
-1. **Admin → Missions → Exporta per a UMM**: totes les missions candidates (o només les seleccionades) en un sol fitxer UMM.
+1. **Admin → Exportacions → Fitxer UMM per editar a IITC**: totes les missions candidates (o només les seleccionades) en un sol fitxer UMM.
 2. A IITC amb UMM: *UMM Opt → Import*, i després dibuixa o edita les rutes («mission mode», missió següent/anterior, desfer).
-3. *UMM Opt → Export* i puja el fitxer a **Admin → Missions → Importa des d'UMM**. L'eina mostra els canvis per missió (portals afegits, eliminats o reordenats) abans de desar.
+3. *UMM Opt → Export* i puja el fitxer a **Admin → Exportacions → Importa d'UMM**. L'eina mostra els canvis per missió (portals afegits, eliminats o reordenats) abans de desar.
 
 Consells:
 - Les missions es fan coincidir per posició al fitxer, i sempre manen els noms i descripcions desats a l'eina, de manera que no importa si UMM reescriu els títols quan edites els seus «banner details».
@@ -194,7 +194,7 @@ El full de missions (CSV) continua disponible com a llista de comprovació impri
 
 - [x] v0.1 — Configuració del Mission Day, gestor de missions, mapa, selecció i ordre, mosaic
 - [x] v0.2 — Col·laboradors, compositor de capes, pàgina pública de proposta, impressió a PDF
-- [ ] v0.3 — Importació/exportació UMM, altres exportacions (ZIP de PNG, full de missions, KML, ajudant de sol·licitud)
+- [x] v0.3 — Importació/exportació UMM, altres exportacions (ZIP de PNG, full de missions, KML, ajudant de sol·licitud)
 - [ ] v0.4 — (opcional) connector propi per a IITC amb sincronització en directe
 - [ ] v0.5 — Vista per als participants, diversos organitzadors per Mission Day
 
