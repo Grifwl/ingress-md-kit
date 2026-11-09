@@ -1,0 +1,261 @@
+/*
+ * The proposal is a document meant to be read and printed, so it keeps a
+ * light paper look regardless of the visitor's dark-mode preference.
+ */
+:root {
+  color-scheme: light;
+  --paper: #ffffff;
+  --desk: #eef0f3;
+  --text: #1c2128;
+  --muted: #5f6b7a;
+  --border: #d7dce3;
+  --accent: #0b6e8f;
+  --accent-soft: #e6f3f7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--desk);
+  color: var(--text);
+  font:
+    16px/1.6 Georgia,
+    'Times New Roman',
+    serif;
+}
+
+h1,
+h2,
+h3,
+.print-button,
+.subtitle,
+.note {
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.15rem;
+}
+
+h3 {
+  margin: 0;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+p {
+  margin: 0;
+}
+
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: var(--accent);
+}
+
+.document {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.status {
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.print-button {
+  align-self: flex-end;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2rem;
+  background: var(--paper);
+  border-radius: 6px;
+}
+
+.sheet-title {
+  font-size: 1.4rem;
+}
+
+.partner-logo {
+  align-self: flex-start;
+  max-width: 220px;
+  max-height: 110px;
+  object-fit: contain;
+}
+
+.subtitle {
+  margin-top: -0.6rem;
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+.prose {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.request-box {
+  padding: 1.25rem 1.5rem;
+  border-left: 5px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  background: var(--accent-soft);
+}
+
+.medal {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.medal img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mosaic {
+  display: grid;
+  gap: 6px;
+}
+
+.missions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mission {
+  display: grid;
+  grid-template-columns: 96px 1fr 96px;
+  gap: 1rem;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+  break-inside: avoid;
+}
+
+.mission-text {
+  min-width: 0;
+}
+
+.route-sketch {
+  display: block;
+  width: 96px;
+  height: 96px;
+}
+
+.map {
+  width: 100%;
+  height: 420px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  z-index: 0;
+}
+
+.map-screenshot {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+@media (max-width: 560px) {
+  .sheet {
+    padding: 1.25rem;
+  }
+
+  .mission {
+    grid-template-columns: 72px 1fr;
+  }
+
+  .route-sketch {
+    display: none;
+  }
+
+  .mosaic {
+    gap: 3px;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 15mm;
+}
+
+@media print {
+  body {
+    background: none;
+    font-size: 11pt;
+  }
+
+  /* Without this, browsers drop the colours that identify each mission. */
+  * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .document {
+    display: block;
+    max-width: none;
+    padding: 0;
+  }
+
+  .print-button {
+    display: none;
+  }
+
+  .sheet {
+    padding: 0;
+    border-radius: 0;
+    break-before: page;
+  }
+
+  .sheet.cover {
+    break-before: auto;
+  }
+
+  /* Map tiles print unreliably, so a screenshot replaces them when there is one. */
+  .has-screenshot .map-interactive {
+    display: none;
+  }
+}

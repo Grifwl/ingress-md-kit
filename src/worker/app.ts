@@ -5,6 +5,7 @@ import { Hono, type Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import type { AppEnv } from './env';
 import admin from './routes/admin';
+import publicApi, { serveProposalPage } from './routes/public';
 
 /**
  * Answers an admin page request. The admin is a single-page application,
@@ -28,10 +29,13 @@ function serveAdminPage(c: Context<AppEnv>): Promise<Response> {
 const app = new Hono<AppEnv>();
 
 app.route('/api/admin', admin);
+app.route('/api/public', publicApi);
 app.all('/api/*', (c) => c.json({ error: 'not_found' }, 404));
 
 app.get('/admin', serveAdminPage);
 app.get('/admin/*', serveAdminPage);
+
+app.get('/:slug/:segment', serveProposalPage);
 
 app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw));
 

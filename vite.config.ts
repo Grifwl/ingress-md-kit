@@ -32,7 +32,10 @@ export default defineConfig({
     client: {
       build: {
         rollupOptions: {
-          input: { admin: resolve(projectRoot, 'src/web/admin/index.html') },
+          input: {
+            admin: resolve(projectRoot, 'src/web/admin/index.html'),
+            public: resolve(projectRoot, 'src/web/public/index.html'),
+          },
         },
       },
     },
