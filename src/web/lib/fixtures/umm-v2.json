@@ -1,0 +1,63 @@
+{
+  "missionSetName": "MD 2027: Example City",
+  "missionSetDescription": "",
+  "currentMission": 3,
+  "plannedBannerLength": 2,
+  "titleFormat": "T NN-M",
+  "fileFormatVersion": 2,
+  "missions": [
+    {
+      "missionTitle": "Title rewritten by the plugin",
+      "missionDescription": "Description rewritten by the plugin",
+      "portals": [
+        {
+          "description": "",
+          "guid": "guid-b",
+          "imageUrl": "https://example.org/b.jpg",
+          "isOrnamented": false,
+          "isStartPoint": false,
+          "location": { "latitude": 0.002, "longitude": 0.003 },
+          "title": "Portal B",
+          "type": "PORTAL",
+          "objective": {
+            "type": "HACK_PORTAL",
+            "passphrase_params": { "question": "", "_single_passphrase": "" }
+          }
+        },
+        {
+          "description": "",
+          "guid": "guid-a",
+          "imageUrl": "",
+          "isOrnamented": false,
+          "isStartPoint": false,
+          "location": { "latitude": 0.001, "longitude": 0.001 },
+          "title": "Portal A",
+          "type": "PORTAL",
+          "objective": {
+            "type": "HACK_PORTAL",
+            "passphrase_params": { "question": "", "_single_passphrase": "" }
+          }
+        },
+        {
+          "description": "",
+          "guid": "guid-new",
+          "imageUrl": "",
+          "isOrnamented": false,
+          "isStartPoint": false,
+          "location": { "latitude": 0.004, "longitude": 0.004 },
+          "title": "Portal New",
+          "type": "PORTAL",
+          "objective": {
+            "type": "CAPTURE_PORTAL",
+            "passphrase_params": { "question": "", "_single_passphrase": "" }
+          }
+        }
+      ]
+    },
+    {
+      "missionTitle": "An extra mission",
+      "missionDescription": "",
+      "portals": []
+    }
+  ]
+}
