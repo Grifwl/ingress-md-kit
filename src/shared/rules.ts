@@ -444,9 +444,8 @@ export function nianticExportIssues(
     return issues;
   }
 
-  // A partner may be named at any stage of the talks: the handbook asks
-  // how far they have got. Its logo is what needs the written permission,
-  // and that is enforced on the images and on the sample picture.
+  // The partner is not checked here: the application only mentions the one
+  // shown in the sample picture, which already required its permission.
   const { missionDay } = context;
   const issues: ValidationIssue[] = [];
   if (!isCompletePoc(missionDay.team.enlPoc)) {

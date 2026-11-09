@@ -234,14 +234,19 @@ export function ExportsPage({
     downloadFile(buildZip(entries), `${missionDay.slug}-images-${suffix}.zip`, 'application/zip');
   };
 
+  // The application only mentions the partner shown in its picture, so the
+  // answers can never contradict the image they link to.
+  const applicationPartner = samplePartner ?? null;
   const answers = applicationBlocked
     ? []
     : buildApplicationBlocks(
         missionDay,
         selected,
-        partner,
+        applicationPartner,
         language,
-        partner === null ? '' : translate(language, `partnerStatus.${partner.status}`),
+        applicationPartner === null
+          ? ''
+          : translate(language, `partnerStatus.${applicationPartner.status}`),
         sampleUrl,
       );
 

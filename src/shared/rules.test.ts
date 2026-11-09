@@ -253,7 +253,7 @@ describe('nianticExportIssues', () => {
     ]);
   });
 
-  it('lets the application name a partner at any stage of the talks', () => {
+  it('leaves the permission of a partner to the checks of the sample', () => {
     const partner = { hasApproval: false, status: 'candidate' as const, hasOverlay: false };
     expect(issueCodes('application', { partner })).toEqual([]);
   });

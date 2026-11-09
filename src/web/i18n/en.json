@@ -257,7 +257,7 @@
   "exports.importConfirm": "Save these changes",
   "exports.importDone": "Import finished.",
   "exports.applicationTitle": "Application helper",
-  "exports.applicationHelp": "The answers of the Niantic form, ready to copy. The partner chosen above can be at any stage of the talks: its status is part of the answer.",
+  "exports.applicationHelp": "The answers of the Niantic form, ready to copy. Only the partner shown in the picture for the application is mentioned; with the default overlay, none is.",
   "exports.answer.whyThisCity": "Why this city",
   "exports.answer.theme": "Theme",
   "exports.answer.attractions": "List of attractions",

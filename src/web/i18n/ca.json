@@ -257,7 +257,7 @@
   "exports.importConfirm": "Desa aquests canvis",
   "exports.importDone": "Importació acabada.",
   "exports.applicationTitle": "Ajudant de sol·licitud",
-  "exports.applicationHelp": "Les respostes del formulari de Niantic, a punt per copiar. El col·laborador triat a dalt pot estar en qualsevol punt de les converses: el seu estat forma part de la resposta.",
+  "exports.applicationHelp": "Les respostes del formulari de Niantic, a punt per copiar. Només s'hi menciona el col·laborador que surt a la imatge per a la sol·licitud; si fa servir la capa per defecte, no se'n menciona cap.",
   "exports.answer.whyThisCity": "Per què aquesta ciutat",
   "exports.answer.theme": "Tema",
   "exports.answer.attractions": "Llista d'atraccions",
