@@ -31,6 +31,10 @@ interface MissionDayRow {
   letter_json: string;
   my_maps_url: string | null;
   participant_view_enabled: number;
+  default_overlay_key: string | null;
+  default_overlay_version: number;
+  map_screenshot_key: string | null;
+  map_screenshot_version: number;
 }
 
 /** Row of `missions`. */
@@ -102,6 +106,7 @@ function parseLetterJson(json: string): LetterSections {
     whatIsIngress: {},
     whatIsMissionDay: {},
     whyThisCity: {},
+    logoRequest: {},
     closing: {},
     ...(JSON.parse(json) as Partial<LetterSections>),
   };
@@ -132,6 +137,10 @@ function toMissionDay(row: MissionDayRow): MissionDay {
     letter: parseLetterJson(row.letter_json),
     myMapsUrl: row.my_maps_url,
     participantViewEnabled: row.participant_view_enabled === 1,
+    hasDefaultOverlay: row.default_overlay_key !== null,
+    defaultOverlayVersion: row.default_overlay_version,
+    hasMapScreenshot: row.map_screenshot_key !== null,
+    mapScreenshotVersion: row.map_screenshot_version,
   };
 }
 
@@ -223,6 +232,77 @@ export async function findMissionDayForOrganiser(
     .bind(slug, email)
     .first<MissionDayRow & { role: MembershipRole }>();
   return row === null ? null : { ...toMissionDay(row), role: row.role };
+}
+
+/**
+ * Reads a Mission Day regardless of who is asking. Only for callers that
+ * have already authorised the request by other means, such as a token.
+ *
+ * @param db - D1 binding.
+ * @param missionDayId - Mission Day to read.
+ * @returns The Mission Day, or null when it does not exist.
+ */
+export async function findMissionDayById(
+  db: D1Database,
+  missionDayId: string,
+): Promise<MissionDay | null> {
+  const row = await db
+    .prepare('SELECT * FROM mission_days WHERE id = ?')
+    .bind(missionDayId)
+    .first<MissionDayRow>();
+  return row === null ? null : toMissionDay(row);
+}
+
+/** The images stored for a Mission Day as a whole. */
+export type MissionDayFileKind = 'default_overlay' | 'map_screenshot';
+
+/**
+ * Reads where an image of a Mission Day is stored. `kind` is a literal
+ * chosen by the routes, never request data, so it is safe in column names.
+ *
+ * @param db - D1 binding.
+ * @param missionDayId - Mission Day already checked by the caller.
+ * @param kind - Which image.
+ * @returns The storage key and type, or null when there is none.
+ */
+export async function findMissionDayFile(
+  db: D1Database,
+  missionDayId: string,
+  kind: MissionDayFileKind,
+): Promise<{ key: string; type: string } | null> {
+  const row = await db
+    .prepare(`SELECT ${kind}_key AS key, ${kind}_type AS type FROM mission_days WHERE id = ?`)
+    .bind(missionDayId)
+    .first<{ key: string | null; type: string | null }>();
+  return row === null || row.key === null || row.type === null
+    ? null
+    : { key: row.key, type: row.type };
+}
+
+/**
+ * Records a newly stored image of a Mission Day.
+ *
+ * @param db - D1 binding.
+ * @param missionDayId - Mission Day already checked by the caller.
+ * @param kind - Which image.
+ * @param key - Storage key.
+ * @param type - File type.
+ * @param version - New version number.
+ */
+export async function saveMissionDayFile(
+  db: D1Database,
+  missionDayId: string,
+  kind: MissionDayFileKind,
+  key: string,
+  type: string,
+  version: number,
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE mission_days SET ${kind}_key = ?, ${kind}_type = ?, ${kind}_version = ? WHERE id = ?`,
+    )
+    .bind(key, type, version, missionDayId)
+    .run();
 }
 
 /**

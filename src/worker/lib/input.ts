@@ -7,7 +7,19 @@
  * in `shared/rules.ts` will warn about it.
  */
 import { HTTPException } from 'hono/http-exception';
-import { MISSION_FORMATS, isValidSlug, type MissionFormat } from '../../shared/rules';
+import {
+  PARTNER_KINDS,
+  PARTNER_STATUSES,
+  type PartnerKind,
+  type PartnerStatus,
+} from '../../shared/partners';
+import {
+  LANGUAGES,
+  MISSION_FORMATS,
+  isValidSlug,
+  type Language,
+  type MissionFormat,
+} from '../../shared/rules';
 import type {
   CropRect,
   LetterSections,
@@ -60,6 +72,23 @@ export interface MissionPatch {
   description?: LocalizedText;
   notes?: string;
   colour?: string;
+}
+
+/** Fields of a partner that can be edited. */
+export interface PartnerPatch {
+  name?: string;
+  kind?: PartnerKind;
+  contactPerson?: string;
+  contactEmail?: string;
+  whyYou?: string;
+  logoRequest?: LocalizedText;
+  letterLanguage?: Language;
+}
+
+/** A new entry in the history of a partner. */
+export interface PartnerStatusInput {
+  status: PartnerStatus;
+  note: string;
 }
 
 /**
@@ -252,6 +281,7 @@ function letter(value: unknown): LetterSections {
     whatIsIngress: localizedText(object.whatIsIngress, 'letter'),
     whatIsMissionDay: localizedText(object.whatIsMissionDay, 'letter'),
     whyThisCity: localizedText(object.whyThisCity, 'letter'),
+    logoRequest: localizedText(object.logoRequest, 'letter'),
     closing: localizedText(object.closing, 'letter'),
   };
 }
@@ -341,6 +371,91 @@ export function parseMissionPatch(body: unknown): MissionPatch {
     patch.colour = object.colour;
   }
   return patch;
+}
+
+/**
+ * Validates an edit of a partner. Absent fields stay unchanged.
+ *
+ * @param body - Parsed JSON.
+ * @returns Only the fields that were sent.
+ */
+export function parsePartnerPatch(body: unknown): PartnerPatch {
+  const object = asObject(body);
+  const patch: PartnerPatch = {};
+  if (object.name !== undefined) patch.name = requiredText(object.name, 'name');
+  if (object.kind !== undefined) {
+    if (!PARTNER_KINDS.includes(object.kind as PartnerKind)) {
+      badRequest('invalid_kind');
+    }
+    patch.kind = object.kind as PartnerKind;
+  }
+  if (object.contactPerson !== undefined) {
+    patch.contactPerson = text(object.contactPerson, 'contact_person');
+  }
+  if (object.contactEmail !== undefined) {
+    patch.contactEmail = text(object.contactEmail, 'contact_email').trim();
+    if (patch.contactEmail !== '' && !/^[^@\s]+@[^@\s]+$/.test(patch.contactEmail)) {
+      badRequest('invalid_contact_email');
+    }
+  }
+  if (object.whyYou !== undefined) patch.whyYou = text(object.whyYou, 'why_you', MAX_LONG_TEXT);
+  if (object.logoRequest !== undefined) {
+    patch.logoRequest = localizedText(object.logoRequest, 'logo_request');
+  }
+  if (object.letterLanguage !== undefined) {
+    if (!LANGUAGES.includes(object.letterLanguage as Language)) {
+      badRequest('invalid_letter_language');
+    }
+    patch.letterLanguage = object.letterLanguage as Language;
+  }
+  return patch;
+}
+
+/**
+ * Validates a request to create a partner.
+ *
+ * @param body - Parsed JSON.
+ * @returns The validated fields, including those a partner cannot lack.
+ */
+export function parsePartnerCreate(
+  body: unknown,
+): PartnerPatch & { name: string; letterLanguage: Language } {
+  const patch = parsePartnerPatch(body);
+  if (patch.name === undefined) {
+    badRequest('invalid_name');
+  }
+  if (patch.letterLanguage === undefined) {
+    badRequest('invalid_letter_language');
+  }
+  return { ...patch, name: patch.name, letterLanguage: patch.letterLanguage };
+}
+
+/**
+ * Validates a change of status.
+ *
+ * @param body - Parsed JSON.
+ * @returns The status and its note.
+ */
+export function parsePartnerStatus(body: unknown): PartnerStatusInput {
+  const object = asObject(body);
+  if (!PARTNER_STATUSES.includes(object.status as PartnerStatus)) {
+    badRequest('invalid_status');
+  }
+  return {
+    status: object.status as PartnerStatus,
+    note: object.note === undefined ? '' : text(object.note, 'note', MAX_LONG_TEXT),
+  };
+}
+
+/**
+ * Validates the original name of an uploaded document.
+ *
+ * @param value - Candidate value.
+ * @returns The name; a neutral one when it is missing.
+ */
+export function parseFileName(value: string | undefined): string {
+  const name = (value ?? '').trim();
+  return name === '' || name.length > MAX_SHORT_TEXT ? 'document' : name;
 }
 
 /**

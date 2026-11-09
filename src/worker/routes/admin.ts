@@ -6,9 +6,9 @@
  * `requireMembership`, and a Mission Day the requester does not belong to
  * looks exactly like one that does not exist.
  */
-import { Hono, type Context, type MiddlewareHandler } from 'hono';
+import { Hono, type MiddlewareHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import { IMAGE_MAX_BYTES, IMAGE_SIZE_PX } from '../../shared/rules';
+import { DOCUMENT_MAX_BYTES, IMAGE_MAX_BYTES, IMAGE_SIZE_PX } from '../../shared/rules';
 import type { CurrentUser, MissionDay } from '../../shared/types';
 import type { AppEnv } from '../env';
 import { isInstanceAdmin, resolveEmail } from '../lib/access';
@@ -19,6 +19,7 @@ import {
   deleteMission,
   deleteMissionDay,
   findMission,
+  findMissionDayFile,
   findMissionDayForOrganiser,
   findPhotoKey,
   getLetterDefaults,
@@ -26,11 +27,13 @@ import {
   listMissions,
   replaceWaypoints,
   saveLetterDefaults,
+  saveMissionDayFile,
   savePhoto,
   saveSelection,
   slugExists,
   updateMission,
   updateMissionDay,
+  type MissionDayFileKind,
 } from '../lib/db';
 import {
   parseCrop,
@@ -41,10 +44,18 @@ import {
   parseSelection,
   parseWaypoints,
 } from '../lib/input';
-import { readPngInfo } from '../lib/png';
-
-/** Context of a request handled by these routes. */
-type AdminContext = Context<AppEnv>;
+import { detectFileType, readPngInfo, type FileType } from '../lib/png';
+import {
+  PRIVATE_IMMUTABLE,
+  assertOwner,
+  deleteObjects,
+  jsonBody,
+  missionDayPrefix,
+  readUpload,
+  serveObject,
+  type AppContext,
+} from './helpers';
+import partners from './partners';
 
 /**
  * Refuses writes coming from another site. The Access session is a cookie
@@ -107,38 +118,13 @@ const requireMembership: MiddlewareHandler<AppEnv> = async (c, next) => {
 };
 
 /**
- * Stops the request unless the requester owns the Mission Day.
- *
- * @param c - Request context.
- */
-function assertOwner(c: AdminContext): void {
-  if (c.get('role') !== 'owner') {
-    throw new HTTPException(403, { message: 'owner_required' });
-  }
-}
-
-/**
  * Stops the request unless the requester administers the instance.
  *
  * @param c - Request context.
  */
-function assertInstanceAdmin(c: AdminContext): void {
+function assertInstanceAdmin(c: AppContext): void {
   if (!isInstanceAdmin(c.get('email'), c.env)) {
     throw new HTTPException(403, { message: 'instance_admin_required' });
-  }
-}
-
-/**
- * Reads the JSON body, turning malformed JSON into a client error.
- *
- * @param c - Request context.
- * @returns The parsed body.
- */
-async function jsonBody(c: AdminContext): Promise<unknown> {
-  try {
-    return await c.req.json();
-  } catch {
-    throw new HTTPException(400, { message: 'invalid_body' });
   }
 }
 
@@ -148,7 +134,7 @@ async function jsonBody(c: AdminContext): Promise<unknown> {
  * @param c - Request context.
  * @returns The mission.
  */
-async function requireMission(c: AdminContext) {
+async function requireMission(c: AppContext) {
   const mission = await findMission(
     c.env.DB,
     c.get('missionDay').id,
@@ -161,34 +147,85 @@ async function requireMission(c: AdminContext) {
 }
 
 /**
- * Builds the storage prefix of everything in a Mission Day.
+ * Stores a new version of an image of the Mission Day, and answers with
+ * the Mission Day after the change.
  *
- * @param missionDayId - Mission Day identifier.
- * @returns The R2 key prefix.
+ * @param c - Request context.
+ * @param kind - Which image.
+ * @param bytes - Contents of the file.
+ * @param type - Its verified type.
+ * @param currentVersion - Version being replaced.
+ * @returns The response.
  */
-function missionDayPrefix(missionDayId: string): string {
-  return `mission-days/${missionDayId}/`;
+async function storeMissionDayFile(
+  c: AppContext,
+  kind: MissionDayFileKind,
+  bytes: ArrayBuffer,
+  type: FileType,
+  currentVersion: number,
+): Promise<Response> {
+  const { id } = c.get('missionDay');
+  const previous = await findMissionDayFile(c.env.DB, id, kind);
+  const version = currentVersion + 1;
+  const key = `${missionDayPrefix(id)}${kind}-${version}`;
+  await c.env.BUCKET.put(key, bytes, { httpMetadata: { contentType: type } });
+  await saveMissionDayFile(c.env.DB, id, kind, key, type, version);
+  if (previous !== null) {
+    await c.env.BUCKET.delete(previous.key);
+  }
+  return c.json(
+    await findMissionDayForOrganiser(c.env.DB, c.get('missionDay').slug, c.get('email')),
+  );
 }
 
 /**
- * Deletes every object stored for a Mission Day.
+ * Answers with an image of the Mission Day.
  *
- * @param bucket - R2 binding.
- * @param missionDayId - Mission Day being removed.
+ * @param c - Request context.
+ * @param kind - Which image.
+ * @returns The response.
  */
-async function deleteMissionDayObjects(bucket: R2Bucket, missionDayId: string): Promise<void> {
-  let cursor: string | undefined;
-  do {
-    const page = await bucket.list({ prefix: missionDayPrefix(missionDayId), cursor });
-    if (page.objects.length > 0) {
-      await bucket.delete(page.objects.map((object) => object.key));
-    }
-    cursor = page.truncated ? page.cursor : undefined;
-  } while (cursor !== undefined);
+async function serveMissionDayFile(c: AppContext, kind: MissionDayFileKind): Promise<Response> {
+  const file = await findMissionDayFile(c.env.DB, c.get('missionDay').id, kind);
+  if (file === null) {
+    throw new HTTPException(404, { message: 'not_found' });
+  }
+  return serveObject(c, file.key, file.type, { 'Cache-Control': PRIVATE_IMMUTABLE });
 }
 
 const scoped = new Hono<AppEnv>();
 scoped.use('*', requireMembership);
+
+scoped.route('/partners', partners);
+
+scoped.put('/default-overlay', async (c) => {
+  const bytes = await readUpload(c, IMAGE_MAX_BYTES);
+  const info = readPngInfo(bytes);
+  if (
+    info === null ||
+    info.width !== IMAGE_SIZE_PX ||
+    info.height !== IMAGE_SIZE_PX ||
+    !info.hasAlpha
+  ) {
+    throw new HTTPException(415, { message: 'invalid_overlay' });
+  }
+  const version = c.get('missionDay').defaultOverlayVersion;
+  return storeMissionDayFile(c, 'default_overlay', bytes, 'image/png', version);
+});
+
+scoped.get('/default-overlay', (c) => serveMissionDayFile(c, 'default_overlay'));
+
+scoped.put('/map-screenshot', async (c) => {
+  const bytes = await readUpload(c, DOCUMENT_MAX_BYTES);
+  const type = detectFileType(bytes);
+  if (type === null || type === 'application/pdf') {
+    throw new HTTPException(415, { message: 'invalid_file' });
+  }
+  const version = c.get('missionDay').mapScreenshotVersion;
+  return storeMissionDayFile(c, 'map_screenshot', bytes, type, version);
+});
+
+scoped.get('/map-screenshot', (c) => serveMissionDayFile(c, 'map_screenshot'));
 
 scoped.get('/', (c) => c.json({ ...c.get('missionDay'), role: c.get('role') }));
 
@@ -202,7 +239,7 @@ scoped.delete('/', async (c) => {
   assertOwner(c);
   const { id } = c.get('missionDay');
   await deleteMissionDay(c.env.DB, id);
-  await deleteMissionDayObjects(c.env.BUCKET, id);
+  await deleteObjects(c.env.BUCKET, missionDayPrefix(id));
   return c.body(null, 204);
 });
 
@@ -258,15 +295,7 @@ scoped.put('/missions/:missionId/photo', async (c) => {
   const mission = await requireMission(c);
   const crop = parseCrop(c.req.query());
 
-  // The declared size is checked first to avoid reading an oversized
-  // body into memory, then the real size, since the header can lie.
-  if (Number(c.req.header('Content-Length') ?? 0) > IMAGE_MAX_BYTES) {
-    throw new HTTPException(413, { message: 'photo_too_large' });
-  }
-  const bytes = await c.req.arrayBuffer();
-  if (bytes.byteLength > IMAGE_MAX_BYTES) {
-    throw new HTTPException(413, { message: 'photo_too_large' });
-  }
+  const bytes = await readUpload(c, IMAGE_MAX_BYTES);
   const info = readPngInfo(bytes);
   if (info === null || info.width !== IMAGE_SIZE_PX || info.height !== IMAGE_SIZE_PX) {
     throw new HTTPException(415, { message: 'invalid_photo' });

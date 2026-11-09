@@ -4,7 +4,8 @@
  * These describe the JSON the API exchanges, not the database rows: the
  * Worker maps snake_case columns and JSON columns to these shapes.
  */
-import type { MissionFormat } from './rules';
+import type { PartnerKind, PartnerStatus } from './partners';
+import type { Language, MissionFormat } from './rules';
 
 /** Text kept per language, keyed by language code such as `en`. */
 export type LocalizedText = Record<string, string>;
@@ -37,6 +38,7 @@ export interface LetterSections {
   whatIsIngress: LocalizedText;
   whatIsMissionDay: LocalizedText;
   whyThisCity: LocalizedText;
+  logoRequest: LocalizedText;
   closing: LocalizedText;
 }
 
@@ -53,6 +55,10 @@ export interface MissionDay {
   letter: LetterSections;
   myMapsUrl: string | null;
   participantViewEnabled: boolean;
+  hasDefaultOverlay: boolean;
+  defaultOverlayVersion: number;
+  hasMapScreenshot: boolean;
+  mapScreenshotVersion: number;
 }
 
 /** A Mission Day together with the role of the person requesting it. */
@@ -95,6 +101,83 @@ export interface Mission {
   notes: string;
   colour: string;
   waypoints: Waypoint[];
+}
+
+/** One recorded change in the conversation with a partner. */
+export interface PartnerStatusChange {
+  status: PartnerStatus;
+  note: string;
+  changedAt: string;
+  changedBy: string;
+}
+
+/**
+ * An entity asked to let the Mission Day use its logo. `logoRequest` holds
+ * the permission request, copied from the Mission Day when the partner is
+ * created so that it can be adapted to this partner alone.
+ */
+export interface Partner {
+  id: string;
+  missionDayId: string;
+  name: string;
+  kind: PartnerKind;
+  contactPerson: string;
+  contactEmail: string;
+  whyYou: string;
+  logoRequest: LocalizedText;
+  letterLanguage: Language;
+  proposalToken: string;
+  status: PartnerStatus;
+  statusHistory: PartnerStatusChange[];
+  hasLogo: boolean;
+  logoVersion: number;
+  hasOverlay: boolean;
+  overlayVersion: number;
+  hasApproval: boolean;
+  approvalVersion: number;
+  approvalName: string | null;
+}
+
+/** A selected mission as a partner sees it. */
+export interface ProposalMission {
+  id: string;
+  name: string;
+  description: string;
+  colour: string;
+  order: number;
+  hasPhoto: boolean;
+  photoVersion: number;
+  waypoints: Pick<Waypoint, 'title' | 'lat' | 'lng'>[];
+}
+
+/**
+ * Everything a public proposal shows. It is built field by field because
+ * the page is open to anyone holding the link: private data such as notes
+ * or contact details must be left out by construction.
+ */
+export interface ProposalView {
+  city: string;
+  year: number;
+  language: Language;
+  partnerName: string;
+  hasLogo: boolean;
+  logoVersion: number;
+  /** Whether a partner or default overlay exists to apply to the images. */
+  hasOverlay: boolean;
+  overlayVersion: number;
+  letter: {
+    aboutUs: string;
+    whatIsIngress: string;
+    whatIsMissionDay: string;
+    whyThisCity: string;
+    whyYou: string;
+    logoRequest: string;
+    closing: string;
+  };
+  missions: ProposalMission[];
+  myMapsUrl: string | null;
+  hasMapScreenshot: boolean;
+  mapScreenshotVersion: number;
 }
 
 /** The signed-in organiser, as reported by the API. */
