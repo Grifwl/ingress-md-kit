@@ -1,0 +1,186 @@
+# Ingress MD Kit
+
+Plan an **Ingress Mission Day** from idea to application: candidate missions and routes, partner proposals, mission images with the partner overlay, and the exports you need for the Niantic application and the Mission Authoring Tool.
+
+Self-hosted on **Cloudflare** (Workers + D1 + R2 + Access). Everything fits in the free tier. Clone it, deploy it under your own (sub)domain and plan your own city.
+
+> Unofficial community tool. Not affiliated with or endorsed by Niantic Spatial.
+> The rules below come from the **Ingress Mission Day Handbook 2026** (last edit: September 2025). Always check the current handbook and https://ingress.com/news before applying — deadlines and rules change.
+
+---
+
+## What it does
+
+One instance can host **several Mission Days** (e.g. `/example-2027`, `/sample-town-2028`), each with its own team of organisers. Other communities can use your instance or deploy their own.
+
+### URLs
+
+| Path | What |
+|---|---|
+| `/<md-slug>` | Mission Day page (participant view, once published) |
+| `/<md-slug>/proposta-<token>` | Proposal for one candidate partner (unlisted). The word follows the letter language: `proposta`, `propuesta`, `proposal` — all three work |
+| `/admin` | Private area (Cloudflare Access) |
+
+### Public side (no login)
+- **Partner proposals** — one page per candidate partner (city council, university, tourism board, museum…), reachable only through an unguessable link. It contains:
+  - a cover letter: who we are, what Ingress is, what a Mission Day is, why this city, why this partner;
+  - the full mission proposal: every mission with name, description, photo and route;
+  - a **6-column mosaic** of the 18 or 24 mission images, with the partner's logo already applied as an example;
+  - the map of all missions and the route of each one — straight lines between its portals, never between missions (interactive map + static image + link to the shared Google My Maps);
+  - the request for permission to use the partner's logo and photos.
+  - A print stylesheet so the page can be saved as PDF and attached to an email.
+- **Participant view** (optional, after the Mission Day is approved) — the same missions, maps and recommended order, without the letter.
+
+Proposal pages are `noindex` and unlisted: they show logos you do not have permission to use yet.
+
+### Private side (admin, behind Cloudflare Access)
+- **Mission Days** — create several; each has its slug, city, year, date, format (18 / 24, or 6 for Lite), team (both ENL and RES Points of Contact), default overlay (no partner) and shared letter texts.
+- **Organisers** — each Mission Day has its own owners/editors (by email); an organiser only sees the Mission Days they belong to.
+- **Mission manager** — create *as many candidate missions as you want* (more than 24): name, description, landmark/theme, photo, portals (waypoints) and route.
+- **Selection and order** — choose which 18 or 24 candidates make the final set, drag to set the recommended order, see the 6-column mosaic live.
+- **Partner manager** — candidate partners with contact info, logo, overlay PNG, the "why you" text, status (not contacted → contacted → in talks → accepted / declined) and the signed permission document.
+- **Image composer** — builds each 512×512 PNG: the mission photo (512×512) with an overlay PNG on top (512×512, transparent where the photo must show). The overlay is prepared outside the tool from the official Mission Day template: one per partner, plus a default one without partner. Preview for every partner before you ask any of them.
+- **Validation** — checks the set against the handbook rules (see below) and flags problems before you export.
+- **Exports**
+  - ZIP with the final 512×512 PNG of every selected mission, for the chosen partner;
+  - **UMM file** to pre-fill every mission in the Mission Authoring Tool with the Ultimate Mission Maker plugin;
+  - mission sheet (CSV): names, descriptions, portals with coordinates and Intel links, as a checklist;
+  - KML to import into Google My Maps;
+  - application helper: the texts and lists the Niantic application form asks for.
+- **Portal picking in IITC** — with Ultimate Mission Maker: export the candidates as a UMM file, draw or fix the routes in IITC, export from UMM and import the file back.
+
+---
+
+## Mission Day rules the tool checks
+
+| Rule | Value |
+|---|---|
+| Missions in the final set | 18 or 24 (Mission Day Lite: 6, towns ≤ 2,500 inhabitants) |
+| Mission type | ANY ORDER (never sequential) |
+| Mission name | `MD <YEAR>: <City>, <Landmark or theme>`, max 50 characters |
+| Mission description | max 200 characters (local language + English if it fits) |
+| Portals per mission | 6 to 10 |
+| Actions | Portal hack only — no passphrases, no Field Trip markers |
+| Image | 512×512 px, PNG, photos you are allowed to use commercially |
+| Design | Same Mission Day overlay on every mission; **never designed as a banner set** |
+| Pathing | Missions must not lead to the next one; any 6 should be doable in under 2 hours |
+| Application | ENL + RES Points of Contact, attraction list, map link, **one** logo/medal design |
+| Partner logo | Written proof of the partner's approval is required |
+
+Notes:
+- The **recommended order** is only a suggestion for agents who want to chain missions. It never appears inside the missions themselves.
+- The **mosaic** is just a way to display the set as agents see it in the scanner. Each image must work on its own: the tool warns you if images look like they form one picture.
+- For the application, Niantic asks for **only one** finished logo/medal. The tool generates all of them because the partner proposal shows them, but submit just one until the overlay is approved.
+
+---
+
+## Architecture
+
+```
+Browser (public + admin SPA)  ─┬─►  Cloudflare Worker (API + static assets)
+                               │       ├─ D1  (missions, portals, partners, texts)
+                               │       └─ R2  (photos, overlays, generated PNGs, documents)
+Cloudflare Access ─────────────┘  protects /admin and /api/admin
+```
+
+- **Worker**: TypeScript + Hono, serves the API and the built frontend.
+- **Frontend**: Vite + TypeScript, Leaflet + OpenStreetMap for maps.
+- **Images**: composed in the browser with `<canvas>` (no image service needed), uploaded to R2.
+- **i18n**: Catalan, Spanish and English for the UI; letters can be written in any language per partner.
+
+---
+
+## Deploy your own
+
+Requirements: Node.js 20+, a Cloudflare account, a domain on Cloudflare, `wrangler` logged in.
+
+```bash
+git clone https://github.com/<you>/ingress-md-kit.git
+cd ingress-md-kit
+npm install
+
+# Create the storage
+npx wrangler d1 create ingress-md-kit
+npx wrangler r2 bucket create ingress-md-kit
+
+# Configure
+cp wrangler.example.toml wrangler.toml   # fill in the D1 id, bucket and route
+
+# Database
+npm run db:migrate          # remote
+npm run db:migrate:local    # local dev
+
+# Run and deploy
+npm run dev
+npm run deploy
+```
+
+Then, in the Cloudflare dashboard:
+1. **Custom domain**: attach the Worker to your subdomain (e.g. `md.example.org`).
+2. **Zero Trust → Access**: create an application for `md.example.org/admin*` and `md.example.org/api/admin*`, allowing the emails of everyone who organises a Mission Day on this instance. Which Mission Days each of them can edit is decided inside the tool.
+3. Everything else (Mission Day pages and proposals) stays outside Access.
+
+`wrangler.toml` is git-ignored: your domain, IDs and data never end up in the repository.
+
+---
+
+## Typical workflow
+
+1. Create the Mission Day (city, year, format 18/24) and the shared letter texts.
+2. Draft candidate missions; pick portals in IITC with Ultimate Mission Maker; upload a photo for each.
+3. Add candidate partners with their logo and overlay PNG.
+4. Select the final 18 or 24 missions and their recommended order. Fix validation warnings.
+5. Export the KML, import it into Google My Maps, paste the link and upload a screenshot.
+6. Send each partner its proposal link (or the PDF). Track the answers.
+7. When a partner says yes: upload their written approval, generate the final PNGs and the mission sheet, and fill in the Niantic application with the application helper.
+8. After approval: create the missions in the Mission Authoring Tool with the UMM file and the PNG ZIP, and publish the participant view.
+
+---
+
+## Picking portals in IITC
+
+Ingress MD Kit doesn't ship its own IITC plugin (for now); it works with **Ultimate Mission Maker**:
+
+1. **Admin → Missions → Export for UMM**: all candidate missions (or only the selected ones) in one UMM file.
+2. In IITC with UMM: *UMM Opt → Import*, then draw or edit routes ("mission mode", next/previous mission, undo).
+3. *UMM Opt → Export* and upload the file in **Admin → Missions → Import from UMM**. The tool shows the changes per mission (portals added/removed/reordered) before saving.
+
+Tips:
+- Missions are matched by position in the file, and the names and descriptions stored in the tool always win, so it doesn't matter if UMM rewrites titles when you edit its "banner details".
+- UMM warns when the "banner length" isn't a multiple of 6: harmless here.
+
+A dedicated plugin (live sync, 6–10 counter) may come later if the round trip proves annoying.
+
+---
+
+## Google My Maps
+
+Google offers no API to create My Maps, so the tool exports a **KML** you import by hand (My Maps → Create map → Import). My Maps allows **10 layers** per map, so the KML uses one layer for portals and one for routes (one line per mission, nothing joining missions), with one colour per mission. Paste the resulting share link and a screenshot in the admin; both appear in the proposals.
+
+---
+
+## Mission Authoring Tool (via Ultimate Mission Maker)
+
+The Mission Authoring Tool (missions.ingress.com) has no import of its own, but the community plugin **[Ultimate Mission Maker](https://umm.vashiru.tech/)** (UMM) adds one: install it in Tampermonkey, open MAT, load a UMM JSON file, and for each new mission pick it from the list — title, description and portals are pre-filled. You still upload the image and finish each mission by hand.
+
+Ingress MD Kit exports the selected missions as a **UMM file (format version 2)**, in the recommended order, with the final `MD <YEAR>: <City>, <Landmark>` names and descriptions. Then, in MAT, for every mission:
+1. New mission → choose it from the UMM list → Import;
+2. set the type to **ANY ORDER** (check it every time);
+3. upload its PNG from the ZIP (files are numbered in the same order);
+4. check the portals (all "Hack portal") and submit.
+
+The mission sheet (CSV) is still there as a printable checklist.
+
+---
+
+## Roadmap
+
+- [ ] v0.1 — Mission Day settings, mission manager, map, selection/order, mosaic
+- [ ] v0.2 — Partners, overlay composer, public proposal page, PDF print
+- [ ] v0.3 — UMM import/export, other exports (PNG ZIP, mission sheet, KML, application helper)
+- [ ] v0.4 — (optional) own IITC plugin with live sync
+- [ ] v0.5 — Participant view, several organisers per Mission Day
+
+## License
+
+MIT. Ingress, its logos and the Mission Day templates belong to Niantic Spatial; partner logos belong to their owners.
