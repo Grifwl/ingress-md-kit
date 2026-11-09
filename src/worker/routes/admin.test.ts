@@ -100,6 +100,7 @@ beforeEach(async () => {
   await env.DB.batch([
     env.DB.prepare('DELETE FROM mission_days'),
     env.DB.prepare('DELETE FROM organisers'),
+    env.DB.prepare(`UPDATE instance_settings SET letter_defaults_json = '{}'`),
   ]);
   await createMissionDay('example-2027');
 });
@@ -230,6 +231,79 @@ describe('Mission Days', () => {
       body: { myMapsUrl: 'javascript:alert(1)' },
     });
     expect(response.status).toBe(400);
+  });
+});
+
+describe('default letter texts', () => {
+  const defaults = {
+    aboutUs: { ca: 'Som agents.' },
+    whatIsIngress: { en: 'A game.' },
+    whatIsMissionDay: {},
+    whyThisCity: {},
+    closing: {},
+  };
+
+  /**
+   * Saves the default texts as an instance administrator.
+   *
+   * @param letter - Texts to save.
+   * @returns The response.
+   */
+  function saveDefaults(letter: unknown): Promise<Response> {
+    return call('/letter-defaults', { method: 'PUT', as: ADMIN, body: letter });
+  }
+
+  /**
+   * Reads the letter of a Mission Day.
+   *
+   * @param slug - Mission Day slug.
+   * @returns Its letter sections.
+   */
+  async function letterOf(slug: string): Promise<unknown> {
+    const day = (await (await call(`/mission-days/${slug}`)).json()) as { letter: unknown };
+    return day.letter;
+  }
+
+  it('are reserved to instance administrators', async () => {
+    expect((await call('/letter-defaults', { as: OWNER })).status).toBe(403);
+    const write = await call('/letter-defaults', { method: 'PUT', as: OWNER, body: defaults });
+    expect(write.status).toBe(403);
+  });
+
+  it('start empty and return what was saved', async () => {
+    const empty = (await (await call('/letter-defaults', { as: ADMIN })).json()) as {
+      aboutUs: unknown;
+    };
+    expect(empty.aboutUs).toEqual({});
+
+    expect((await saveDefaults(defaults)).status).toBe(200);
+    expect(await (await call('/letter-defaults', { as: ADMIN })).json()).toEqual(defaults);
+  });
+
+  it('are copied into a new Mission Day', async () => {
+    await saveDefaults(defaults);
+    await createMissionDay('other-2028');
+    expect(await letterOf('other-2028')).toEqual(defaults);
+  });
+
+  it('leave existing Mission Days alone when they change', async () => {
+    const before = await letterOf('example-2027');
+    await saveDefaults(defaults);
+    expect(await letterOf('example-2027')).toEqual(before);
+  });
+
+  it('are not changed by editing a Mission Day', async () => {
+    await saveDefaults(defaults);
+    await createMissionDay('other-2028');
+    const edited = { ...defaults, closing: { ca: 'Fins aviat.' } };
+    await call('/mission-days/other-2028', { method: 'PATCH', body: { letter: edited } });
+
+    expect(await letterOf('other-2028')).toEqual(edited);
+    expect(await (await call('/letter-defaults', { as: ADMIN })).json()).toEqual(defaults);
+  });
+
+  it('refuse malformed texts', async () => {
+    expect((await saveDefaults({ aboutUs: 'not a map' })).status).toBe(400);
   });
 });
 

@@ -257,6 +257,16 @@ function letter(value: unknown): LetterSections {
 }
 
 /**
+ * Validates the default letter texts of the instance.
+ *
+ * @param body - Parsed JSON.
+ * @returns The sections.
+ */
+export function parseLetterDefaults(body: unknown): LetterSections {
+  return letter(body);
+}
+
+/**
  * Validates a request to create a Mission Day.
  *
  * @param body - Parsed JSON.

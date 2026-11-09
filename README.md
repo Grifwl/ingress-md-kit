@@ -37,6 +37,7 @@ Proposal pages are `noindex` and unlisted: they show logos you do not have permi
 
 ### Private side (admin, behind Cloudflare Access)
 - **Mission Days** — create several; each has its slug, city, year, date, format (18 / 24, or 6 for Lite), team (both ENL and RES Points of Contact), default overlay (no partner) and shared letter texts.
+- **Default letter texts** — instance-wide texts (who we are, what Ingress is…) that every new Mission Day copies when it is created and can then adapt.
 - **Organisers** — each Mission Day has its own owners/editors (by email); an organiser only sees the Mission Days they belong to.
 - **Mission manager** — create *as many candidate missions as you want* (more than 24): name, description, landmark/theme, photo, portals (waypoints) and route.
 - **Selection and order** — choose which 18 or 24 candidates make the final set, drag to set the recommended order, see the 6-column mosaic live.

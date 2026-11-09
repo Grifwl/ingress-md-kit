@@ -5,6 +5,7 @@
 /** A screen of the admin area. */
 export type Route =
   | { name: 'home' }
+  | { name: 'letterDefaults' }
   | { name: 'missions'; slug: string }
   | { name: 'mission'; slug: string; missionId: string }
   | { name: 'map'; slug: string }
@@ -43,6 +44,9 @@ export function parseRoute(pathname: string): Route {
   }
   if (slug === undefined) {
     return { name: 'home' };
+  }
+  if (slug === 'letter-defaults') {
+    return section === undefined ? { name: 'letterDefaults' } : { name: 'notFound' };
   }
   if (section === undefined || section === 'missions') {
     return missionId === undefined

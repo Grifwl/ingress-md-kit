@@ -21,9 +21,11 @@ import {
   findMission,
   findMissionDayForOrganiser,
   findPhotoKey,
+  getLetterDefaults,
   listMissionDaysForOrganiser,
   listMissions,
   replaceWaypoints,
+  saveLetterDefaults,
   savePhoto,
   saveSelection,
   slugExists,
@@ -32,6 +34,7 @@ import {
 } from '../lib/db';
 import {
   parseCrop,
+  parseLetterDefaults,
   parseMissionDayCreate,
   parseMissionDayPatch,
   parseMissionPatch,
@@ -111,6 +114,17 @@ const requireMembership: MiddlewareHandler<AppEnv> = async (c, next) => {
 function assertOwner(c: AdminContext): void {
   if (c.get('role') !== 'owner') {
     throw new HTTPException(403, { message: 'owner_required' });
+  }
+}
+
+/**
+ * Stops the request unless the requester administers the instance.
+ *
+ * @param c - Request context.
+ */
+function assertInstanceAdmin(c: AdminContext): void {
+  if (!isInstanceAdmin(c.get('email'), c.env)) {
+    throw new HTTPException(403, { message: 'instance_admin_required' });
   }
 }
 
@@ -297,11 +311,21 @@ admin.get('/mission-days', async (c) =>
   c.json(await listMissionDaysForOrganiser(c.env.DB, c.get('email'))),
 );
 
+admin.get('/letter-defaults', async (c) => {
+  assertInstanceAdmin(c);
+  return c.json(await getLetterDefaults(c.env.DB));
+});
+
+admin.put('/letter-defaults', async (c) => {
+  assertInstanceAdmin(c);
+  const letter = parseLetterDefaults(await jsonBody(c));
+  await saveLetterDefaults(c.env.DB, letter);
+  return c.json(letter);
+});
+
 admin.post('/mission-days', async (c) => {
+  assertInstanceAdmin(c);
   const email = c.get('email');
-  if (!isInstanceAdmin(email, c.env)) {
-    throw new HTTPException(403, { message: 'instance_admin_required' });
-  }
   const input = parseMissionDayCreate(await jsonBody(c));
   if (await slugExists(c.env.DB, input.slug)) {
     throw new HTTPException(409, { message: 'slug_taken' });

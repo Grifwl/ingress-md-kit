@@ -5,6 +5,7 @@ import type { MissionFormat } from '../../shared/rules';
 import type {
   CropRect,
   CurrentUser,
+  LetterSections,
   Mission,
   MissionDay,
   MissionDayWithRole,
@@ -90,6 +91,25 @@ function missionPath(slug: string, missionId: string): string {
  */
 export function getMe(): Promise<CurrentUser> {
   return request('/me');
+}
+
+/**
+ * Reads the letter texts that new Mission Days start from.
+ *
+ * @returns The default sections.
+ */
+export function getLetterDefaults(): Promise<LetterSections> {
+  return request('/letter-defaults');
+}
+
+/**
+ * Saves the letter texts that new Mission Days start from.
+ *
+ * @param letter - The default sections.
+ * @returns The saved sections.
+ */
+export function saveLetterDefaults(letter: LetterSections): Promise<LetterSections> {
+  return request('/letter-defaults', json('PUT', letter));
 }
 
 /**

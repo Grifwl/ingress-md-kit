@@ -37,6 +37,7 @@ Les pàgines de proposta són `noindex` i no estan llistades: mostren logotips q
 
 ### Part privada (administració, darrere de Cloudflare Access)
 - **Mission Days**: en pots crear diversos; cadascun té la seva adreça, ciutat, any, data, format (18 / 24, o 6 per a Lite), equip (els punts de contacte d'ENL i RES), capa per defecte (sense soci) i textos compartits de la carta.
+- **Textos per defecte de la carta**: textos de tota la instància (qui som, què és Ingress…) que cada Mission Day nou copia en crear-se i després pot adaptar.
 - **Organitzadors**: cada Mission Day té els seus propietaris i editors (per correu); cada organitzador només veu els Mission Days dels quals forma part.
 - **Gestor de missions**: crea *totes les missions candidates que vulguis* (més de 24): nom, descripció, punt d'interès o tema, foto, portals i ruta.
 - **Selecció i ordre**: tria quines 18 o 24 candidates formen el conjunt final, arrossega-les per fixar l'ordre recomanat i mira el mosaic de 6 columnes en directe.

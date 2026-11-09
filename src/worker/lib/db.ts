@@ -91,6 +91,23 @@ const MISSION_COLOURS = [
 ];
 
 /**
+ * Decodes stored letter sections, filling those never saved with empty values.
+ *
+ * @param json - Content of a letter column.
+ * @returns All the sections.
+ */
+function parseLetterJson(json: string): LetterSections {
+  return {
+    aboutUs: {},
+    whatIsIngress: {},
+    whatIsMissionDay: {},
+    whyThisCity: {},
+    closing: {},
+    ...(JSON.parse(json) as Partial<LetterSections>),
+  };
+}
+
+/**
  * Converts a Mission Day row, filling sections never saved with empty values.
  *
  * @param row - Database row.
@@ -103,14 +120,6 @@ function toMissionDay(row: MissionDayRow): MissionDay {
     others: [],
     ...(JSON.parse(row.team_json) as Partial<Team>),
   };
-  const letter: LetterSections = {
-    aboutUs: {},
-    whatIsIngress: {},
-    whatIsMissionDay: {},
-    whyThisCity: {},
-    closing: {},
-    ...(JSON.parse(row.letter_json) as Partial<LetterSections>),
-  };
   return {
     id: row.id,
     slug: row.slug,
@@ -120,7 +129,7 @@ function toMissionDay(row: MissionDayRow): MissionDay {
     format: row.format,
     status: row.status,
     team,
-    letter,
+    letter: parseLetterJson(row.letter_json),
     myMapsUrl: row.my_maps_url,
     participantViewEnabled: row.participant_view_enabled === 1,
   };
@@ -229,7 +238,35 @@ export async function slugExists(db: D1Database, slug: string): Promise<boolean>
 }
 
 /**
- * Creates a Mission Day and its first owner in one atomic batch.
+ * Reads the letter texts that new Mission Days start from.
+ *
+ * @param db - D1 binding.
+ * @returns The default sections.
+ */
+export async function getLetterDefaults(db: D1Database): Promise<LetterSections> {
+  const json = await db
+    .prepare('SELECT letter_defaults_json FROM instance_settings WHERE id = 1')
+    .first<string>('letter_defaults_json');
+  return parseLetterJson(json ?? '{}');
+}
+
+/**
+ * Saves the letter texts that new Mission Days start from.
+ *
+ * @param db - D1 binding.
+ * @param letter - The default sections.
+ */
+export async function saveLetterDefaults(db: D1Database, letter: LetterSections): Promise<void> {
+  await db
+    .prepare('UPDATE instance_settings SET letter_defaults_json = ? WHERE id = 1')
+    .bind(JSON.stringify(letter))
+    .run();
+}
+
+/**
+ * Creates a Mission Day and its first owner in one atomic batch. The
+ * default letter texts are copied, not referenced: each Mission Day can
+ * then adapt its own, and later changes to the defaults leave it alone.
  *
  * @param db - D1 binding.
  * @param input - Validated fields.
@@ -244,7 +281,11 @@ export async function createMissionDay(
   const id = crypto.randomUUID();
   await db.batch([
     db
-      .prepare('INSERT INTO mission_days (id, slug, city, year, format) VALUES (?, ?, ?, ?, ?)')
+      .prepare(
+        `INSERT INTO mission_days (id, slug, city, year, format, letter_json)
+         VALUES (?, ?, ?, ?, ?,
+           COALESCE((SELECT letter_defaults_json FROM instance_settings WHERE id = 1), '{}'))`,
+      )
       .bind(id, input.slug, input.city, input.year, input.format),
     db.prepare('INSERT OR IGNORE INTO organisers (email) VALUES (?)').bind(ownerEmail),
     db

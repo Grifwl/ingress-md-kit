@@ -2,12 +2,7 @@
  * Settings of a Mission Day: general data, team and shared letter texts.
  */
 import { useState } from 'preact/hooks';
-import {
-  LANGUAGES,
-  MISSION_FORMATS,
-  type Language,
-  type MissionFormat,
-} from '../../../shared/rules';
+import { MISSION_FORMATS, type MissionFormat } from '../../../shared/rules';
 import type {
   LetterSections,
   MissionDayStatus,
@@ -16,20 +11,13 @@ import type {
   TeamContact,
 } from '../../../shared/types';
 import { useI18n } from '../../i18n';
-import type { MessageKey } from '../../i18n/messages';
 import { deleteMissionDay, updateMissionDay } from '../api';
 import { ConfirmButton, ErrorMessage, Field } from '../components/common';
+import { LetterEditor } from '../components/LetterEditor';
 import { navigate } from '../router';
 
 const FORMATS = Object.keys(MISSION_FORMATS) as MissionFormat[];
 const STATUSES: MissionDayStatus[] = ['draft', 'applied', 'approved', 'done'];
-const LETTER_SECTIONS: { key: keyof LetterSections; label: MessageKey }[] = [
-  { key: 'aboutUs', label: 'settings.aboutUs' },
-  { key: 'whatIsIngress', label: 'settings.whatIsIngress' },
-  { key: 'whatIsMissionDay', label: 'settings.whatIsMissionDay' },
-  { key: 'whyThisCity', label: 'settings.whyThisCity' },
-  { key: 'closing', label: 'settings.closing' },
-];
 
 /**
  * Inputs for one member of the team.
@@ -76,7 +64,7 @@ export function SettingsPage({
   missionDay: MissionDayWithRole;
   onChange: (missionDay: MissionDayWithRole) => void;
 }) {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
   const [city, setCity] = useState(missionDay.city);
   const [year, setYear] = useState(missionDay.year);
   const [date, setDate] = useState(missionDay.date ?? '');
@@ -85,7 +73,6 @@ export function SettingsPage({
   const [myMapsUrl, setMyMapsUrl] = useState(missionDay.myMapsUrl ?? '');
   const [team, setTeam] = useState<Team>(missionDay.team);
   const [letter, setLetter] = useState<LetterSections>(missionDay.letter);
-  const [letterLanguage, setLetterLanguage] = useState<Language>(language);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<unknown>();
@@ -229,32 +216,7 @@ export function SettingsPage({
         <section class="card">
           <h2>{t('settings.letter')}</h2>
           <p class="muted">{t('settings.letterHelp')}</p>
-          <Field label={t('settings.letterLanguage')}>
-            <select
-              value={letterLanguage}
-              onChange={(e) => setLetterLanguage(e.currentTarget.value as Language)}
-            >
-              {LANGUAGES.map((option) => (
-                <option key={option} value={option}>
-                  {option.toUpperCase()}
-                </option>
-              ))}
-            </select>
-          </Field>
-          {LETTER_SECTIONS.map(({ key, label }) => (
-            <Field key={key} label={t(label)}>
-              <textarea
-                rows={4}
-                value={letter[key][letterLanguage] ?? ''}
-                onInput={(e) =>
-                  setLetter({
-                    ...letter,
-                    [key]: { ...letter[key], [letterLanguage]: e.currentTarget.value },
-                  })
-                }
-              />
-            </Field>
-          ))}
+          <LetterEditor value={letter} onChange={setLetter} />
         </section>
 
         <ErrorMessage error={error} />

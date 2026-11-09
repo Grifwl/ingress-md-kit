@@ -81,12 +81,19 @@ describe('names and slugs', () => {
     expect(isValidSlug(slug)).toBe(true);
   });
 
-  it.each(['admin', 'api', 'assets', 'Upper-2027', 'a', 'bad--slug', '-x-2027', 'a/b-2027'])(
-    'rejects the slug %s',
-    (slug) => {
-      expect(isValidSlug(slug)).toBe(false);
-    },
-  );
+  it.each([
+    'admin',
+    'api',
+    'assets',
+    'letter-defaults',
+    'Upper-2027',
+    'a',
+    'bad--slug',
+    '-x-2027',
+    'a/b-2027',
+  ])('rejects the slug %s', (slug) => {
+    expect(isValidSlug(slug)).toBe(false);
+  });
 });
 
 describe('validateMission', () => {

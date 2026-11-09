@@ -42,8 +42,8 @@ export const IMAGE_MAX_BYTES = 4 * 1024 * 1024;
 /** Number of columns of the mosaic, matching the scanner's display. */
 export const MOSAIC_COLUMNS = 6;
 
-/** First path segments the application uses, so a slug cannot take them. */
-export const RESERVED_SLUGS: readonly string[] = ['admin', 'api', 'assets'];
+/** Path segments the application uses, at the root or under /admin, so a slug cannot take them. */
+export const RESERVED_SLUGS: readonly string[] = ['admin', 'api', 'assets', 'letter-defaults'];
 
 /** Languages available in the interface and offered for content fields. */
 export const LANGUAGES = ['ca', 'es', 'en'] as const;

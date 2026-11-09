@@ -116,6 +116,11 @@ export function HomePage({ user }: { user: CurrentUser }) {
           </li>
         ))}
       </ul>
+      {user.isInstanceAdmin && (
+        <Link href="/admin/letter-defaults" class="back-link">
+          {t('letterDefaults.title')}
+        </Link>
+      )}
       {user.isInstanceAdmin && <CreateMissionDayForm />}
     </main>
   );

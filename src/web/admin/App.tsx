@@ -10,6 +10,7 @@ import { ErrorMessage } from './components/common';
 import { useAsync } from './hooks';
 import type { Route } from './lib/routes';
 import { HomePage } from './pages/HomePage';
+import { LetterDefaultsPage } from './pages/LetterDefaultsPage';
 import { MapPage } from './pages/MapPage';
 import { MissionEditPage } from './pages/MissionEditPage';
 import { MissionsPage } from './pages/MissionsPage';
@@ -184,6 +185,7 @@ export function App() {
         </main>
       )}
       {me.data !== undefined && route.name === 'home' && <HomePage user={me.data} />}
+      {me.data !== undefined && route.name === 'letterDefaults' && <LetterDefaultsPage />}
       {me.data !== undefined && route.name === 'notFound' && (
         <main class="page">
           <p class="alert">{t('error.not_found')}</p>
