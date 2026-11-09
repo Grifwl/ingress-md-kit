@@ -29,7 +29,7 @@ Una sola instancia puede alojar **varios Mission Days** (p. ej. `/example-2027`,
   - la propuesta completa de misiones: cada misión con nombre, descripción, foto y ruta;
   - un **mosaico de 6 columnas** con las 18 o 24 imágenes de las misiones, con el logotipo del colaborador ya aplicado como ejemplo;
   - el mapa de todas las misiones y la ruta de cada una, con líneas rectas entre sus portales y nunca entre misiones (mapa interactivo + imagen estática + enlace al Google My Maps compartido);
-  - la petición de permiso para usar el logotipo y las fotos del colaborador.
+  - la petición de permiso para usar el logotipo y las fotos del colaborador: un texto por defecto que hereda cada colaborador nuevo y que se puede adaptar a cada uno.
   - Una hoja de estilo de impresión para que la página se pueda guardar como PDF y adjuntar a un correo.
 - **Vista para participantes** (opcional, una vez aprobado el Mission Day): las mismas misiones, mapas y orden recomendado, sin la carta.
 
@@ -193,7 +193,7 @@ La hoja de misiones (CSV) sigue disponible como lista de comprobación imprimibl
 ## Hoja de ruta
 
 - [x] v0.1 — Configuración del Mission Day, gestor de misiones, mapa, selección y orden, mosaico
-- [ ] v0.2 — Colaboradores, compositor de capas, página pública de propuesta, impresión a PDF
+- [x] v0.2 — Colaboradores, compositor de capas, página pública de propuesta, impresión a PDF
 - [ ] v0.3 — Importación/exportación UMM, otras exportaciones (ZIP de PNG, hoja de misiones, KML, ayudante de solicitud)
 - [ ] v0.4 — (opcional) complemento propio para IITC con sincronización en directo
 - [ ] v0.5 — Vista para participantes, varios organizadores por Mission Day

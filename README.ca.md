@@ -29,7 +29,7 @@ Una sola instància pot allotjar **diversos Mission Days** (p. ex. `/example-202
   - la proposta completa de missions: cada missió amb nom, descripció, foto i ruta;
   - un **mosaic de 6 columnes** amb les 18 o 24 imatges de les missions, amb el logotip del col·laborador ja aplicat com a exemple;
   - el mapa de totes les missions i la ruta de cadascuna, amb línies rectes entre els seus portals i mai entre missions (mapa interactiu + imatge estàtica + enllaç al Google My Maps compartit);
-  - la petició de permís per fer servir el logotip i les fotos del col·laborador.
+  - la petició de permís per fer servir el logotip i les fotos del col·laborador: un text per defecte que hereta cada col·laborador nou i que es pot adaptar a cadascun.
   - Un full d'estil d'impressió perquè la pàgina es pugui desar com a PDF i adjuntar a un correu.
 - **Vista per als participants** (opcional, un cop aprovat el Mission Day): les mateixes missions, mapes i ordre recomanat, sense la carta.
 
@@ -193,7 +193,7 @@ El full de missions (CSV) continua disponible com a llista de comprovació impri
 ## Full de ruta
 
 - [x] v0.1 — Configuració del Mission Day, gestor de missions, mapa, selecció i ordre, mosaic
-- [ ] v0.2 — Col·laboradors, compositor de capes, pàgina pública de proposta, impressió a PDF
+- [x] v0.2 — Col·laboradors, compositor de capes, pàgina pública de proposta, impressió a PDF
 - [ ] v0.3 — Importació/exportació UMM, altres exportacions (ZIP de PNG, full de missions, KML, ajudant de sol·licitud)
 - [ ] v0.4 — (opcional) connector propi per a IITC amb sincronització en directe
 - [ ] v0.5 — Vista per als participants, diversos organitzadors per Mission Day

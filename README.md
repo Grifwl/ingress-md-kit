@@ -29,7 +29,7 @@ One instance can host **several Mission Days** (e.g. `/example-2027`, `/sample-t
   - the full mission proposal: every mission with name, description, photo and route;
   - a **6-column mosaic** of the 18 or 24 mission images, with the partner's logo already applied as an example;
   - the map of all missions and the route of each one — straight lines between its portals, never between missions (interactive map + static image + link to the shared Google My Maps);
-  - the request for permission to use the partner's logo and photos.
+  - the request for permission to use the partner's logo and photos: a default text every new partner inherits and that can be adapted to each one.
   - A print stylesheet so the page can be saved as PDF and attached to an email.
 - **Participant view** (optional, after the Mission Day is approved) — the same missions, maps and recommended order, without the letter.
 
@@ -193,7 +193,7 @@ The mission sheet (CSV) is still there as a printable checklist.
 ## Roadmap
 
 - [x] v0.1 — Mission Day settings, mission manager, map, selection/order, mosaic
-- [ ] v0.2 — Partners, overlay composer, public proposal page, PDF print
+- [x] v0.2 — Partners, overlay composer, public proposal page, PDF print
 - [ ] v0.3 — UMM import/export, other exports (PNG ZIP, mission sheet, KML, application helper)
 - [ ] v0.4 — (optional) own IITC plugin with live sync
 - [ ] v0.5 — Participant view, several organisers per Mission Day
