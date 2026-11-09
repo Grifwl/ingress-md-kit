@@ -6,6 +6,7 @@
 export type Route =
   | { name: 'home' }
   | { name: 'letterDefaults' }
+  | { name: 'newMissionDay' }
   | { name: 'missions'; slug: string }
   | { name: 'mission'; slug: string; missionId: string }
   | { name: 'map'; slug: string }
@@ -44,6 +45,9 @@ export function parseRoute(pathname: string): Route {
   }
   if (slug === undefined) {
     return { name: 'home' };
+  }
+  if (slug === 'new') {
+    return section === undefined ? { name: 'newMissionDay' } : { name: 'notFound' };
   }
   if (slug === 'letter-defaults') {
     return section === undefined ? { name: 'letterDefaults' } : { name: 'notFound' };

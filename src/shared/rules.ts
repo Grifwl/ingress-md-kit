@@ -43,7 +43,16 @@ export const IMAGE_MAX_BYTES = 4 * 1024 * 1024;
 export const MOSAIC_COLUMNS = 6;
 
 /** Path segments the application uses, at the root or under /admin, so a slug cannot take them. */
-export const RESERVED_SLUGS: readonly string[] = ['admin', 'api', 'assets', 'letter-defaults'];
+export const RESERVED_SLUGS: readonly string[] = [
+  'admin',
+  'api',
+  'assets',
+  'letter-defaults',
+  'new',
+];
+
+/** Longest address a Mission Day can have. */
+export const SLUG_MAX_LENGTH = 60;
 
 /** Languages available in the interface and offered for content fields. */
 export const LANGUAGES = ['ca', 'es', 'en'] as const;
@@ -125,9 +134,33 @@ export function isValidSlug(slug: string): boolean {
   return (
     /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) &&
     slug.length >= 3 &&
-    slug.length <= 60 &&
+    slug.length <= SLUG_MAX_LENGTH &&
     !RESERVED_SLUGS.includes(slug)
   );
+}
+
+/**
+ * Proposes the address of a Mission Day from its city and year: lowercase,
+ * without accents, and with hyphens in place of spaces and punctuation.
+ *
+ * @param city - Name of the city.
+ * @param year - Year of the Mission Day; left out when it is not positive.
+ * @returns The proposed slug, or an empty string when there is no city yet.
+ */
+export function suggestSlug(city: string, year: number): string {
+  const name = city
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    // The Catalan interpunct joins two letters, so it must not split the word.
+    .replace(/·/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  if (name === '') {
+    return '';
+  }
+  const suffix = year > 0 ? `-${year}` : '';
+  return `${name.slice(0, SLUG_MAX_LENGTH - suffix.length).replace(/-+$/, '')}${suffix}`;
 }
 
 /**

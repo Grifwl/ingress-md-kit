@@ -5,6 +5,8 @@ describe('parseRoute', () => {
   it.each([
     ['/admin', { name: 'home' }],
     ['/admin/', { name: 'home' }],
+    ['/admin/new', { name: 'newMissionDay' }],
+    ['/admin/new/extra', { name: 'notFound' }],
     ['/admin/letter-defaults', { name: 'letterDefaults' }],
     ['/admin/letter-defaults/extra', { name: 'notFound' }],
     ['/admin/example-2027', { name: 'missions', slug: 'example-2027' }],

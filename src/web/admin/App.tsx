@@ -14,6 +14,7 @@ import { LetterDefaultsPage } from './pages/LetterDefaultsPage';
 import { MapPage } from './pages/MapPage';
 import { MissionEditPage } from './pages/MissionEditPage';
 import { MissionsPage } from './pages/MissionsPage';
+import { NewMissionDayPage } from './pages/NewMissionDayPage';
 import { SelectionPage } from './pages/SelectionPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { Link, useRoute } from './router';
@@ -186,6 +187,9 @@ export function App() {
       )}
       {me.data !== undefined && route.name === 'home' && <HomePage user={me.data} />}
       {me.data !== undefined && route.name === 'letterDefaults' && <LetterDefaultsPage />}
+      {me.data !== undefined && route.name === 'newMissionDay' && (
+        <NewMissionDayPage user={me.data} />
+      )}
       {me.data !== undefined && route.name === 'notFound' && (
         <main class="page">
           <p class="alert">{t('error.not_found')}</p>

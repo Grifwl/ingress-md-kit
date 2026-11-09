@@ -9,6 +9,7 @@ import {
   fullMissionName,
   hasSequenceHint,
   isValidSlug,
+  suggestSlug,
   validateMission,
   validateSelection,
 } from './rules';
@@ -73,6 +74,25 @@ describe('names and slugs', () => {
     expect(fullMissionName(missionDay, 'Old Bridge')).toBe('MD 2027: Example City, Old Bridge');
   });
 
+  it.each([
+    ['Example City', 2027, 'example-city-2027'],
+    ['Vila Àmplia', 2028, 'vila-amplia-2028'],
+    ["L'Exemple del Mar", 2027, 'l-exemple-del-mar-2027'],
+    ['Il·lusió', 2027, 'illusio-2027'],
+    ['  Lots   of  spaces ', 2027, 'lots-of-spaces-2027'],
+    ['Example', 0, 'example'],
+    ['', 2027, ''],
+    ['···', 2027, ''],
+  ])('suggests an address for "%s" %d', (city, year, expected) => {
+    expect(suggestSlug(city, year)).toBe(expected);
+  });
+
+  it('suggests only valid addresses, even for very long names', () => {
+    const slug = suggestSlug(`${'x'.repeat(58)} y`, 2027);
+    expect(isValidSlug(slug)).toBe(true);
+    expect(slug.endsWith('-2027')).toBe(true);
+  });
+
   it('counts code points rather than UTF-16 units', () => {
     expect(characterCount('🌉a')).toBe(2);
   });
@@ -86,6 +106,7 @@ describe('names and slugs', () => {
     'api',
     'assets',
     'letter-defaults',
+    'new',
     'Upper-2027',
     'a',
     'bad--slug',

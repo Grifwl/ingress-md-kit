@@ -181,6 +181,11 @@ textarea {
   gap: 0.25rem;
 }
 
+.slug-preview {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
 .field-label {
   font-size: 0.85rem;
   font-weight: 600;
@@ -213,6 +218,10 @@ textarea {
   font: inherit;
   white-space: nowrap;
   cursor: pointer;
+}
+
+a.button {
+  text-decoration: none;
 }
 
 .button.primary {
