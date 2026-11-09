@@ -1,0 +1,7 @@
+dist/
+node_modules/
+.wrangler/
+coverage/
+package-lock.json
+README*.md
+seed/demo.sql

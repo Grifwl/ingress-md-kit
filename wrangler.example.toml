@@ -1,0 +1,28 @@
+# Copy this file to wrangler.toml and fill in the values of your instance.
+# wrangler.toml is git-ignored, so your domain and IDs stay out of the repository.
+name = "ingress-md-kit"
+main = "src/worker/index.ts"
+compatibility_date = "2026-11-01"
+
+# The Worker runs first on every request: it decides what is API, what is
+# the admin page and what is a static file.
+[assets]
+binding = "ASSETS"
+run_worker_first = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ingress-md-kit"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "ingress-md-kit"
+
+# Local development overrides these values from .dev.vars.
+[vars]
+ENVIRONMENT = "production"
+ACCESS_TEAM_DOMAIN = "your-team.cloudflareaccess.com"
+ACCESS_AUD = ""
+INSTANCE_ADMINS = ""

@@ -1,0 +1,13 @@
+# Instance configuration and secrets
+wrangler.toml
+.dev.vars
+.env
+.env.*
+!.dev.vars.example
+
+# Dependencies and generated output
+node_modules/
+dist/
+coverage/
+.wrangler/
+*.log

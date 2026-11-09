@@ -1,0 +1,4 @@
+# Copy this file to .dev.vars for local development.
+ENVIRONMENT=dev
+DEV_USER_EMAIL=dev@example.org
+INSTANCE_ADMINS=dev@example.org
