@@ -39,7 +39,6 @@ export function Mosaic({
             ) : (
               <span class="mosaic-landmark">{mission.landmark}</span>
             )}
-            <span class="mosaic-order">{mission.recommendedOrder}</span>
           </div>
         );
       })}

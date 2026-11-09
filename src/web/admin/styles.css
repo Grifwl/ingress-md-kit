@@ -479,18 +479,6 @@ textarea {
   overflow-wrap: anywhere;
 }
 
-.mosaic-order {
-  position: absolute;
-  left: 50%;
-  bottom: 6%;
-  transform: translateX(-50%);
-  padding: 0 0.35rem;
-  border-radius: 999px;
-  background: rgb(0 0 0 / 60%);
-  color: #ffffff;
-  font-size: 0.7rem;
-}
-
 .issues {
   display: flex;
   flex-direction: column;
