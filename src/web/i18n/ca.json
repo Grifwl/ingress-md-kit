@@ -245,7 +245,7 @@
   "exports.kmlTitle": "Mapa per a Google My Maps (KML)",
   "exports.kmlHelp": "Una capa de portals i una de rutes, per importar a mà.",
   "exports.importTitle": "Importa d'UMM",
-  "exports.importHelp": "Del fitxer només s'agafen els portals. Els noms i les descripcions es mantenen. Veuràs els canvis abans de desar res.",
+  "exports.importHelp": "Importa l'últim fitxer exportat per editar a IITC. Del fitxer només s'agafen els portals. Els noms i les descripcions es mantenen. Veuràs els canvis abans de desar res.",
   "exports.importFile": "Fitxer UMM",
   "exports.importError.invalid_file": "Aquest fitxer no s'ha pogut llegir com a fitxer UMM.",
   "exports.importError.unsupported_version": "Aquest fitxer s'ha fet amb una versió antiga d'UMM. Torna'l a exportar amb una versió actual.",

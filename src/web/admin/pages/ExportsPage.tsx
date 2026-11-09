@@ -157,18 +157,27 @@ export function ExportsPage({
     !canExportForNiantic([...selectionIssues, ...issues]);
 
   /**
-   * Exports missions to a UMM file and remembers their positions, which
-   * is how the file will be recognised when it comes back.
+   * Offers missions as a UMM file.
    *
    * @param list - Missions to include, in the order of the file.
    */
-  const exportUmm = async (list: readonly Mission[]) => {
+  const downloadUmm = (list: readonly Mission[]) => {
+    const file = buildUmmFile(missionDay, list, language);
+    downloadFile(JSON.stringify(file, null, 2), ummFileName(missionDay.slug), UMM_MIME_TYPE);
+  };
+
+  /**
+   * Exports every candidate for editing in IITC. Only this file comes back
+   * to the tool, so only this one records the positions used to recognise
+   * it; the file for the authoring tool must not overwrite them.
+   */
+  const exportForEditing = async () => {
+    const list = candidatesForList(missions);
     await saveUmmManifest(
       missionDay.slug,
       list.map((mission) => mission.id),
     );
-    const file = buildUmmFile(missionDay, list, language);
-    downloadFile(JSON.stringify(file, null, 2), ummFileName(missionDay.slug), UMM_MIME_TYPE);
+    downloadUmm(list);
   };
 
   /** Composes every selected image with its overlay and zips them. */
@@ -257,7 +266,7 @@ export function ExportsPage({
           title={t('exports.ummMatTitle')}
           help={t('exports.ummMatHelp')}
           blocked={isBlocked(ummIssues)}
-          onRun={() => exportUmm(selected)}
+          onRun={async () => downloadUmm(selected)}
         >
           {blockers(ummIssues)}
         </ExportCard>
@@ -274,7 +283,7 @@ export function ExportsPage({
           title={t('exports.ummAllTitle')}
           help={t('exports.ummAllHelp')}
           blocked={missions.length === 0}
-          onRun={() => exportUmm(candidatesForList(missions))}
+          onRun={exportForEditing}
         />
         <ExportCard
           title={t('exports.csvTitle')}

@@ -245,7 +245,7 @@
   "exports.kmlTitle": "Mapa para Google My Maps (KML)",
   "exports.kmlHelp": "Una capa de portales y una de rutas, para importar a mano.",
   "exports.importTitle": "Importar desde UMM",
-  "exports.importHelp": "Del archivo solo se toman los portales. Los nombres y las descripciones se mantienen. Verás los cambios antes de guardar nada.",
+  "exports.importHelp": "Importa el último archivo exportado para editar en IITC. Del archivo solo se toman los portales. Los nombres y las descripciones se mantienen. Verás los cambios antes de guardar nada.",
   "exports.importFile": "Archivo UMM",
   "exports.importError.invalid_file": "Ese archivo no se ha podido leer como archivo UMM.",
   "exports.importError.unsupported_version": "Este archivo se ha hecho con una versión antigua de UMM. Vuelve a exportarlo con una versión actual.",
