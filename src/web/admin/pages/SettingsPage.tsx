@@ -78,6 +78,8 @@ export function SettingsPage({
   const [format, setFormat] = useState(missionDay.format);
   const [status, setStatus] = useState(missionDay.status);
   const [myMapsUrl, setMyMapsUrl] = useState(missionDay.myMapsUrl ?? '');
+  const [applicationTheme, setApplicationTheme] = useState(missionDay.applicationTheme);
+  const [logoUrl, setLogoUrl] = useState(missionDay.logoUrl ?? '');
   const [team, setTeam] = useState<Team>(missionDay.team);
   const [letter, setLetter] = useState<LetterSections>(missionDay.letter);
   const [busy, setBusy] = useState(false);
@@ -103,6 +105,8 @@ export function SettingsPage({
           format,
           status,
           myMapsUrl: myMapsUrl === '' ? null : myMapsUrl,
+          applicationTheme,
+          logoUrl: logoUrl === '' ? null : logoUrl,
           team,
           letter,
         }),
@@ -175,6 +179,19 @@ export function SettingsPage({
                 type="url"
                 value={myMapsUrl}
                 onInput={(e) => setMyMapsUrl(e.currentTarget.value)}
+              />
+            </Field>
+            <Field label={t('settings.applicationTheme')} help={t('settings.applicationThemeHelp')}>
+              <input
+                value={applicationTheme}
+                onInput={(e) => setApplicationTheme(e.currentTarget.value)}
+              />
+            </Field>
+            <Field label={t('settings.logoUrl')} help={t('settings.logoUrlHelp')}>
+              <input
+                type="url"
+                value={logoUrl}
+                onInput={(e) => setLogoUrl(e.currentTarget.value)}
               />
             </Field>
           </div>

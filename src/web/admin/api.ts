@@ -274,6 +274,27 @@ export function saveSelection(slug: string, missionIds: string[]): Promise<Missi
 }
 
 /**
+ * Reads which mission occupied each position of the last UMM export.
+ *
+ * @param slug - Mission Day slug.
+ * @returns The mission identifiers by position.
+ */
+export async function getUmmManifest(slug: string): Promise<string[]> {
+  const body = await request<{ missionIds: string[] }>(`${dayPath(slug)}/umm-manifest`);
+  return body.missionIds;
+}
+
+/**
+ * Remembers the positions of an exported UMM file.
+ *
+ * @param slug - Mission Day slug.
+ * @param missionIds - Mission identifiers by position.
+ */
+export async function saveUmmManifest(slug: string, missionIds: string[]): Promise<void> {
+  await request(`${dayPath(slug)}/umm-manifest`, json('PUT', { missionIds }));
+}
+
+/**
  * Builds the API path of a partner.
  *
  * @param slug - Mission Day slug.

@@ -231,6 +231,31 @@ textarea {
   border-top: 1px solid var(--border);
 }
 
+.exports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.answer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.import-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.import-table td,
+.import-table th {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
 .slug-preview {
   font-weight: 600;
   overflow-wrap: anywhere;

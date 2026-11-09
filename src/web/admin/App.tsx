@@ -9,6 +9,7 @@ import { getMe, getMissionDay, listMissions, listPartners } from './api';
 import { ErrorMessage } from './components/common';
 import { useAsync } from './hooks';
 import type { Route } from './lib/routes';
+import { ExportsPage } from './pages/ExportsPage';
 import { HomePage } from './pages/HomePage';
 import { LetterDefaultsPage } from './pages/LetterDefaultsPage';
 import { MapPage } from './pages/MapPage';
@@ -29,6 +30,7 @@ const TABS: { name: MissionDayRoute['name']; path: string; label: MessageKey }[]
   { name: 'map', path: 'map', label: 'nav.map' },
   { name: 'selection', path: 'selection', label: 'nav.selection' },
   { name: 'partners', path: 'partners', label: 'nav.partners' },
+  { name: 'exports', path: 'exports', label: 'nav.exports' },
   { name: 'settings', path: 'settings', label: 'nav.settings' },
 ];
 
@@ -136,6 +138,15 @@ function MissionDayArea({ route }: { route: MissionDayRoute }) {
         return <SelectionPage missionDay={missionDay} missions={missions} onChange={setMissions} />;
       case 'settings':
         return <SettingsPage missionDay={missionDay} onChange={setMissionDay} />;
+      case 'exports':
+        return (
+          <ExportsPage
+            missionDay={missionDay}
+            missions={missions}
+            partners={partners}
+            onMissionsChange={setMissions}
+          />
+        );
       case 'partners':
         return (
           <PartnersPage

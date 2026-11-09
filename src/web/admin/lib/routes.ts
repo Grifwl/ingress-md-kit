@@ -13,6 +13,7 @@ export type Route =
   | { name: 'partner'; slug: string; partnerId: string }
   | { name: 'map'; slug: string }
   | { name: 'selection'; slug: string }
+  | { name: 'exports'; slug: string }
   | { name: 'settings'; slug: string }
   | { name: 'notFound' };
 
@@ -67,6 +68,9 @@ export function parseRoute(pathname: string): Route {
   }
   if (missionId === undefined && (section === 'map' || section === 'selection')) {
     return { name: section, slug };
+  }
+  if (missionId === undefined && section === 'exports') {
+    return { name: 'exports', slug };
   }
   if (missionId === undefined && section === 'settings') {
     return { name: 'settings', slug };

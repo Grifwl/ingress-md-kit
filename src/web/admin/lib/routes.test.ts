@@ -14,6 +14,7 @@ describe('parseRoute', () => {
     ['/admin/example-2027/missions/m1', { name: 'mission', slug: 'example-2027', missionId: 'm1' }],
     ['/admin/example-2027/partners', { name: 'partners', slug: 'example-2027' }],
     ['/admin/example-2027/partners/p1', { name: 'partner', slug: 'example-2027', partnerId: 'p1' }],
+    ['/admin/example-2027/exports', { name: 'exports', slug: 'example-2027' }],
     ['/admin/example-2027/map', { name: 'map', slug: 'example-2027' }],
     ['/admin/example-2027/selection', { name: 'selection', slug: 'example-2027' }],
     ['/admin/example-2027/settings', { name: 'settings', slug: 'example-2027' }],
