@@ -145,6 +145,7 @@ function MissionDayArea({ route }: { route: MissionDayRoute }) {
             missions={missions}
             partners={partners}
             onMissionsChange={setMissions}
+            onMissionDayChange={setMissionDay}
           />
         );
       case 'partners':

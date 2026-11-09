@@ -30,6 +30,7 @@ import {
   saveLetterDefaults,
   saveMissionDayFile,
   savePhoto,
+  saveSamplePartner,
   saveSelection,
   saveUmmManifest,
   slugExists,
@@ -46,6 +47,7 @@ import {
   parseSelection,
   parseWaypoints,
 } from '../lib/input';
+import { findPartner } from '../lib/partners';
 import { detectFileType, readPngInfo, type FileType } from '../lib/png';
 import {
   PRIVATE_IMMUTABLE,
@@ -228,6 +230,29 @@ scoped.put('/map-screenshot', async (c) => {
 });
 
 scoped.get('/map-screenshot', (c) => serveMissionDayFile(c, 'map_screenshot'));
+
+// The browser composes the picture, since the Worker never processes
+// images; from here on it is an ordinary file served at a fixed address.
+scoped.put('/sample', async (c) => {
+  const missionDay = c.get('missionDay');
+  const partnerId = c.req.query('partnerId') ?? '';
+  if (partnerId !== '') {
+    const partner = await findPartner(c.env.DB, missionDay.id, partnerId);
+    if (partner === null) {
+      throw new HTTPException(404, { message: 'not_found' });
+    }
+    if (partner.status !== 'accepted' || !partner.hasApproval) {
+      throw new HTTPException(403, { message: 'partner_not_approved' });
+    }
+  }
+  const bytes = await readUpload(c, IMAGE_MAX_BYTES);
+  const info = readPngInfo(bytes);
+  if (info === null || info.width !== IMAGE_SIZE_PX || info.height !== IMAGE_SIZE_PX) {
+    throw new HTTPException(415, { message: 'invalid_photo' });
+  }
+  await saveSamplePartner(c.env.DB, missionDay.id, partnerId === '' ? null : partnerId);
+  return storeMissionDayFile(c, 'sample', bytes, 'image/png', missionDay.sampleVersion);
+});
 
 scoped.get('/', (c) => c.json({ ...c.get('missionDay'), role: c.get('role') }));
 

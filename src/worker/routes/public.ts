@@ -11,11 +11,12 @@ import type { AppEnv } from '../env';
 import {
   findMission,
   findMissionDayById,
+  findMissionDayBySlug,
   findMissionDayFile,
   findPhotoKey,
   listMissions,
 } from '../lib/db';
-import { findPartnerByToken, findPartnerFile } from '../lib/partners';
+import { findPartner, findPartnerByToken, findPartnerFile } from '../lib/partners';
 import { buildProposalView } from '../lib/proposal';
 import { serveObject, type AppContext } from './helpers';
 
@@ -125,6 +126,36 @@ publicApi.get('/proposals/:token/map-screenshot', async (c) => {
   }
   return serveObject(c, file.key, file.type, PUBLIC_IMAGE_CACHE);
 });
+
+/**
+ * Answers `/:slug/sample` with the picture sent with the application: a
+ * plain PNG, so that it also works for a program that fetches the address.
+ * If the partner it shows has withdrawn its permission or been removed,
+ * the picture stops being served until a new one is generated.
+ *
+ * @param c - Request context.
+ * @param next - Next handler, for addresses of no Mission Day.
+ * @returns The image, or a 404 page.
+ */
+export const serveSample: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const missionDay = await findMissionDayBySlug(c.env.DB, c.req.param('slug') ?? '');
+  if (missionDay === null) {
+    return next();
+  }
+  const file = await findMissionDayFile(c.env.DB, missionDay.id, 'sample');
+  let allowed = file !== null;
+  if (allowed && missionDay.samplePartnerId !== null) {
+    const partner = await findPartner(c.env.DB, missionDay.id, missionDay.samplePartnerId);
+    allowed = partner !== null && partner.status === 'accepted' && partner.hasApproval;
+  }
+  if (file === null || !allowed) {
+    return c.html(NOT_FOUND_PAGE, 404, { 'X-Robots-Tag': 'noindex' });
+  }
+  return serveObject(c, file.key, file.type, {
+    'Cache-Control': 'public, max-age=300',
+    'X-Robots-Tag': 'noindex',
+  });
+};
 
 /**
  * Answers `/:slug/proposta-:token`. Any of the three words is accepted and

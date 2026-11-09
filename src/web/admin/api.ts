@@ -295,6 +295,23 @@ export async function saveUmmManifest(slug: string, missionIds: string[]): Promi
 }
 
 /**
+ * Stores the picture sent with the application, already composed.
+ *
+ * @param slug - Mission Day slug.
+ * @param image - The 512×512 PNG.
+ * @param partnerId - Partner it shows, or null for the default overlay.
+ * @returns The updated Mission Day.
+ */
+export function uploadSample(
+  slug: string,
+  image: Blob,
+  partnerId: string | null,
+): Promise<MissionDayWithRole> {
+  const query = partnerId === null ? '' : `?partnerId=${encodeURIComponent(partnerId)}`;
+  return request(`${dayPath(slug)}/sample${query}`, { method: 'PUT', body: image });
+}
+
+/**
  * Builds the API path of a partner.
  *
  * @param slug - Mission Day slug.

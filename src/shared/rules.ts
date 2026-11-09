@@ -90,7 +90,8 @@ export type IssueCode =
   | 'application.resPocMissing'
   | 'application.mapLinkMissing'
   | 'application.themeMissing'
-  | 'application.logoLinkMissing';
+  | 'application.sampleMissing'
+  | 'sample.firstPhotoMissing';
 
 /** A problem found by a validator. */
 export interface ValidationIssue {
@@ -343,13 +344,26 @@ export function validateSelection(
 }
 
 /** The exports that end up with Niantic, and so have to be complete. */
-export type NianticExport = 'umm' | 'images' | 'application';
+export type NianticExport = 'umm' | 'images' | 'sample' | 'application';
+
+/**
+ * Problems of the selection that also stop an application. Photos and
+ * portals are not among them: the handbook asks for a single picture until
+ * the overlay is approved, and portals are only needed to build the missions.
+ */
+const APPLICATION_BLOCKING_CODES: readonly IssueCode[] = [
+  'selection.wrongCount',
+  'selection.orderInvalid',
+  'selection.duplicateName',
+  'mission.landmarkMissing',
+  'mission.nameTooLong',
+];
 
 /** What the checks of an export for Niantic look at, beyond the selection. */
 export interface NianticContext {
   missionDay: Pick<
     MissionDay,
-    'hasDefaultOverlay' | 'team' | 'myMapsUrl' | 'applicationTheme' | 'logoUrl'
+    'hasDefaultOverlay' | 'team' | 'myMapsUrl' | 'applicationTheme' | 'hasSample'
   >;
   selected: readonly Mission[];
   partner: Pick<Partner, 'hasApproval' | 'status' | 'hasOverlay'> | null;
@@ -372,6 +386,28 @@ function imageIssues({ missionDay, partner }: NianticContext): ValidationIssue[]
     issues.push({ code: 'partner.notAccepted', severity: 'error' });
   if (!partner.hasApproval) issues.push({ code: 'partner.noApproval', severity: 'error' });
   return issues;
+}
+
+/**
+ * Tells whether a Point of Contact has every answer the form asks for.
+ *
+ * @param person - The Point of Contact.
+ * @returns True when all the fields are filled in.
+ */
+function isCompletePoc(person: NianticContext['missionDay']['team']['enlPoc']): boolean {
+  return [person.codename, person.email, person.contact, person.backupContact].every(
+    (value) => value.trim() !== '',
+  );
+}
+
+/**
+ * Keeps the problems of a selection that stop an application.
+ *
+ * @param issues - Result of `validateSelection`.
+ * @returns The ones that matter at the application stage.
+ */
+export function applicationSelectionIssues(issues: readonly ValidationIssue[]): ValidationIssue[] {
+  return issues.filter((issue) => APPLICATION_BLOCKING_CODES.includes(issue.code));
 }
 
 /**
@@ -400,12 +436,23 @@ export function nianticExportIssues(
     return imageIssues(context);
   }
 
+  if (kind === 'sample') {
+    const issues = imageIssues(context);
+    if (context.selected[0]?.hasPhoto !== true) {
+      issues.push({ code: 'sample.firstPhotoMissing', severity: 'error' });
+    }
+    return issues;
+  }
+
+  // A partner may be named at any stage of the talks: the handbook asks
+  // how far they have got. Its logo is what needs the written permission,
+  // and that is enforced on the images and on the sample picture.
   const { missionDay } = context;
-  const issues = imageIssues(context);
-  if (missionDay.team.enlPoc.codename.trim() === '') {
+  const issues: ValidationIssue[] = [];
+  if (!isCompletePoc(missionDay.team.enlPoc)) {
     issues.push({ code: 'application.enlPocMissing', severity: 'error' });
   }
-  if (missionDay.team.resPoc.codename.trim() === '') {
+  if (!isCompletePoc(missionDay.team.resPoc)) {
     issues.push({ code: 'application.resPocMissing', severity: 'error' });
   }
   if (missionDay.myMapsUrl === null) {
@@ -414,8 +461,8 @@ export function nianticExportIssues(
   if (missionDay.applicationTheme.trim() === '') {
     issues.push({ code: 'application.themeMissing', severity: 'error' });
   }
-  if (missionDay.logoUrl === null) {
-    issues.push({ code: 'application.logoLinkMissing', severity: 'error' });
+  if (!missionDay.hasSample) {
+    issues.push({ code: 'application.sampleMissing', severity: 'error' });
   }
   return issues;
 }

@@ -82,6 +82,9 @@ export function PartnersPage({
               </span>
               <span class="mission-name">{partner.name}</span>
               <span class="muted">{t(`kind.${partner.kind}`)}</span>
+              {missionDay.samplePartnerId === partner.id && (
+                <span class="badge">{t('partners.sampleBadge')}</span>
+              )}
               <span class={statusClass(partner.status)}>
                 {t(`partnerStatus.${partner.status}`)}
               </span>

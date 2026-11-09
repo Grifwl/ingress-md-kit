@@ -4,11 +4,18 @@
  */
 import { fillLetterPlaceholders, resolveLocalized } from '../../../shared/letter';
 import type { Language } from '../../../shared/rules';
-import type { Mission, MissionDay, Partner, TeamContact } from '../../../shared/types';
+import type { Mission, MissionDay, Partner, PointOfContact } from '../../../shared/types';
 
 /** Identifies each answer of the form. */
 export type ApplicationBlockKey =
-  'whyThisCity' | 'theme' | 'attractions' | 'mapLink' | 'logoLink' | 'pointsOfContact' | 'partner';
+  | 'whyThisCity'
+  | 'theme'
+  | 'attractions'
+  | 'mapLink'
+  | 'logoLink'
+  | 'pointsOfContact'
+  | 'difference'
+  | 'partner';
 
 /** One answer ready to paste. */
 export interface ApplicationBlock {
@@ -17,14 +24,20 @@ export interface ApplicationBlock {
 }
 
 /**
- * Formats a person of the team.
+ * Formats a Point of Contact, with the fields in the order of the form,
+ * whose questions are in English.
  *
  * @param faction - Faction label.
- * @param person - Codename and contact.
- * @returns One line of text.
+ * @param person - The Point of Contact.
+ * @returns The text.
  */
-function contactLine(faction: string, person: TeamContact): string {
-  return `${faction}: ${person.codename}${person.contact === '' ? '' : ` (${person.contact})`}`;
+function contactLines(faction: string, person: PointOfContact): string {
+  return [
+    `${faction} codename: ${person.codename}`,
+    `Email: ${person.email}`,
+    `Primary contact: ${person.contact}`,
+    `Backup contact: ${person.backupContact}`,
+  ].join('\n');
 }
 
 /**
@@ -35,6 +48,7 @@ function contactLine(faction: string, person: TeamContact): string {
  * @param partner - The partner, or null when there is none.
  * @param language - Language of the texts.
  * @param partnerStatusLabel - Translated status of the partner.
+ * @param sampleUrl - Address of the picture of the logo/medal.
  * @returns The answers, in the order of the form.
  */
 export function buildApplicationBlocks(
@@ -43,6 +57,7 @@ export function buildApplicationBlocks(
   partner: Partner | null,
   language: Language,
   partnerStatusLabel: string,
+  sampleUrl: string,
 ): ApplicationBlock[] {
   const blocks: ApplicationBlock[] = [
     {
@@ -55,15 +70,18 @@ export function buildApplicationBlocks(
     { key: 'theme', text: missionDay.applicationTheme },
     { key: 'attractions', text: selected.map((mission) => mission.landmark).join('\n') },
     { key: 'mapLink', text: missionDay.myMapsUrl ?? '' },
-    { key: 'logoLink', text: missionDay.logoUrl ?? '' },
+    { key: 'logoLink', text: sampleUrl },
     {
       key: 'pointsOfContact',
       text: [
-        contactLine('ENL', missionDay.team.enlPoc),
-        contactLine('RES', missionDay.team.resPoc),
-      ].join('\n'),
+        contactLines('ENL', missionDay.team.enlPoc),
+        contactLines('RES', missionDay.team.resPoc),
+      ].join('\n\n'),
     },
   ];
+  if (missionDay.applicationDifference.trim() !== '') {
+    blocks.push({ key: 'difference', text: missionDay.applicationDifference });
+  }
   if (partner !== null) {
     blocks.push({ key: 'partner', text: `${partner.name} (${partnerStatusLabel})` });
   }

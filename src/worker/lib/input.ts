@@ -25,6 +25,7 @@ import type {
   LetterSections,
   LocalizedText,
   MissionDayStatus,
+  PointOfContact,
   Team,
   TeamContact,
   Waypoint,
@@ -65,7 +66,7 @@ export interface MissionDayPatch {
   letter?: LetterSections;
   myMapsUrl?: string | null;
   applicationTheme?: string;
-  logoUrl?: string | null;
+  applicationDifference?: string;
 }
 
 /** Fields of a mission that can be edited. */
@@ -253,6 +254,21 @@ function teamContact(value: unknown): TeamContact {
 }
 
 /**
+ * Validates a Point of Contact. The fields added later may be absent.
+ *
+ * @param value - Candidate value.
+ * @returns The Point of Contact.
+ */
+function pointOfContact(value: unknown): PointOfContact {
+  const object = asObject(value);
+  return {
+    ...teamContact(object),
+    email: text(object.email ?? '', 'team'),
+    backupContact: text(object.backupContact ?? '', 'team'),
+  };
+}
+
+/**
  * Validates a whole team.
  *
  * @param value - Candidate value.
@@ -264,8 +280,8 @@ function team(value: unknown): Team {
     badRequest('invalid_team');
   }
   return {
-    enlPoc: teamContact(object.enlPoc),
-    resPoc: teamContact(object.resPoc),
+    enlPoc: pointOfContact(object.enlPoc),
+    resPoc: pointOfContact(object.resPoc),
     others: object.others.map(teamContact),
   };
 }
@@ -353,7 +369,13 @@ export function parseMissionDayPatch(body: unknown): MissionDayPatch {
   if (object.applicationTheme !== undefined) {
     patch.applicationTheme = text(object.applicationTheme, 'application_theme', MAX_LONG_TEXT);
   }
-  if (object.logoUrl !== undefined) patch.logoUrl = optionalWebUrl(object.logoUrl, 'logo_url');
+  if (object.applicationDifference !== undefined) {
+    patch.applicationDifference = text(
+      object.applicationDifference,
+      'application_difference',
+      MAX_LONG_TEXT,
+    );
+  }
   return patch;
 }
 

@@ -329,6 +329,104 @@ describe('partner files', () => {
   });
 });
 
+describe('sample picture', () => {
+  const generate = `/api/admin/mission-days/${SLUG}/sample`;
+  const image = pngHeader(IMAGE_SIZE_PX, 6);
+
+  /**
+   * Creates a partner that has given its signed permission.
+   *
+   * @returns The partner.
+   */
+  async function approvedPartner(): Promise<Partner> {
+    const partner = await createPartner();
+    const pdf = new Uint8Array(40);
+    pdf.set(new TextEncoder().encode('%PDF-1.7'));
+    await partnersApi(`/${partner.id}/approval`, { method: 'PUT', rawBody: pdf });
+    await partnersApi(`/${partner.id}/status`, { method: 'POST', body: { status: 'accepted' } });
+    return partner;
+  }
+
+  /**
+   * Fetches the picture the way a program would: no session, in production.
+   *
+   * @returns The response.
+   */
+  async function fetchSample(): Promise<Response> {
+    return app.fetch(new Request(`https://md.example.org/${SLUG}/sample`), {
+      ...env,
+      ENVIRONMENT: 'production',
+      INSTANCE_ADMINS: '',
+    } as unknown as Env);
+  }
+
+  it('is served as a finished PNG without any session', async () => {
+    expect((await send(generate, { method: 'PUT', rawBody: image })).status).toBe(200);
+    const response = await fetchSample();
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Content-Type')).toBe('image/png');
+    expect(response.headers.get('X-Robots-Tag')).toBe('noindex');
+    expect(new Uint8Array(await response.arrayBuffer())).toEqual(image);
+  });
+
+  it('does not exist until it has been generated', async () => {
+    expect((await fetchSample()).status).toBe(404);
+  });
+
+  it('can only show a partner that has given its permission', async () => {
+    const partner = await createPartner();
+    const response = await send(`${generate}?partnerId=${partner.id}`, {
+      method: 'PUT',
+      rawBody: image,
+    });
+    expect(response.status).toBe(403);
+    expect((await fetchSample()).status).toBe(404);
+  });
+
+  it('marks a single partner, and replaces the previous picture', async () => {
+    const first = await approvedPartner();
+    const second = await approvedPartner();
+    await send(`${generate}?partnerId=${first.id}`, { method: 'PUT', rawBody: image });
+    const response = await send(`${generate}?partnerId=${second.id}`, {
+      method: 'PUT',
+      rawBody: image,
+    });
+    const day = (await response.json()) as { samplePartnerId: string; id: string };
+    expect(day.samplePartnerId).toBe(second.id);
+    const objects = await env.BUCKET.list({ prefix: `mission-days/${day.id}/sample` });
+    expect(objects.objects).toHaveLength(1);
+  });
+
+  it('stops being served if the partner withdraws its permission', async () => {
+    const partner = await approvedPartner();
+    await send(`${generate}?partnerId=${partner.id}`, { method: 'PUT', rawBody: image });
+    expect((await fetchSample()).status).toBe(200);
+    await partnersApi(`/${partner.id}/status`, { method: 'POST', body: { status: 'declined' } });
+    expect((await fetchSample()).status).toBe(404);
+  });
+
+  it('stops being served if the partner is deleted', async () => {
+    const partner = await approvedPartner();
+    await send(`${generate}?partnerId=${partner.id}`, { method: 'PUT', rawBody: image });
+    await partnersApi(`/${partner.id}`, { method: 'DELETE' });
+    expect((await fetchSample()).status).toBe(404);
+  });
+
+  it('refuses anything but a 512×512 PNG', async () => {
+    const response = await send(generate, { method: 'PUT', rawBody: pngHeader(100, 6) });
+    expect(response.status).toBe(415);
+  });
+
+  it('is reserved to members of the Mission Day', async () => {
+    const response = await send(generate, { method: 'PUT', rawBody: image, as: STRANGER });
+    expect(response.status).toBe(404);
+  });
+
+  it('leaves the address of no Mission Day to the static files', async () => {
+    expect(await (await send('/no-such-day/sample')).text()).toBe('<html>page</html>');
+  });
+});
+
 describe('public proposal', () => {
   /**
    * Reads a proposal through the public API.

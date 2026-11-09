@@ -4,6 +4,7 @@ import {
   MISSION_FORMATS,
   WAYPOINTS_MAX,
   WAYPOINTS_MIN,
+  applicationSelectionIssues,
   canExportForNiantic,
   characterCount,
   fullMissionName,
@@ -189,17 +190,19 @@ describe('hasSequenceHint', () => {
 });
 
 describe('nianticExportIssues', () => {
-  const team = {
-    enlPoc: { codename: 'Green', contact: '' },
-    resPoc: { codename: 'Blue', contact: '' },
-    others: [],
+  const poc = {
+    codename: 'Agent',
+    email: 'agent@example.org',
+    contact: '@agent',
+    backupContact: 'other@example.org',
   };
+  const team = { enlPoc: poc, resPoc: poc, others: [] };
   const complete = {
     hasDefaultOverlay: true,
     team,
     myMapsUrl: 'https://example.org/map',
     applicationTheme: 'Heritage',
-    logoUrl: 'https://example.org/logo',
+    hasSample: true,
   };
   const approved = { hasApproval: true, status: 'accepted' as const, hasOverlay: true };
 
@@ -250,24 +253,52 @@ describe('nianticExportIssues', () => {
     ]);
   });
 
-  it('applies the same partner checks to the application', () => {
-    const partner = { ...approved, hasApproval: false };
-    expect(issueCodes('application', { partner })).toEqual(['partner.noApproval']);
+  it('lets the application name a partner at any stage of the talks', () => {
+    const partner = { hasApproval: false, status: 'candidate' as const, hasOverlay: false };
+    expect(issueCodes('application', { partner })).toEqual([]);
   });
 
   it('lists each answer missing from the application', () => {
     const missionDay = {
       ...complete,
-      team: { ...team, enlPoc: { codename: ' ', contact: '' } },
+      team: { ...team, enlPoc: { ...poc, backupContact: ' ' } },
       myMapsUrl: null,
       applicationTheme: '',
-      logoUrl: null,
+      hasSample: false,
     };
     expect(issueCodes('application', { missionDay })).toEqual([
       'application.enlPocMissing',
       'application.mapLinkMissing',
       'application.themeMissing',
-      'application.logoLinkMissing',
+      'application.sampleMissing',
+    ]);
+  });
+
+  it('needs only the photo of the first mission for the sample', () => {
+    const first = validMission({ hasPhoto: true });
+    const second = validMission({ id: 'm2', hasPhoto: false });
+    expect(issueCodes('sample', { selected: [first, second] })).toEqual([]);
+    expect(issueCodes('sample', { selected: [second, first] })).toEqual([
+      'sample.firstPhotoMissing',
+    ]);
+    expect(issueCodes('sample', { selected: [] })).toEqual(['sample.firstPhotoMissing']);
+  });
+
+  it('applies the partner permission checks to the sample', () => {
+    const partner = { ...approved, hasApproval: false };
+    expect(issueCodes('sample', { partner, selected: [validMission()] })).toEqual([
+      'partner.noApproval',
+    ]);
+  });
+});
+
+describe('applicationSelectionIssues', () => {
+  it('ignores photos and portals, which are not needed to apply', () => {
+    const issues = validateSelection(missionDay, [
+      validMission({ hasPhoto: false, waypoints: [] }),
+    ]);
+    expect(applicationSelectionIssues(issues).map((issue) => issue.code)).toEqual([
+      'selection.wrongCount',
     ]);
   });
 });

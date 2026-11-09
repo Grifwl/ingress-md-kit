@@ -36,7 +36,10 @@ interface MissionDayRow {
   map_screenshot_key: string | null;
   map_screenshot_version: number;
   application_theme: string;
-  logo_url: string | null;
+  application_difference: string;
+  sample_key: string | null;
+  sample_version: number;
+  sample_partner_id: string | null;
 }
 
 /** Row of `missions`. */
@@ -65,7 +68,7 @@ interface WaypointRow {
   image_url: string | null;
 }
 
-const EMPTY_CONTACT = { codename: '', contact: '' };
+const EMPTY_POC = { codename: '', contact: '', email: '', backupContact: '' };
 
 // One colour per mission, used on maps and in exports. The list repeats
 // after 24 entries because a route is told apart by its neighbours only.
@@ -122,11 +125,11 @@ function parseLetterJson(json: string): LetterSections {
  * @returns The domain object.
  */
 function toMissionDay(row: MissionDayRow): MissionDay {
+  const storedTeam = JSON.parse(row.team_json) as Partial<Team>;
   const team: Team = {
-    enlPoc: EMPTY_CONTACT,
-    resPoc: EMPTY_CONTACT,
-    others: [],
-    ...(JSON.parse(row.team_json) as Partial<Team>),
+    enlPoc: { ...EMPTY_POC, ...storedTeam.enlPoc },
+    resPoc: { ...EMPTY_POC, ...storedTeam.resPoc },
+    others: storedTeam.others ?? [],
   };
   return {
     id: row.id,
@@ -145,7 +148,10 @@ function toMissionDay(row: MissionDayRow): MissionDay {
     hasMapScreenshot: row.map_screenshot_key !== null,
     mapScreenshotVersion: row.map_screenshot_version,
     applicationTheme: row.application_theme,
-    logoUrl: row.logo_url,
+    applicationDifference: row.application_difference,
+    hasSample: row.sample_key !== null,
+    sampleVersion: row.sample_version,
+    samplePartnerId: row.sample_partner_id,
   };
 }
 
@@ -259,7 +265,45 @@ export async function findMissionDayById(
 }
 
 /** The images stored for a Mission Day as a whole. */
-export type MissionDayFileKind = 'default_overlay' | 'map_screenshot';
+export type MissionDayFileKind = 'default_overlay' | 'map_screenshot' | 'sample';
+
+/**
+ * Finds a Mission Day by its address, regardless of who is asking. Only
+ * for public answers that reveal nothing about it.
+ *
+ * @param db - D1 binding.
+ * @param slug - Mission Day slug.
+ * @returns The Mission Day, or null when it does not exist.
+ */
+export async function findMissionDayBySlug(
+  db: D1Database,
+  slug: string,
+): Promise<MissionDay | null> {
+  const row = await db
+    .prepare('SELECT * FROM mission_days WHERE slug = ?')
+    .bind(slug)
+    .first<MissionDayRow>();
+  return row === null ? null : toMissionDay(row);
+}
+
+/**
+ * Records which partner the sample picture shows. Being one column of the
+ * Mission Day, there can never be more than one.
+ *
+ * @param db - D1 binding.
+ * @param missionDayId - Mission Day being edited.
+ * @param partnerId - The partner, or null for the default overlay.
+ */
+export async function saveSamplePartner(
+  db: D1Database,
+  missionDayId: string,
+  partnerId: string | null,
+): Promise<void> {
+  await db
+    .prepare('UPDATE mission_days SET sample_partner_id = ? WHERE id = ?')
+    .bind(partnerId, missionDayId)
+    .run();
+}
 
 /**
  * Reads where an image of a Mission Day is stored. `kind` is a literal
@@ -400,7 +444,8 @@ export async function updateMissionDay(
     .prepare(
       `UPDATE mission_days
        SET city = ?, year = ?, date = ?, format = ?, status = ?,
-           team_json = ?, letter_json = ?, my_maps_url = ?, application_theme = ?, logo_url = ?
+           team_json = ?, letter_json = ?, my_maps_url = ?, application_theme = ?,
+           application_difference = ?
        WHERE id = ?`,
     )
     .bind(
@@ -413,7 +458,7 @@ export async function updateMissionDay(
       JSON.stringify(next.letter),
       next.myMapsUrl,
       next.applicationTheme,
-      next.logoUrl,
+      next.applicationDifference,
       missionDay.id,
     )
     .run();

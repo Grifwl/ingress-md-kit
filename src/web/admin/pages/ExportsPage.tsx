@@ -6,6 +6,7 @@ import type { ComponentChildren } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import {
   LANGUAGES,
+  applicationSelectionIssues,
   canExportForNiantic,
   fullMissionName,
   nianticExportIssues,
@@ -14,16 +15,16 @@ import {
   type NianticContext,
   type ValidationIssue,
 } from '../../../shared/rules';
-import type { Mission, MissionDay, Partner } from '../../../shared/types';
+import type { Mission, MissionDay, MissionDayWithRole, Partner } from '../../../shared/types';
 import { useI18n } from '../../i18n';
-import type { MessageKey } from '../../i18n/messages';
+import { translate, type MessageKey } from '../../i18n/messages';
 import { composeImage } from '../../lib/compose';
 import { buildApplicationBlocks } from '../../lib/exports/application';
 import { downloadFile } from '../../lib/exports/download';
 import { buildKml, buildMissionSheet } from '../../lib/exports/sheets';
 import { buildZip, missionImageName, type ZipEntry } from '../../lib/exports/zip';
 import { UMM_MIME_TYPE, buildUmmFile, ummFileName } from '../../lib/umm';
-import { defaultOverlayUrl, partnerFileUrl, photoUrl, saveUmmManifest } from '../api';
+import { defaultOverlayUrl, partnerFileUrl, photoUrl, saveUmmManifest, uploadSample } from '../api';
 import { ErrorMessage, Field, IssueList } from '../components/common';
 import { UmmImport } from '../components/UmmImport';
 import { candidatesForList, selectedInOrder } from '../lib/selection';
@@ -44,6 +45,7 @@ function ExportCard({
   blocked,
   onRun,
   progress,
+  actionLabel,
   children,
 }: {
   title: string;
@@ -51,6 +53,7 @@ function ExportCard({
   blocked: boolean;
   onRun: () => Promise<void>;
   progress?: string;
+  actionLabel?: string;
   children?: ComponentChildren;
 }) {
   const { t } = useI18n();
@@ -77,7 +80,7 @@ function ExportCard({
       {children}
       <ErrorMessage error={error} />
       <button type="button" class="button primary" disabled={blocked || busy} onClick={run}>
-        {busy ? (progress ?? t('exports.generating')) : t('exports.download')}
+        {busy ? (progress ?? t('exports.generating')) : (actionLabel ?? t('exports.download'))}
       </button>
     </section>
   );
@@ -124,11 +127,13 @@ export function ExportsPage({
   missions,
   partners,
   onMissionsChange,
+  onMissionDayChange,
 }: {
   missionDay: MissionDay;
   missions: readonly Mission[];
   partners: readonly Partner[];
   onMissionsChange: (missions: Mission[]) => void;
+  onMissionDayChange: (missionDay: MissionDayWithRole) => void;
 }) {
   const { t, tDynamic, language: uiLanguage } = useI18n();
   const [partnerId, setPartnerId] = useState('');
@@ -141,11 +146,30 @@ export function ExportsPage({
     () => validateSelection(missionDay, missions),
     [missionDay, missions],
   );
-  const context: NianticContext = { missionDay, selected, partner };
+
+  // The picture stops being served if the partner it shows withdraws its
+  // permission, so here it only counts while that address really works.
+  const samplePartner = partners.find((item) => item.id === missionDay.samplePartnerId);
+  const sampleAvailable =
+    missionDay.hasSample &&
+    (missionDay.samplePartnerId === null ||
+      (samplePartner?.status === 'accepted' && samplePartner.hasApproval));
+  const sampleUrl = `${location.origin}/${missionDay.slug}/sample`;
+
+  const context: NianticContext = {
+    missionDay: { ...missionDay, hasSample: sampleAvailable },
+    selected,
+    partner,
+  };
 
   const ummIssues = nianticExportIssues('umm', context);
   const imageIssues = nianticExportIssues('images', context);
-  const applicationIssues = nianticExportIssues('application', context);
+  const sampleIssues = nianticExportIssues('sample', context);
+  const applicationIssues = [
+    ...applicationSelectionIssues(selectionIssues),
+    ...nianticExportIssues('application', context),
+  ];
+  const applicationBlocked = !canExportForNiantic(applicationIssues);
 
   /**
    * Tells whether an export for Niantic has to be refused.
@@ -180,12 +204,19 @@ export function ExportsPage({
     downloadUmm(list);
   };
 
+  const overlayUrl =
+    partner === null
+      ? defaultOverlayUrl(missionDay)
+      : partnerFileUrl(missionDay.slug, partner, 'overlay');
+
+  /** Composes the first mission with its overlay and stores the result. */
+  const generateSample = async () => {
+    const image = await composeImage(photoUrl(missionDay.slug, selected[0]!), overlayUrl);
+    onMissionDayChange(await uploadSample(missionDay.slug, image, partner?.id ?? null));
+  };
+
   /** Composes every selected image with its overlay and zips them. */
   const exportImages = async () => {
-    const overlayUrl =
-      partner === null
-        ? defaultOverlayUrl(missionDay)
-        : partnerFileUrl(missionDay.slug, partner, 'overlay');
     const entries: ZipEntry[] = [];
     try {
       for (const [index, mission] of selected.entries()) {
@@ -203,14 +234,15 @@ export function ExportsPage({
     downloadFile(buildZip(entries), `${missionDay.slug}-images-${suffix}.zip`, 'application/zip');
   };
 
-  const answers = isBlocked(applicationIssues)
+  const answers = applicationBlocked
     ? []
     : buildApplicationBlocks(
         missionDay,
         selected,
         partner,
         language,
-        partner === null ? '' : t(`partnerStatus.${partner.status}`),
+        partner === null ? '' : translate(language, `partnerStatus.${partner.status}`),
+        sampleUrl,
       );
 
   /**
@@ -260,6 +292,35 @@ export function ExportsPage({
           <IssueList issues={selectionIssues} missions={missions} missionDay={missionDay} />
         )}
       </section>
+
+      <ExportCard
+        title={t('exports.sampleTitle')}
+        help={t('exports.sampleHelp')}
+        blocked={!canExportForNiantic(sampleIssues)}
+        onRun={generateSample}
+        actionLabel={t('exports.sampleGenerate')}
+      >
+        {sampleAvailable && (
+          <div class="sample-current">
+            <img
+              class="file-preview"
+              src={`${sampleUrl}?v=${missionDay.sampleVersion}`}
+              alt={t('exports.sampleTitle')}
+            />
+            <div>
+              <p>
+                {t('exports.sampleShows', {
+                  partner: samplePartner?.name ?? t('exports.sampleDefaultOverlay'),
+                })}
+              </p>
+              <a href={sampleUrl} target="_blank" rel="noopener">
+                {sampleUrl}
+              </a>
+            </div>
+          </div>
+        )}
+        {blockers(sampleIssues)}
+      </ExportCard>
 
       <div class="exports-grid">
         <ExportCard
@@ -317,9 +378,6 @@ export function ExportsPage({
         <h2>{t('exports.applicationTitle')}</h2>
         <p class="muted">{t('exports.applicationHelp')}</p>
         {blockers(applicationIssues)}
-        {isBlocked(applicationIssues) && applicationIssues.length === 0 && (
-          <p class="alert">{t('exports.applicationBlocked')}</p>
-        )}
         {answers.map((answer) => (
           <Answer
             key={answer.key}

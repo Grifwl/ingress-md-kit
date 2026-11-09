@@ -353,19 +353,24 @@ describe('missions', () => {
 });
 
 describe('application answers', () => {
-  it('saves the theme and the logo link', async () => {
+  it('saves the theme and what makes it different', async () => {
     const path = '/mission-days/example-2027';
-    const body = { applicationTheme: 'Heritage', logoUrl: 'https://example.org/logo.png' };
+    const body = { applicationTheme: 'Heritage', applicationDifference: 'New routes.' };
     await call(path, { method: 'PATCH', body });
     expect(await (await call(path)).json()).toMatchObject(body);
   });
 
-  it('refuses a logo link that is not a web address', async () => {
-    const response = await call('/mission-days/example-2027', {
-      method: 'PATCH',
-      body: { logoUrl: 'javascript:alert(1)' },
-    });
-    expect(response.status).toBe(400);
+  it('keeps every field of a Point of Contact', async () => {
+    const path = '/mission-days/example-2027';
+    const poc = {
+      codename: 'Agent',
+      contact: '@agent',
+      email: 'agent@example.org',
+      backupContact: 'other@example.org',
+    };
+    await call(path, { method: 'PATCH', body: { team: { enlPoc: poc, resPoc: poc, others: [] } } });
+    const saved = (await (await call(path)).json()) as { team: { enlPoc: unknown } };
+    expect(saved.team.enlPoc).toEqual(poc);
   });
 });
 

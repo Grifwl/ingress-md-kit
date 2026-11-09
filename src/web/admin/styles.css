@@ -231,6 +231,14 @@ textarea {
   border-top: 1px solid var(--border);
 }
 
+.sample-current {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  overflow-wrap: anywhere;
+}
+
 .exports-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

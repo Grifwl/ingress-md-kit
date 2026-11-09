@@ -7,6 +7,7 @@ import type {
   LetterSections,
   MissionDayStatus,
   MissionDayWithRole,
+  PointOfContact,
   Team,
   TeamContact,
 } from '../../../shared/types';
@@ -59,6 +60,51 @@ function ContactInputs({
 }
 
 /**
+ * Inputs for a faction's Point of Contact: what the application form asks.
+ *
+ * @param props - Current value and change handler.
+ * @returns The inputs.
+ */
+function PocInputs({
+  value,
+  onChange,
+}: {
+  value: PointOfContact;
+  onChange: (value: PointOfContact) => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <div class="grid-2">
+      <Field label={t('settings.codename')}>
+        <input
+          value={value.codename}
+          onInput={(e) => onChange({ ...value, codename: e.currentTarget.value })}
+        />
+      </Field>
+      <Field label={t('settings.email')}>
+        <input
+          type="email"
+          value={value.email}
+          onInput={(e) => onChange({ ...value, email: e.currentTarget.value })}
+        />
+      </Field>
+      <Field label={t('settings.primaryContact')} help={t('settings.contactMethodHelp')}>
+        <input
+          value={value.contact}
+          onInput={(e) => onChange({ ...value, contact: e.currentTarget.value })}
+        />
+      </Field>
+      <Field label={t('settings.backupContact')} help={t('settings.contactMethodHelp')}>
+        <input
+          value={value.backupContact}
+          onInput={(e) => onChange({ ...value, backupContact: e.currentTarget.value })}
+        />
+      </Field>
+    </div>
+  );
+}
+
+/**
  * The settings screen.
  *
  * @param props - The Mission Day and a callback receiving saved changes.
@@ -79,7 +125,9 @@ export function SettingsPage({
   const [status, setStatus] = useState(missionDay.status);
   const [myMapsUrl, setMyMapsUrl] = useState(missionDay.myMapsUrl ?? '');
   const [applicationTheme, setApplicationTheme] = useState(missionDay.applicationTheme);
-  const [logoUrl, setLogoUrl] = useState(missionDay.logoUrl ?? '');
+  const [applicationDifference, setApplicationDifference] = useState(
+    missionDay.applicationDifference,
+  );
   const [team, setTeam] = useState<Team>(missionDay.team);
   const [letter, setLetter] = useState<LetterSections>(missionDay.letter);
   const [busy, setBusy] = useState(false);
@@ -106,7 +154,7 @@ export function SettingsPage({
           status,
           myMapsUrl: myMapsUrl === '' ? null : myMapsUrl,
           applicationTheme,
-          logoUrl: logoUrl === '' ? null : logoUrl,
+          applicationDifference,
           team,
           letter,
         }),
@@ -187,11 +235,11 @@ export function SettingsPage({
                 onInput={(e) => setApplicationTheme(e.currentTarget.value)}
               />
             </Field>
-            <Field label={t('settings.logoUrl')} help={t('settings.logoUrlHelp')}>
-              <input
-                type="url"
-                value={logoUrl}
-                onInput={(e) => setLogoUrl(e.currentTarget.value)}
+            <Field label={t('settings.difference')} help={t('settings.differenceHelp')}>
+              <textarea
+                rows={2}
+                value={applicationDifference}
+                onInput={(e) => setApplicationDifference(e.currentTarget.value)}
               />
             </Field>
           </div>
@@ -200,9 +248,9 @@ export function SettingsPage({
         <section class="card">
           <h2>{t('settings.team')}</h2>
           <h3>{t('settings.enlPoc')}</h3>
-          <ContactInputs value={team.enlPoc} onChange={(enlPoc) => setTeam({ ...team, enlPoc })} />
+          <PocInputs value={team.enlPoc} onChange={(enlPoc) => setTeam({ ...team, enlPoc })} />
           <h3>{t('settings.resPoc')}</h3>
-          <ContactInputs value={team.resPoc} onChange={(resPoc) => setTeam({ ...team, resPoc })} />
+          <PocInputs value={team.resPoc} onChange={(resPoc) => setTeam({ ...team, resPoc })} />
           <h3>{t('settings.others')}</h3>
           {team.others.map((other, index) => (
             <div key={index} class="row-end">
