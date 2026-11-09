@@ -209,5 +209,11 @@
   "proposal.mosaic": "El conjunt de missions",
   "proposal.mosaicHelp": "Les imatges mostren el logotip aplicat com a exemple.",
   "proposal.map": "Mapa de les missions",
-  "proposal.openMyMaps": "Obre el mapa compartit"
+  "proposal.openMyMaps": "Obre el mapa compartit",
+  "proposal.consent": "Conformitat",
+  "proposal.consentText": "L'entitat {partner} autoritza l'ús del seu logotip a les imatges de les missions del Mission Day {city} {year}, amb les condicions descrites en aquest document.",
+  "proposal.consentName": "Nom i cognoms",
+  "proposal.consentPosition": "Càrrec",
+  "proposal.consentDate": "Data",
+  "proposal.consentSignature": "Signatura"
 }

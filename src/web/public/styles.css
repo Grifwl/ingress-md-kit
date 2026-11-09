@@ -140,6 +140,46 @@ a {
   background: var(--accent-soft);
 }
 
+.consent {
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  break-inside: avoid;
+}
+
+.consent-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem 2rem;
+  margin: 1.25rem 0 0;
+}
+
+.consent-field dt {
+  color: var(--muted);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 0.85rem;
+}
+
+/* The empty lines are where the partner writes by hand. */
+.consent-field dd {
+  height: 2rem;
+  margin: 0;
+  border-bottom: 1px solid var(--text);
+}
+
+.consent-field.signature {
+  grid-column: 1 / -1;
+}
+
+.consent-field.signature dd {
+  height: 5.5rem;
+}
+
 .medal {
   width: 100%;
   aspect-ratio: 1;

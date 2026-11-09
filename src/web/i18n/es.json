@@ -209,5 +209,11 @@
   "proposal.mosaic": "El conjunto de misiones",
   "proposal.mosaicHelp": "Las imágenes muestran el logotipo aplicado como ejemplo.",
   "proposal.map": "Mapa de las misiones",
-  "proposal.openMyMaps": "Abrir el mapa compartido"
+  "proposal.openMyMaps": "Abrir el mapa compartido",
+  "proposal.consent": "Conformidad",
+  "proposal.consentText": "La entidad {partner} autoriza el uso de su logotipo en las imágenes de las misiones del Mission Day {city} {year}, en las condiciones descritas en este documento.",
+  "proposal.consentName": "Nombre y apellidos",
+  "proposal.consentPosition": "Cargo",
+  "proposal.consentDate": "Fecha",
+  "proposal.consentSignature": "Firma"
 }

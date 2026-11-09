@@ -18,13 +18,19 @@ import { sketchRoute } from './routeSketch';
 const SKETCH_SIZE = 120;
 const SKETCH_PADDING = 12;
 
-/** Sections of the letter that come before the permission request. */
+/** Sections of the letter common to every partner of the Mission Day. */
 const INTRODUCTION: { key: keyof ProposalView['letter']; title: MessageKey }[] = [
   { key: 'aboutUs', title: 'settings.aboutUs' },
   { key: 'whatIsIngress', title: 'settings.whatIsIngress' },
   { key: 'whatIsMissionDay', title: 'settings.whatIsMissionDay' },
   { key: 'whyThisCity', title: 'settings.whyThisCity' },
-  { key: 'whyYou', title: 'proposal.whyYou' },
+];
+
+/** Fields the partner completes by hand in the conformity block. */
+const CONSENT_FIELDS: MessageKey[] = [
+  'proposal.consentName',
+  'proposal.consentPosition',
+  'proposal.consentDate',
 ];
 
 /**
@@ -40,19 +46,59 @@ function readAddress(): { token: string; language: Language } | null {
 }
 
 /**
- * A titled block of the letter; empty texts are left out altogether.
+ * A block of the letter; empty texts are left out altogether.
  *
- * @param props - Title and text.
+ * @param props - Optional title, and the text.
  * @returns The block element, or nothing.
  */
-function LetterBlock({ title, text }: { title: string; text: string }) {
+function LetterBlock({ title, text }: { title?: string; text: string }) {
   if (text.trim() === '') {
     return null;
   }
   return (
     <div class="letter-block">
-      <h2>{title}</h2>
+      {title !== undefined && <h2>{title}</h2>}
       <p class="prose">{text}</p>
+    </div>
+  );
+}
+
+/**
+ * Block the partner can sign to give its written approval, either by hand
+ * on a printed copy or with an electronic signature on the saved PDF.
+ *
+ * @param props - The proposal and a translation function.
+ * @returns The block element.
+ */
+function ConsentBlock({
+  view,
+  t,
+}: {
+  view: ProposalView;
+  t: (key: MessageKey, params?: MessageParams) => string;
+}) {
+  return (
+    <div class="consent">
+      <h2>{t('proposal.consent')}</h2>
+      <p class="prose">
+        {t('proposal.consentText', {
+          partner: view.partnerName,
+          city: view.city,
+          year: view.year,
+        })}
+      </p>
+      <dl class="consent-fields">
+        {CONSENT_FIELDS.map((field) => (
+          <div key={field} class="consent-field">
+            <dt>{t(field)}</dt>
+            <dd />
+          </div>
+        ))}
+        <div class="consent-field signature">
+          <dt>{t('proposal.consentSignature')}</dt>
+          <dd />
+        </div>
+      </dl>
     </div>
   );
 }
@@ -163,6 +209,9 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
 
   const title = t('proposal.title', { city: view.city, year: view.year });
   const overlayUrl = view.hasOverlay ? `${base}/overlay?v=${view.overlayVersion}` : null;
+  const hasRequest = view.letter.logoRequest.trim() !== '';
+  const hasPartnerSheet =
+    hasRequest || view.letter.whyYou.trim() !== '' || view.letter.closing.trim() !== '';
   const mapMissions = useMemo(
     () => view.missions.map(({ id, colour, waypoints }) => ({ id, colour, waypoints })),
     [view],
@@ -194,18 +243,18 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
         ))}
       </Sheet>
 
-      {view.letter.logoRequest.trim() !== '' && (
+      {/* Everything specific to this partner goes on a sheet of its own. */}
+      {hasPartnerSheet && (
         <Sheet class="request">
-          <div class="request-box">
-            <h2>{t('proposal.logoRequest')}</h2>
-            <p class="prose">{view.letter.logoRequest}</p>
-          </div>
-          <LetterBlock title="" text={view.letter.closing} />
-        </Sheet>
-      )}
-      {view.letter.logoRequest.trim() === '' && view.letter.closing.trim() !== '' && (
-        <Sheet>
-          <LetterBlock title="" text={view.letter.closing} />
+          <LetterBlock title={t('proposal.whyYou')} text={view.letter.whyYou} />
+          {hasRequest && (
+            <div class="request-box">
+              <h2>{t('proposal.logoRequest')}</h2>
+              <p class="prose">{view.letter.logoRequest}</p>
+            </div>
+          )}
+          <LetterBlock text={view.letter.closing} />
+          {hasRequest && <ConsentBlock view={view} t={t} />}
         </Sheet>
       )}
 
