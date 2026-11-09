@@ -20,6 +20,18 @@ export function selectedInOrder(missions: readonly Mission[]): Mission[] {
 }
 
 /**
+ * Orders the list of candidates: the selected missions first, in their
+ * recommended order, so the list agrees with every other screen, and then
+ * the rest in the order they were received, which is creation order.
+ *
+ * @param missions - All candidates, in creation order.
+ * @returns The same missions, ready to list.
+ */
+export function candidatesForList(missions: readonly Mission[]): Mission[] {
+  return [...selectedInOrder(missions), ...missions.filter((mission) => !mission.selected)];
+}
+
+/**
  * Places a mission at a position of the selection, adding it if needed.
  *
  * @param ids - Current selection, in order.

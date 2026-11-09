@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Mission } from '../../../shared/types';
-import { applySelection, placeInSelection, selectedInOrder } from './selection';
+import { applySelection, candidatesForList, placeInSelection, selectedInOrder } from './selection';
 
 /**
  * Builds a mission with only the fields these functions read.
@@ -32,6 +32,23 @@ describe('selectedInOrder', () => {
   it('sorts selected missions and leaves out the rest', () => {
     const missions = [mission('b', 2), mission('x', null), mission('a', 1)];
     expect(selectedInOrder(missions).map((item) => item.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('candidatesForList', () => {
+  it('puts selected missions first in order, then the rest as received', () => {
+    const missions = [
+      mission('first-created', 2),
+      mission('not-selected-a', null),
+      mission('second-created', 1),
+      mission('not-selected-b', null),
+    ];
+    expect(candidatesForList(missions).map((item) => item.id)).toEqual([
+      'second-created',
+      'first-created',
+      'not-selected-a',
+      'not-selected-b',
+    ]);
   });
 });
 

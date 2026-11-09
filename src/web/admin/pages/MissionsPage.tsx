@@ -7,6 +7,7 @@ import type { Mission, MissionDay } from '../../../shared/types';
 import { useI18n } from '../../i18n';
 import { createMission, photoUrl } from '../api';
 import { ErrorMessage } from '../components/common';
+import { candidatesForList } from '../lib/selection';
 import { Link, navigate } from '../router';
 
 /**
@@ -68,7 +69,7 @@ export function MissionsPage({
       <ErrorMessage error={error} />
       {missions.length === 0 && <p class="muted">{t('missions.empty')}</p>}
       <ul class="mission-list">
-        {missions.map((mission) => {
+        {candidatesForList(missions).map((mission) => {
           const problems = validateMission(mission, missionDay).length;
           return (
             <li key={mission.id}>
