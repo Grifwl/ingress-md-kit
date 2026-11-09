@@ -1,5 +1,7 @@
 # Ingress MD Kit
 
+Languages: **English** · [Català](README.ca.md) · [Español](README.es.md)
+
 Plan an **Ingress Mission Day** from idea to application: candidate missions and routes, partner proposals, mission images with the partner overlay, and the exports you need for the Niantic application and the Mission Authoring Tool.
 
 Self-hosted on **Cloudflare** (Workers + D1 + R2 + Access). Everything fits in the free tier. Clone it, deploy it under your own (sub)domain and plan your own city.
@@ -122,6 +124,20 @@ Then, in the Cloudflare dashboard:
 
 `wrangler.toml` is git-ignored: your domain, IDs and data never end up in the repository.
 
+Before the first deploy, set `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` and `INSTANCE_ADMINS` (comma-separated emails of those who can create Mission Days) in `wrangler.toml`. The admin area refuses everyone until they are set.
+
+### Local development
+
+```bash
+cp wrangler.example.toml wrangler.toml
+cp .dev.vars.example .dev.vars
+npm run db:migrate:local
+npm run seed:local          # fictional demo Mission Day
+npm run dev                 # then open /admin
+```
+
+`.dev.vars` sets `ENVIRONMENT=dev`, the only mode in which the admin area skips Cloudflare Access.
+
 ---
 
 ## Typical workflow
@@ -175,7 +191,7 @@ The mission sheet (CSV) is still there as a printable checklist.
 
 ## Roadmap
 
-- [ ] v0.1 — Mission Day settings, mission manager, map, selection/order, mosaic
+- [x] v0.1 — Mission Day settings, mission manager, map, selection/order, mosaic
 - [ ] v0.2 — Partners, overlay composer, public proposal page, PDF print
 - [ ] v0.3 — UMM import/export, other exports (PNG ZIP, mission sheet, KML, application helper)
 - [ ] v0.4 — (optional) own IITC plugin with live sync
