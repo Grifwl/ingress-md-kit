@@ -14,6 +14,7 @@ const LETTER_SECTIONS: { key: keyof LetterSections; label: MessageKey }[] = [
   { key: 'whatIsIngress', label: 'settings.whatIsIngress' },
   { key: 'whatIsMissionDay', label: 'settings.whatIsMissionDay' },
   { key: 'whyThisCity', label: 'settings.whyThisCity' },
+  { key: 'whyYou', label: 'settings.whyYou' },
   { key: 'logoRequest', label: 'settings.logoRequest' },
   { key: 'closing', label: 'settings.closing' },
 ];

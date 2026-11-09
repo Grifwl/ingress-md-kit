@@ -169,6 +169,7 @@ describe('partners', () => {
       whatIsIngress: {},
       whatIsMissionDay: {},
       whyThisCity: {},
+      whyYou: {},
       logoRequest: { ca: 'Ens deixeu el logotip, {partner}?' },
       closing: {},
     };
@@ -188,6 +189,31 @@ describe('partners', () => {
     });
     const read = (await (await partnersApi(`/${partner.id}`)).json()) as Partner;
     expect(read.logoRequest).toEqual({ ca: 'Text propi.' });
+  });
+
+  it('copies the "why you" text of the Mission Day, per language', async () => {
+    const whyYou = { ca: 'Perquè sou {partner}.', es: 'Porque sois {partner}.' };
+    const letter = {
+      aboutUs: {},
+      whatIsIngress: {},
+      whatIsMissionDay: {},
+      whyThisCity: {},
+      whyYou,
+      logoRequest: {},
+      closing: {},
+    };
+    await send(`/api/admin/mission-days/${SLUG}`, { method: 'PATCH', body: { letter } });
+    expect((await createPartner()).whyYou).toEqual(whyYou);
+  });
+
+  it('shows the "why you" text in the language of the letter', async () => {
+    const partner = await createPartner({
+      letterLanguage: 'es',
+      whyYou: { ca: 'En català', es: 'Para {partner}' },
+    });
+    const response = await send(`/api/public/proposals/${partner.proposalToken}`);
+    const view = (await response.json()) as ProposalView;
+    expect(view.letter.whyYou).toBe('Para The Museum');
   });
 
   it('refuses invalid fields', async () => {
@@ -339,6 +365,7 @@ describe('public proposal', () => {
       whatIsIngress: {},
       whatIsMissionDay: {},
       whyThisCity: {},
+      whyYou: {},
       logoRequest: { ca: 'Ens deixeu el logotip, {partner}?' },
       closing: {},
     };

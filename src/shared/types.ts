@@ -38,6 +38,7 @@ export interface LetterSections {
   whatIsIngress: LocalizedText;
   whatIsMissionDay: LocalizedText;
   whyThisCity: LocalizedText;
+  whyYou: LocalizedText;
   logoRequest: LocalizedText;
   closing: LocalizedText;
 }
@@ -112,9 +113,9 @@ export interface PartnerStatusChange {
 }
 
 /**
- * An entity asked to let the Mission Day use its logo. `logoRequest` holds
- * the permission request, copied from the Mission Day when the partner is
- * created so that it can be adapted to this partner alone.
+ * An entity asked to let the Mission Day use its logo. `whyYou` and
+ * `logoRequest` are copied from the Mission Day when the partner is
+ * created, so that they can be adapted to this partner alone.
  */
 export interface Partner {
   id: string;
@@ -123,7 +124,7 @@ export interface Partner {
   kind: PartnerKind;
   contactPerson: string;
   contactEmail: string;
-  whyYou: string;
+  whyYou: LocalizedText;
   logoRequest: LocalizedText;
   letterLanguage: Language;
   proposalToken: string;

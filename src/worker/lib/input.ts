@@ -80,7 +80,7 @@ export interface PartnerPatch {
   kind?: PartnerKind;
   contactPerson?: string;
   contactEmail?: string;
-  whyYou?: string;
+  whyYou?: LocalizedText;
   logoRequest?: LocalizedText;
   letterLanguage?: Language;
 }
@@ -281,6 +281,7 @@ function letter(value: unknown): LetterSections {
     whatIsIngress: localizedText(object.whatIsIngress, 'letter'),
     whatIsMissionDay: localizedText(object.whatIsMissionDay, 'letter'),
     whyThisCity: localizedText(object.whyThisCity, 'letter'),
+    whyYou: localizedText(object.whyYou, 'letter'),
     logoRequest: localizedText(object.logoRequest, 'letter'),
     closing: localizedText(object.closing, 'letter'),
   };
@@ -398,7 +399,7 @@ export function parsePartnerPatch(body: unknown): PartnerPatch {
       badRequest('invalid_contact_email');
     }
   }
-  if (object.whyYou !== undefined) patch.whyYou = text(object.whyYou, 'why_you', MAX_LONG_TEXT);
+  if (object.whyYou !== undefined) patch.whyYou = localizedText(object.whyYou, 'why_you');
   if (object.logoRequest !== undefined) {
     patch.logoRequest = localizedText(object.logoRequest, 'logo_request');
   }

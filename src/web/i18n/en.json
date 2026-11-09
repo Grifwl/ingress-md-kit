@@ -168,7 +168,6 @@
   "partner.letterLanguage": "Language of the letter",
   "partner.whyYou": "Why this entity",
   "partner.logoRequest": "Logo permission request",
-  "partner.logoRequestHelp": "Copied from the Mission Day's texts when the partner was created. Changes here affect only this partner. It is shown in the language of the letter.",
   "partner.status": "Status of the conversation",
   "partner.statusNew": "New status",
   "partner.statusNote": "Note",
@@ -215,5 +214,8 @@
   "proposal.consentName": "Full name",
   "proposal.consentPosition": "Position",
   "proposal.consentDate": "Date",
-  "proposal.consentSignature": "Signature"
+  "proposal.consentSignature": "Signature",
+  "settings.whyYou": "Why this entity",
+  "partner.inheritedTextHelp": "Copied from the Mission Day's texts when the partner was created. Changes here affect only this partner. It is shown in the language of the letter.",
+  "proposal.mapCredit": "Maps: © OpenStreetMap contributors"
 }

@@ -206,7 +206,7 @@ a {
 
 .mission {
   display: grid;
-  grid-template-columns: 96px 1fr 96px;
+  grid-template-columns: 96px 1fr 128px;
   gap: 1rem;
   align-items: center;
   padding-bottom: 1rem;
@@ -220,8 +220,11 @@ a {
 
 .route-sketch {
   display: block;
-  width: 96px;
-  height: 96px;
+  width: 128px;
+  height: 128px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--desk);
 }
 
 .map {
@@ -292,6 +295,29 @@ a {
 
   .sheet.cover {
     break-before: auto;
+  }
+
+  /*
+   * Six rows per sheet: the height leaves room on the first sheet for the
+   * section title, and is too tall for a seventh row on any sheet.
+   */
+  .missions {
+    display: block;
+  }
+
+  .mission {
+    grid-template-columns: 36mm 1fr 36mm;
+    height: 41mm;
+    padding-bottom: 0;
+  }
+
+  .mission.sheet-end:not(:last-child) {
+    break-after: page;
+  }
+
+  .route-sketch {
+    width: 36mm;
+    height: 36mm;
   }
 
   /* Map tiles print unreliably, so a screenshot replaces them when there is one. */

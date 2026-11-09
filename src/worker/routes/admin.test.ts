@@ -240,6 +240,7 @@ describe('default letter texts', () => {
     whatIsIngress: { en: 'A game.' },
     whatIsMissionDay: {},
     whyThisCity: {},
+    whyYou: {},
     logoRequest: { ca: 'Ens deixeu fer servir el logotip?' },
     closing: {},
   };

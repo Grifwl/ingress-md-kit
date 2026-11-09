@@ -168,7 +168,6 @@
   "partner.letterLanguage": "Idioma de la carta",
   "partner.whyYou": "Por qué esta entidad",
   "partner.logoRequest": "Petición de uso del logotipo",
-  "partner.logoRequestHelp": "Se ha copiado de los textos del Mission Day al crear el colaborador. Lo que cambies aquí solo le afecta a él. Se muestra en el idioma de la carta.",
   "partner.status": "Estado de la conversación",
   "partner.statusNew": "Estado nuevo",
   "partner.statusNote": "Nota",
@@ -215,5 +214,8 @@
   "proposal.consentName": "Nombre y apellidos",
   "proposal.consentPosition": "Cargo",
   "proposal.consentDate": "Fecha",
-  "proposal.consentSignature": "Firma"
+  "proposal.consentSignature": "Firma",
+  "settings.whyYou": "Por qué esta entidad",
+  "partner.inheritedTextHelp": "Se ha copiado de los textos del Mission Day al crear el colaborador. Lo que cambies aquí solo le afecta a él. Se muestra en el idioma de la carta.",
+  "proposal.mapCredit": "Mapas: © colaboradores de OpenStreetMap"
 }

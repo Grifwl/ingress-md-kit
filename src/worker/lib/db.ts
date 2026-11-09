@@ -106,6 +106,7 @@ function parseLetterJson(json: string): LetterSections {
     whatIsIngress: {},
     whatIsMissionDay: {},
     whyThisCity: {},
+    whyYou: {},
     logoRequest: {},
     closing: {},
     ...(JSON.parse(json) as Partial<LetterSections>),

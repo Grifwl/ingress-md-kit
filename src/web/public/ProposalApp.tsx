@@ -12,11 +12,14 @@ import type { ProposalMission, ProposalView } from '../../shared/types';
 import { MissionMap } from '../admin/components/MissionMap';
 import { translate, type MessageKey, type MessageParams } from '../i18n/messages';
 import { ComposedImage } from '../lib/ComposedImage';
-import { sketchRoute } from './routeSketch';
+import { TILE_SIZE, routeMapView } from './routeSketch';
 
-/** Side of the route drawing of each mission. */
-const SKETCH_SIZE = 120;
-const SKETCH_PADDING = 12;
+/** Side and margin of the map of each mission, in map pixels. */
+const SKETCH_SIZE = 256;
+const SKETCH_PADDING = 28;
+
+/** Missions on each printed sheet; every format is a multiple of this. */
+const MISSIONS_PER_SHEET = 6;
 
 /** Sections of the letter common to every partner of the Mission Day. */
 const INTRODUCTION: { key: keyof ProposalView['letter']; title: MessageKey }[] = [
@@ -111,7 +114,10 @@ function ConsentBlock({
  * @returns The drawing element.
  */
 function RouteSketch({ mission }: { mission: ProposalMission }) {
-  const points = sketchRoute(mission.waypoints, SKETCH_SIZE, SKETCH_PADDING);
+  const view = routeMapView(mission.waypoints, SKETCH_SIZE, SKETCH_PADDING);
+  if (view === null) {
+    return <div class="route-sketch" />;
+  }
   return (
     <svg
       class="route-sketch"
@@ -119,21 +125,31 @@ function RouteSketch({ mission }: { mission: ProposalMission }) {
       role="img"
       aria-label={mission.name}
     >
+      {view.tiles.map((tile) => (
+        <image
+          key={tile.url}
+          href={tile.url}
+          x={tile.x}
+          y={tile.y}
+          width={TILE_SIZE}
+          height={TILE_SIZE}
+        />
+      ))}
       <polyline
-        points={points.map((point) => `${point.x},${point.y}`).join(' ')}
+        points={view.points.map((point) => `${point.x},${point.y}`).join(' ')}
         fill="none"
         stroke={mission.colour}
-        stroke-width="2.5"
+        stroke-width="7"
       />
-      {points.map((point, index) => (
+      {view.points.map((point, index) => (
         <circle
           key={index}
           cx={point.x}
           cy={point.y}
-          r="3.5"
+          r="9"
           fill="#ffffff"
           stroke={mission.colour}
-          stroke-width="2"
+          stroke-width="5"
         />
       ))}
     </svg>
@@ -281,8 +297,11 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
       {view.missions.length > 0 && (
         <Sheet title={t('proposal.missions')}>
           <ol class="missions">
-            {view.missions.map((mission) => (
-              <li key={mission.id} class="mission">
+            {view.missions.map((mission, index) => (
+              <li
+                key={mission.id}
+                class={(index + 1) % MISSIONS_PER_SHEET === 0 ? 'mission sheet-end' : 'mission'}
+              >
                 <MissionImage mission={mission} base={base} overlayUrl={overlayUrl} />
                 <div class="mission-text">
                   <h3>{mission.name}</h3>
@@ -293,6 +312,11 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
               </li>
             ))}
           </ol>
+          <p class="note">
+            <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">
+              {t('proposal.mapCredit')}
+            </a>
+          </p>
         </Sheet>
       )}
 

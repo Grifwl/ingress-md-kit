@@ -80,7 +80,7 @@ export function buildProposalView(
       whatIsIngress: render(missionDay.letter.whatIsIngress),
       whatIsMissionDay: render(missionDay.letter.whatIsMissionDay),
       whyThisCity: render(missionDay.letter.whyThisCity),
-      whyYou: fillLetterPlaceholders(partner.whyYou, values),
+      whyYou: render(partner.whyYou),
       logoRequest: render(partner.logoRequest),
       closing: render(missionDay.letter.closing),
     },

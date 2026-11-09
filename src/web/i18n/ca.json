@@ -168,7 +168,6 @@
   "partner.letterLanguage": "Idioma de la carta",
   "partner.whyYou": "Per què aquesta entitat",
   "partner.logoRequest": "Petició d'ús del logotip",
-  "partner.logoRequestHelp": "S'ha copiat dels textos del Mission Day en crear el col·laborador. El que canviïs aquí només l'afecta a ell. Es mostra en l'idioma de la carta.",
   "partner.status": "Estat de la conversa",
   "partner.statusNew": "Estat nou",
   "partner.statusNote": "Nota",
@@ -215,5 +214,8 @@
   "proposal.consentName": "Nom i cognoms",
   "proposal.consentPosition": "Càrrec",
   "proposal.consentDate": "Data",
-  "proposal.consentSignature": "Signatura"
+  "proposal.consentSignature": "Signatura",
+  "settings.whyYou": "Per què aquesta entitat",
+  "partner.inheritedTextHelp": "S'ha copiat dels textos del Mission Day en crear el col·laborador. El que canviïs aquí només l'afecta a ell. Es mostra en l'idioma de la carta.",
+  "proposal.mapCredit": "Mapes: © col·laboradors d'OpenStreetMap"
 }

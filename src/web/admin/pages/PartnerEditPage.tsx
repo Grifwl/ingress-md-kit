@@ -193,7 +193,7 @@ export function PartnerEditPage({
   const [kind, setKind] = useState<PartnerKind>(partner.kind);
   const [contactPerson, setContactPerson] = useState(partner.contactPerson);
   const [contactEmail, setContactEmail] = useState(partner.contactEmail);
-  const [whyYou, setWhyYou] = useState(partner.whyYou);
+  const [whyYou, setWhyYou] = useState<LocalizedText>(partner.whyYou);
   const [logoRequest, setLogoRequest] = useState<LocalizedText>(partner.logoRequest);
   const [letterLanguage, setLetterLanguage] = useState<Language>(partner.letterLanguage);
   const [busy, setBusy] = useState(false);
@@ -308,12 +308,19 @@ export function PartnerEditPage({
               </select>
             </Field>
           </div>
-          <Field label={t('partner.whyYou')}>
-            <textarea rows={4} value={whyYou} onInput={(e) => setWhyYou(e.currentTarget.value)} />
+          <Field
+            label={`${t('partner.whyYou')} (${letterLanguage.toUpperCase()})`}
+            help={t('partner.inheritedTextHelp')}
+          >
+            <textarea
+              rows={4}
+              value={whyYou[letterLanguage] ?? ''}
+              onInput={(e) => setWhyYou({ ...whyYou, [letterLanguage]: e.currentTarget.value })}
+            />
           </Field>
           <Field
             label={`${t('partner.logoRequest')} (${letterLanguage.toUpperCase()})`}
-            help={t('partner.logoRequestHelp')}
+            help={t('partner.inheritedTextHelp')}
           >
             <textarea
               rows={6}

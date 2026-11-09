@@ -15,7 +15,7 @@ interface PartnerRow {
   kind: PartnerKind;
   contact_person: string;
   contact_email: string;
-  why_you: string;
+  why_you_json: string;
   logo_request_json: string;
   letter_language: Language;
   proposal_token: string;
@@ -94,7 +94,7 @@ function toPartner(row: PartnerRow, statusHistory: PartnerStatusChange[]): Partn
     kind: row.kind,
     contactPerson: row.contact_person,
     contactEmail: row.contact_email,
-    whyYou: row.why_you,
+    whyYou: JSON.parse(row.why_you_json),
     logoRequest: JSON.parse(row.logo_request_json),
     letterLanguage: row.letter_language,
     proposalToken: row.proposal_token,
@@ -215,8 +215,8 @@ export async function findPartnerByToken(db: D1Database, token: string): Promise
 }
 
 /**
- * Creates a partner. The permission request starts as a copy of the
- * Mission Day's, so it can later be adapted to this partner alone.
+ * Creates a partner. Its "why you" text and permission request start as
+ * copies of the Mission Day's, so they can be adapted to this partner alone.
  *
  * @param db - D1 binding.
  * @param missionDay - Owning Mission Day.
@@ -235,7 +235,7 @@ export async function createPartner(
     db
       .prepare(
         `INSERT INTO partners (id, mission_day_id, name, kind, contact_person, contact_email,
-           why_you, logo_request_json, letter_language, proposal_token)
+           why_you_json, logo_request_json, letter_language, proposal_token)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
@@ -245,7 +245,7 @@ export async function createPartner(
         input.kind ?? 'other',
         input.contactPerson ?? '',
         input.contactEmail ?? '',
-        input.whyYou ?? '',
+        JSON.stringify(input.whyYou ?? missionDay.letter.whyYou),
         JSON.stringify(input.logoRequest ?? missionDay.letter.logoRequest),
         input.letterLanguage,
         generateProposalToken(),
@@ -271,7 +271,7 @@ export async function updatePartner(
   await db
     .prepare(
       `UPDATE partners
-       SET name = ?, kind = ?, contact_person = ?, contact_email = ?, why_you = ?,
+       SET name = ?, kind = ?, contact_person = ?, contact_email = ?, why_you_json = ?,
            logo_request_json = ?, letter_language = ?
        WHERE id = ? AND mission_day_id = ?`,
     )
@@ -280,7 +280,7 @@ export async function updatePartner(
       next.kind,
       next.contactPerson,
       next.contactEmail,
-      next.whyYou,
+      JSON.stringify(next.whyYou),
       JSON.stringify(next.logoRequest),
       next.letterLanguage,
       partner.id,
