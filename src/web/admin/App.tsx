@@ -2,10 +2,10 @@
  * Root of the admin application: header, session and screen selection.
  */
 import { LANGUAGES, type Language } from '../../shared/rules';
-import type { Mission, MissionDayWithRole } from '../../shared/types';
+import type { Mission, MissionDayWithRole, Partner } from '../../shared/types';
 import { useI18n } from '../i18n';
 import type { MessageKey } from '../i18n/messages';
-import { getMe, getMissionDay, listMissions } from './api';
+import { getMe, getMissionDay, listMissions, listPartners } from './api';
 import { ErrorMessage } from './components/common';
 import { useAsync } from './hooks';
 import type { Route } from './lib/routes';
@@ -15,6 +15,8 @@ import { MapPage } from './pages/MapPage';
 import { MissionEditPage } from './pages/MissionEditPage';
 import { MissionsPage } from './pages/MissionsPage';
 import { NewMissionDayPage } from './pages/NewMissionDayPage';
+import { PartnerEditPage } from './pages/PartnerEditPage';
+import { PartnersPage } from './pages/PartnersPage';
 import { SelectionPage } from './pages/SelectionPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { Link, useRoute } from './router';
@@ -26,6 +28,7 @@ const TABS: { name: MissionDayRoute['name']; path: string; label: MessageKey }[]
   { name: 'missions', path: 'missions', label: 'nav.missions' },
   { name: 'map', path: 'map', label: 'nav.map' },
   { name: 'selection', path: 'selection', label: 'nav.selection' },
+  { name: 'partners', path: 'partners', label: 'nav.partners' },
   { name: 'settings', path: 'settings', label: 'nav.settings' },
 ];
 
@@ -40,7 +43,8 @@ const TABS: { name: MissionDayRoute['name']; path: string; label: MessageKey }[]
 function MissionDayArea({ route }: { route: MissionDayRoute }) {
   const { t } = useI18n();
   const loaded = useAsync(
-    () => Promise.all([getMissionDay(route.slug), listMissions(route.slug)]),
+    () =>
+      Promise.all([getMissionDay(route.slug), listMissions(route.slug), listPartners(route.slug)]),
     [route.slug],
   );
 
@@ -56,21 +60,36 @@ function MissionDayArea({ route }: { route: MissionDayRoute }) {
     );
   }
 
-  const [missionDay, missions] = loaded.data;
+  const [missionDay, missions, partners] = loaded.data;
 
   /**
    * Replaces the missions after a change.
    *
    * @param next - The new list.
    */
-  const setMissions = (next: Mission[]) => loaded.setData([missionDay, next]);
+  const setMissions = (next: Mission[]) => loaded.setData([missionDay, next, partners]);
 
   /**
    * Replaces the Mission Day after a change.
    *
    * @param next - The new Mission Day.
    */
-  const setMissionDay = (next: MissionDayWithRole) => loaded.setData([next, missions]);
+  const setMissionDay = (next: MissionDayWithRole) => loaded.setData([next, missions, partners]);
+
+  /**
+   * Replaces the partners after a change.
+   *
+   * @param next - The new list.
+   */
+  const setPartners = (next: Partner[]) => loaded.setData([missionDay, missions, next]);
+
+  /**
+   * Replaces one edited partner.
+   *
+   * @param updated - The new version.
+   */
+  const replacePartner = (updated: Partner) =>
+    setPartners(partners.map((partner) => (partner.id === updated.id ? updated : partner)));
 
   /**
    * Replaces one edited mission.
@@ -117,10 +136,35 @@ function MissionDayArea({ route }: { route: MissionDayRoute }) {
         return <SelectionPage missionDay={missionDay} missions={missions} onChange={setMissions} />;
       case 'settings':
         return <SettingsPage missionDay={missionDay} onChange={setMissionDay} />;
+      case 'partners':
+        return (
+          <PartnersPage
+            missionDay={missionDay}
+            partners={partners}
+            onCreated={(partner) => setPartners([...partners, partner])}
+          />
+        );
+      case 'partner': {
+        const partner = partners.find((item) => item.id === route.partnerId);
+        if (partner === undefined) {
+          return <p class="alert">{t('error.not_found')}</p>;
+        }
+        return (
+          <PartnerEditPage
+            key={partner.id}
+            missionDay={missionDay}
+            missions={missions}
+            partner={partner}
+            onChange={replacePartner}
+            onDeleted={(id) => setPartners(partners.filter((item) => item.id !== id))}
+          />
+        );
+      }
     }
   };
 
-  const activeTab = route.name === 'mission' ? 'missions' : route.name;
+  const activeTab =
+    route.name === 'mission' ? 'missions' : route.name === 'partner' ? 'partners' : route.name;
 
   return (
     <main class="page">

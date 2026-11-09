@@ -1,7 +1,8 @@
 /**
  * Client of the private API.
  */
-import type { MissionFormat } from '../../shared/rules';
+import type { PartnerStatus } from '../../shared/partners';
+import type { Language, MissionFormat } from '../../shared/rules';
 import type {
   CropRect,
   CurrentUser,
@@ -9,6 +10,7 @@ import type {
   Mission,
   MissionDay,
   MissionDayWithRole,
+  Partner,
   Waypoint,
 } from '../../shared/types';
 
@@ -269,6 +271,194 @@ export function uploadPhoto(
  */
 export function saveSelection(slug: string, missionIds: string[]): Promise<Mission[]> {
   return request(`${dayPath(slug)}/selection`, json('PUT', { missionIds }));
+}
+
+/**
+ * Builds the API path of a partner.
+ *
+ * @param slug - Mission Day slug.
+ * @param partnerId - Partner identifier.
+ * @returns The path.
+ */
+function partnerPath(slug: string, partnerId: string): string {
+  return `${dayPath(slug)}/partners/${encodeURIComponent(partnerId)}`;
+}
+
+/**
+ * Lists the partners of a Mission Day.
+ *
+ * @param slug - Mission Day slug.
+ * @returns The partners.
+ */
+export function listPartners(slug: string): Promise<Partner[]> {
+  return request(`${dayPath(slug)}/partners`);
+}
+
+/**
+ * Creates a partner.
+ *
+ * @param slug - Mission Day slug.
+ * @param name - Name of the entity.
+ * @param letterLanguage - Language of its letter.
+ * @returns The new partner.
+ */
+export function createPartner(
+  slug: string,
+  name: string,
+  letterLanguage: Language,
+): Promise<Partner> {
+  return request(`${dayPath(slug)}/partners`, json('POST', { name, letterLanguage }));
+}
+
+/**
+ * Saves the fields of a partner.
+ *
+ * @param slug - Mission Day slug.
+ * @param partnerId - Partner identifier.
+ * @param patch - Fields to change.
+ * @returns The updated partner.
+ */
+export function updatePartner(
+  slug: string,
+  partnerId: string,
+  patch: Partial<
+    Pick<
+      Partner,
+      | 'name'
+      | 'kind'
+      | 'contactPerson'
+      | 'contactEmail'
+      | 'whyYou'
+      | 'logoRequest'
+      | 'letterLanguage'
+    >
+  >,
+): Promise<Partner> {
+  return request(partnerPath(slug, partnerId), json('PATCH', patch));
+}
+
+/**
+ * Deletes a partner.
+ *
+ * @param slug - Mission Day slug.
+ * @param partnerId - Partner identifier.
+ */
+export function deletePartner(slug: string, partnerId: string): Promise<void> {
+  return request(partnerPath(slug, partnerId), { method: 'DELETE' });
+}
+
+/**
+ * Records a change in the conversation with a partner.
+ *
+ * @param slug - Mission Day slug.
+ * @param partnerId - Partner identifier.
+ * @param status - New status.
+ * @param note - Free comment.
+ * @returns The updated partner.
+ */
+export function changePartnerStatus(
+  slug: string,
+  partnerId: string,
+  status: PartnerStatus,
+  note: string,
+): Promise<Partner> {
+  return request(`${partnerPath(slug, partnerId)}/status`, json('POST', { status, note }));
+}
+
+/**
+ * Replaces the secret link of a proposal, revoking the previous one.
+ *
+ * @param slug - Mission Day slug.
+ * @param partnerId - Partner identifier.
+ * @returns The updated partner.
+ */
+export function regenerateProposalToken(slug: string, partnerId: string): Promise<Partner> {
+  return request(`${partnerPath(slug, partnerId)}/token`, { method: 'POST' });
+}
+
+/** The files a partner can have. */
+export type PartnerFileKind = 'logo' | 'overlay' | 'approval';
+
+/**
+ * Uploads a file of a partner.
+ *
+ * @param slug - Mission Day slug.
+ * @param partnerId - Partner identifier.
+ * @param kind - Which file.
+ * @param file - The file.
+ * @returns The updated partner.
+ */
+export function uploadPartnerFile(
+  slug: string,
+  partnerId: string,
+  kind: PartnerFileKind,
+  file: File,
+): Promise<Partner> {
+  const query = kind === 'approval' ? `?name=${encodeURIComponent(file.name)}` : '';
+  return request(`${partnerPath(slug, partnerId)}/${kind}${query}`, { method: 'PUT', body: file });
+}
+
+/**
+ * Builds the address of a partner's file.
+ *
+ * @param slug - Mission Day slug.
+ * @param partner - The partner.
+ * @param kind - Which file.
+ * @returns The address.
+ */
+export function partnerFileUrl(slug: string, partner: Partner, kind: PartnerFileKind): string {
+  const version = {
+    logo: partner.logoVersion,
+    overlay: partner.overlayVersion,
+    approval: partner.approvalVersion,
+  }[kind];
+  return `${BASE}${partnerPath(slug, partner.id)}/${kind}?v=${version}`;
+}
+
+/**
+ * Uploads the default overlay of a Mission Day.
+ *
+ * @param slug - Mission Day slug.
+ * @param file - The 512×512 PNG.
+ * @returns The updated Mission Day.
+ */
+export function uploadDefaultOverlay(slug: string, file: File): Promise<MissionDayWithRole> {
+  return request(`${dayPath(slug)}/default-overlay`, { method: 'PUT', body: file });
+}
+
+/**
+ * Uploads the map screenshot of a Mission Day.
+ *
+ * @param slug - Mission Day slug.
+ * @param file - The image.
+ * @returns The updated Mission Day.
+ */
+export function uploadMapScreenshot(slug: string, file: File): Promise<MissionDayWithRole> {
+  return request(`${dayPath(slug)}/map-screenshot`, { method: 'PUT', body: file });
+}
+
+/**
+ * Builds the address of a Mission Day's default overlay.
+ *
+ * @param missionDay - The Mission Day.
+ * @returns The address, or null when it has none.
+ */
+export function defaultOverlayUrl(missionDay: MissionDay): string | null {
+  return missionDay.hasDefaultOverlay
+    ? `${BASE}${dayPath(missionDay.slug)}/default-overlay?v=${missionDay.defaultOverlayVersion}`
+    : null;
+}
+
+/**
+ * Builds the address of a Mission Day's map screenshot.
+ *
+ * @param missionDay - The Mission Day.
+ * @returns The address, or null when it has none.
+ */
+export function mapScreenshotUrl(missionDay: MissionDay): string | null {
+  return missionDay.hasMapScreenshot
+    ? `${BASE}${dayPath(missionDay.slug)}/map-screenshot?v=${missionDay.mapScreenshotVersion}`
+    : null;
 }
 
 /**

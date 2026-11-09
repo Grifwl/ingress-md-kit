@@ -181,6 +181,56 @@ textarea {
   gap: 0.25rem;
 }
 
+.thumb.logo {
+  background: #ffffff;
+  border: 1px solid var(--border);
+}
+
+.thumb.logo img,
+.file-preview {
+  object-fit: contain;
+}
+
+.file-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.file-preview {
+  display: block;
+  width: 160px;
+  height: 160px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+/* A chequered background makes the transparent parts of an overlay visible. */
+.file-preview.overlay {
+  background: repeating-conic-gradient(#bfc5cc 0 25%, #ffffff 0 50%) 0 0 / 20px 20px;
+}
+
+.file-preview.wide {
+  width: 320px;
+  max-width: 100%;
+  height: auto;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.history li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid var(--border);
+}
+
 .slug-preview {
   font-weight: 600;
   overflow-wrap: anywhere;

@@ -72,15 +72,20 @@ export function Field({
  * one acts, which avoids a blocking browser dialog. It disarms by itself
  * so that it cannot be left waiting for an accidental click.
  *
- * @param props - Action to perform and whether it is disabled.
+ * @param props - Action to perform, whether it is disabled, and the two
+ *   texts of the button when it is not a deletion.
  * @returns The button element.
  */
 export function ConfirmButton({
   onConfirm,
   disabled,
+  label,
+  confirmLabel,
 }: {
   onConfirm: () => void;
   disabled?: boolean;
+  label?: string;
+  confirmLabel?: string;
 }) {
   const { t } = useI18n();
   const [armed, setArmed] = useState(false);
@@ -107,8 +112,70 @@ export function ConfirmButton({
         }
       }}
     >
-      {armed ? t('common.confirmDelete') : t('common.delete')}
+      {armed ? (confirmLabel ?? t('common.confirmDelete')) : (label ?? t('common.delete'))}
     </button>
+  );
+}
+
+/**
+ * A file picker that uploads as soon as a file is chosen.
+ *
+ * @param props - Label, help text, accepted types, the upload to perform,
+ *   and an optional preview of the current file.
+ * @returns The picker element.
+ */
+export function FileUpload({
+  label,
+  help,
+  accept,
+  onUpload,
+  children,
+}: {
+  label: string;
+  help?: string;
+  accept: string;
+  onUpload: (file: File) => Promise<unknown>;
+  children?: ComponentChildren;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<unknown>();
+
+  /**
+   * Uploads the chosen file and clears the picker, so that the same file
+   * can be chosen again after a failure.
+   *
+   * @param input - The file input.
+   */
+  const upload = async (input: HTMLInputElement) => {
+    const file = input.files?.[0];
+    if (file === undefined) {
+      return;
+    }
+    setBusy(true);
+    setError(undefined);
+    try {
+      await onUpload(file);
+    } catch (failure) {
+      setError(failure);
+    } finally {
+      setBusy(false);
+      input.value = '';
+    }
+  };
+
+  return (
+    <div class="file-upload">
+      {children}
+      <Field label={label} help={help}>
+        <input
+          type="file"
+          accept={accept}
+          disabled={busy}
+          onChange={(event) => upload(event.currentTarget)}
+        />
+      </Field>
+      <ErrorMessage error={error} />
+    </div>
   );
 }
 

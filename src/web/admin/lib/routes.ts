@@ -9,6 +9,8 @@ export type Route =
   | { name: 'newMissionDay' }
   | { name: 'missions'; slug: string }
   | { name: 'mission'; slug: string; missionId: string }
+  | { name: 'partners'; slug: string }
+  | { name: 'partner'; slug: string; partnerId: string }
   | { name: 'map'; slug: string }
   | { name: 'selection'; slug: string }
   | { name: 'settings'; slug: string }
@@ -35,6 +37,7 @@ function decodeSegment(segment: string): string {
  * @returns The matching route.
  */
 export function parseRoute(pathname: string): Route {
+  // The fourth segment is the identifier of a mission or of a partner.
   const [root, slug, section, missionId, ...rest] = pathname
     .split('/')
     .filter((segment) => segment !== '')
@@ -56,6 +59,11 @@ export function parseRoute(pathname: string): Route {
     return missionId === undefined
       ? { name: 'missions', slug }
       : { name: 'mission', slug, missionId };
+  }
+  if (section === 'partners') {
+    return missionId === undefined
+      ? { name: 'partners', slug }
+      : { name: 'partner', slug, partnerId: missionId };
   }
   if (missionId === undefined && (section === 'map' || section === 'selection')) {
     return { name: section, slug };

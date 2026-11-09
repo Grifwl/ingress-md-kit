@@ -11,8 +11,15 @@ import type {
   TeamContact,
 } from '../../../shared/types';
 import { useI18n } from '../../i18n';
-import { deleteMissionDay, updateMissionDay } from '../api';
-import { ConfirmButton, ErrorMessage, Field } from '../components/common';
+import {
+  defaultOverlayUrl,
+  deleteMissionDay,
+  mapScreenshotUrl,
+  updateMissionDay,
+  uploadDefaultOverlay,
+  uploadMapScreenshot,
+} from '../api';
+import { ConfirmButton, ErrorMessage, Field, FileUpload } from '../components/common';
 import { LetterEditor } from '../components/LetterEditor';
 import { navigate } from '../router';
 
@@ -227,6 +234,38 @@ export function SettingsPage({
           {saved && <span class="muted">{t('common.saved')}</span>}
         </div>
       </form>
+
+      <section class="card">
+        <h2>{t('settings.images')}</h2>
+        <FileUpload
+          label={t('settings.defaultOverlay')}
+          help={t('settings.defaultOverlayHelp')}
+          accept="image/png"
+          onUpload={async (file) => onChange(await uploadDefaultOverlay(missionDay.slug, file))}
+        >
+          {defaultOverlayUrl(missionDay) !== null && (
+            <img
+              class="file-preview overlay"
+              src={defaultOverlayUrl(missionDay)!}
+              alt={t('settings.defaultOverlay')}
+            />
+          )}
+        </FileUpload>
+        <FileUpload
+          label={t('settings.mapScreenshot')}
+          help={t('settings.mapScreenshotHelp')}
+          accept="image/png,image/jpeg,image/webp"
+          onUpload={async (file) => onChange(await uploadMapScreenshot(missionDay.slug, file))}
+        >
+          {mapScreenshotUrl(missionDay) !== null && (
+            <img
+              class="file-preview wide"
+              src={mapScreenshotUrl(missionDay)!}
+              alt={t('settings.mapScreenshot')}
+            />
+          )}
+        </FileUpload>
+      </section>
 
       {missionDay.role === 'owner' && (
         <section class="card">

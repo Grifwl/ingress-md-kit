@@ -6,7 +6,7 @@ import { mosaicAdjacentPairs, mosaicCells, type MosaicPair } from '../../../shar
 import { MISSION_FORMATS, fullMissionName, validateSelection } from '../../../shared/rules';
 import type { Mission, MissionDay } from '../../../shared/types';
 import { useI18n } from '../../i18n';
-import { photoUrl, saveSelection } from '../api';
+import { defaultOverlayUrl, photoUrl, saveSelection } from '../api';
 import { ErrorMessage, IssueList } from '../components/common';
 import { Mosaic } from '../components/Mosaic';
 import { findBannerLikePairs } from '../lib/bannerCheck';
@@ -244,7 +244,11 @@ export function SelectionPage({
       <section class="card">
         <h2>{t('selection.mosaic')}</h2>
         <p class="muted">{t('selection.mosaicHelp')}</p>
-        <Mosaic missionDay={missionDay} selected={selected} />
+        <Mosaic
+          missionDay={missionDay}
+          selected={selected}
+          overlayUrl={defaultOverlayUrl(missionDay)}
+        />
       </section>
 
       <section class="card">

@@ -9,7 +9,7 @@ import type { Waypoint } from '../../../shared/types';
 export interface MapMission {
   id: string;
   colour: string;
-  waypoints: readonly Waypoint[];
+  waypoints: readonly Pick<Waypoint, 'title' | 'lat' | 'lng'>[];
 }
 
 /** World view used until there is something to frame. */

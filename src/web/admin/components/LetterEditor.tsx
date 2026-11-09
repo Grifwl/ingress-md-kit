@@ -14,6 +14,7 @@ const LETTER_SECTIONS: { key: keyof LetterSections; label: MessageKey }[] = [
   { key: 'whatIsIngress', label: 'settings.whatIsIngress' },
   { key: 'whatIsMissionDay', label: 'settings.whatIsMissionDay' },
   { key: 'whyThisCity', label: 'settings.whyThisCity' },
+  { key: 'logoRequest', label: 'settings.logoRequest' },
   { key: 'closing', label: 'settings.closing' },
 ];
 
@@ -35,6 +36,7 @@ export function LetterEditor({
 
   return (
     <>
+      <p class="field-help">{t('settings.placeholdersHelp')}</p>
       <Field label={t('settings.letterLanguage')}>
         <select
           value={letterLanguage}
