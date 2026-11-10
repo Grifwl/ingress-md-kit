@@ -4,7 +4,9 @@
  * Access decides who may enter the instance; these routes decide what
  * each person may touch. Every request under a Mission Day goes through
  * `requireMembership`, and a Mission Day the requester does not belong to
- * looks exactly like one that does not exist.
+ * looks exactly like one that does not exist. The only exception is the
+ * team of a Mission Day (see `members.ts`), which instance administrators
+ * may manage without belonging to it.
  */
 import { Hono, type MiddlewareHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
@@ -44,9 +46,11 @@ import {
   parseMissionDayCreate,
   parseMissionDayPatch,
   parseMissionPatch,
+  parseProfile,
   parseSelection,
   parseWaypoints,
 } from '../lib/input';
+import { getProfile, listAllMissionDays, saveProfile } from '../lib/members';
 import { findPartner } from '../lib/partners';
 import { detectFileType, readPngInfo, type FileType } from '../lib/png';
 import {
@@ -59,6 +63,7 @@ import {
   serveObject,
   type AppContext,
 } from './helpers';
+import members from './members';
 import partners from './partners';
 
 /**
@@ -371,15 +376,35 @@ scoped.get('/missions/:missionId/photo', async (c) => {
 const admin = new Hono<AppEnv>();
 admin.use('*', requireSameOrigin, requireIdentity);
 
-admin.get('/me', (c) => {
+/**
+ * Builds the description of the signed-in organiser.
+ *
+ * @param c - Request context.
+ * @returns Their profile and instance-wide rights.
+ */
+async function currentUser(c: AppContext): Promise<CurrentUser> {
   const email = c.get('email');
-  const user: CurrentUser = { email, isInstanceAdmin: isInstanceAdmin(email, c.env) };
-  return c.json(user);
+  return { ...(await getProfile(c.env.DB, email)), isInstanceAdmin: isInstanceAdmin(email, c.env) };
+}
+
+admin.get('/me', async (c) => c.json(await currentUser(c)));
+
+// Anyone signed in may keep a profile, even before joining a team, so that
+// owners see a codename rather than a bare email once they add them.
+admin.patch('/me', async (c) => {
+  const { codename, faction } = parseProfile(await jsonBody(c));
+  await saveProfile(c.env.DB, c.get('email'), codename, faction);
+  return c.json(await currentUser(c));
 });
 
 admin.get('/mission-days', async (c) =>
   c.json(await listMissionDaysForOrganiser(c.env.DB, c.get('email'))),
 );
+
+admin.get('/instance/mission-days', async (c) => {
+  assertInstanceAdmin(c);
+  return c.json(await listAllMissionDays(c.env.DB, c.get('email')));
+});
 
 admin.get('/letter-defaults', async (c) => {
   assertInstanceAdmin(c);
@@ -405,6 +430,9 @@ admin.post('/mission-days', async (c) => {
   return c.json({ slug: input.slug }, 201);
 });
 
+// The team routes come first: they answer instance administrators who are
+// not members, whom the membership check of the other routes would stop.
+admin.route('/mission-days/:slug/members', members);
 admin.route('/mission-days/:slug', scoped);
 
 export default admin;

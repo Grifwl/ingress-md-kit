@@ -16,7 +16,7 @@ export type MembershipRole = 'owner' | 'editor';
 /** Lifecycle of a Mission Day application. */
 export type MissionDayStatus = 'draft' | 'applied' | 'approved' | 'done';
 
-/** Agent faction, as used for the Points of Contact. */
+/** Agent faction, as used for the Points of Contact and organiser profiles. */
 export type Faction = 'ENL' | 'RES';
 
 /** A person named on the Mission Day team. */
@@ -196,8 +196,33 @@ export interface ProposalView {
   mapScreenshotVersion: number;
 }
 
-/** The signed-in organiser, as reported by the API. */
-export interface CurrentUser {
+/**
+ * What an organiser says about themself. It belongs to the person, not to
+ * a Mission Day, so it is the same in every team they are part of.
+ */
+export interface OrganiserProfile {
   email: string;
+  codename: string;
+  faction: Faction | null;
+}
+
+/** An organiser as a member of one Mission Day's team. */
+export interface Member extends OrganiserProfile {
+  role: MembershipRole;
+}
+
+/**
+ * A Mission Day as listed to an instance administrator, who may manage
+ * the team of any of them. `role` is null where they are not a member.
+ */
+export interface InstanceMissionDay {
+  slug: string;
+  city: string;
+  year: number;
+  role: MembershipRole | null;
+}
+
+/** The signed-in organiser, as reported by the API. */
+export interface CurrentUser extends OrganiserProfile {
   isInstanceAdmin: boolean;
 }

@@ -116,11 +116,11 @@ describe('authentication and authorisation', () => {
   });
 
   it('reports who is signed in', async () => {
-    expect(await (await call('/me', { as: ADMIN })).json()).toEqual({
+    expect(await (await call('/me', { as: ADMIN })).json()).toMatchObject({
       email: ADMIN,
       isInstanceAdmin: true,
     });
-    expect(await (await call('/me', { as: OWNER })).json()).toEqual({
+    expect(await (await call('/me', { as: OWNER })).json()).toMatchObject({
       email: OWNER,
       isInstanceAdmin: false,
     });

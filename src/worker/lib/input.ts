@@ -22,8 +22,10 @@ import {
 } from '../../shared/rules';
 import type {
   CropRect,
+  Faction,
   LetterSections,
   LocalizedText,
+  MembershipRole,
   MissionDayStatus,
   PointOfContact,
   Team,
@@ -145,6 +147,36 @@ function requiredText(value: unknown, field: string): string {
     badRequest(`invalid_${field}`);
   }
   return result;
+}
+
+/**
+ * Validates an email that identifies an organiser. It is lowercased because
+ * Cloudflare Access reports emails in lowercase, and memberships must match
+ * the identity a person signs in with.
+ *
+ * @param value - Candidate value.
+ * @param field - Name used in the error code.
+ * @returns The trimmed, lowercase email.
+ */
+function email(value: unknown, field: string): string {
+  const result = text(value, field).trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+$/.test(result)) {
+    badRequest(`invalid_${field}`);
+  }
+  return result;
+}
+
+/**
+ * Validates a membership role.
+ *
+ * @param value - Candidate value.
+ * @returns The role.
+ */
+function role(value: unknown): MembershipRole {
+  if (value !== 'owner' && value !== 'editor') {
+    badRequest('invalid_role');
+  }
+  return value;
 }
 
 /**
@@ -326,13 +358,10 @@ export function parseMissionDayCreate(body: unknown): MissionDayCreateInput {
   if (typeof object.slug !== 'string' || !isValidSlug(object.slug)) {
     badRequest('invalid_slug');
   }
-  let ownerEmail: string | null = null;
-  if (object.ownerEmail !== undefined && object.ownerEmail !== null && object.ownerEmail !== '') {
-    ownerEmail = text(object.ownerEmail, 'owner_email').trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+$/.test(ownerEmail)) {
-      badRequest('invalid_owner_email');
-    }
-  }
+  const ownerEmail =
+    object.ownerEmail === undefined || object.ownerEmail === null || object.ownerEmail === ''
+      ? null
+      : email(object.ownerEmail, 'owner_email');
   return {
     slug: object.slug,
     city: requiredText(object.city, 'city'),
@@ -377,6 +406,45 @@ export function parseMissionDayPatch(body: unknown): MissionDayPatch {
     );
   }
   return patch;
+}
+
+/**
+ * Validates a request to add someone to a Mission Day's team.
+ *
+ * @param body - Parsed JSON with `email` and `role`.
+ * @returns The validated fields.
+ */
+export function parseMemberCreate(body: unknown): { email: string; role: MembershipRole } {
+  const object = asObject(body);
+  return { email: email(object.email, 'email'), role: role(object.role) };
+}
+
+/**
+ * Validates a change of role.
+ *
+ * @param body - Parsed JSON with `role`.
+ * @returns The new role.
+ */
+export function parseMemberRole(body: unknown): MembershipRole {
+  return role(asObject(body).role);
+}
+
+/**
+ * Validates an organiser's edit of their own profile.
+ *
+ * @param body - Parsed JSON with `codename` and `faction`.
+ * @returns The validated fields; an empty faction means none.
+ */
+export function parseProfile(body: unknown): { codename: string; faction: Faction | null } {
+  const object = asObject(body);
+  const faction = object.faction ?? null;
+  if (faction !== null && faction !== '' && faction !== 'ENL' && faction !== 'RES') {
+    badRequest('invalid_faction');
+  }
+  return {
+    codename: text(object.codename, 'codename').trim(),
+    faction: faction === '' ? null : (faction as Faction | null),
+  };
 }
 
 /**

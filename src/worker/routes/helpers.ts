@@ -22,10 +22,10 @@ export function assertOwner(c: AppContext): void {
 /**
  * Reads the JSON body, turning malformed JSON into a client error.
  *
- * @param c - Request context.
+ * @param c - Request context, of any route module.
  * @returns The parsed body.
  */
-export async function jsonBody(c: AppContext): Promise<unknown> {
+export async function jsonBody(c: Context): Promise<unknown> {
   try {
     return await c.req.json();
   } catch {
