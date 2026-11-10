@@ -15,6 +15,7 @@ import {
   type NianticContext,
   type ValidationIssue,
 } from '../../../shared/rules';
+import { mayShowLogo } from '../../../shared/partners';
 import type { Mission, MissionDay, MissionDayWithRole, Partner } from '../../../shared/types';
 import { useI18n } from '../../i18n';
 import { translate, type MessageKey } from '../../i18n/messages';
@@ -193,7 +194,7 @@ export function ExportsPage({
   const sampleAvailable =
     missionDay.hasSample &&
     (missionDay.samplePartnerId === null ||
-      (samplePartner?.status === 'accepted' && samplePartner.hasApproval));
+      (samplePartner !== undefined && mayShowLogo(samplePartner)));
   const sampleUrl = `${location.origin}/${missionDay.slug}/sample`;
 
   const context: NianticContext = {

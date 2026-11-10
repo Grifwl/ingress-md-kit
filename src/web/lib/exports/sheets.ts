@@ -5,6 +5,7 @@
 import { fullMissionName, type Language } from '../../../shared/rules';
 import type { Mission, MissionDay } from '../../../shared/types';
 import { exportedDescriptions } from './descriptions';
+import { intelUrl } from '../intel';
 
 /** Header row of the mission sheet. */
 const CSV_HEADER = [
@@ -55,7 +56,7 @@ export function buildMissionSheet(
         textCell(waypoint.title),
         String(waypoint.lat),
         String(waypoint.lng),
-        textCell(`https://intel.ingress.com/?pll=${waypoint.lat},${waypoint.lng}`),
+        textCell(intelUrl(waypoint)),
       ].join(','),
     ),
   );

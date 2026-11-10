@@ -430,6 +430,27 @@ export function parseMemberRole(body: unknown): MembershipRole {
 }
 
 /**
+ * Validates the settings of the participant view.
+ *
+ * @param body - Parsed JSON with `enabled` and `partnerId`.
+ * @returns Whether it is public, and whose overlay it uses (null for the default).
+ */
+export function parseParticipantView(body: unknown): {
+  enabled: boolean;
+  partnerId: string | null;
+} {
+  const object = asObject(body);
+  if (typeof object.enabled !== 'boolean') {
+    badRequest('invalid_body');
+  }
+  const partnerId =
+    object.partnerId === null || object.partnerId === undefined || object.partnerId === ''
+      ? null
+      : text(object.partnerId, 'partner_id');
+  return { enabled: object.enabled, partnerId };
+}
+
+/**
  * Validates an organiser's edit of their own profile.
  *
  * @param body - Parsed JSON with `codename` and `faction`.

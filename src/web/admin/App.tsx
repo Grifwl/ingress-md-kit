@@ -168,7 +168,9 @@ function MissionDayArea({ route, user }: { route: MissionDayRoute; user: Current
       case 'selection':
         return <SelectionPage missionDay={missionDay} missions={missions} onChange={setMissions} />;
       case 'settings':
-        return <SettingsPage missionDay={missionDay} onChange={setMissionDay} />;
+        return (
+          <SettingsPage missionDay={missionDay} partners={partners} onChange={setMissionDay} />
+        );
       case 'team':
         return (
           <TeamPage

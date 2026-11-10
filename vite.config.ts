@@ -35,6 +35,7 @@ export default defineConfig({
           input: {
             admin: resolve(projectRoot, 'src/web/admin/index.html'),
             public: resolve(projectRoot, 'src/web/public/index.html'),
+            participant: resolve(projectRoot, 'src/web/participant/index.html'),
           },
         },
       },

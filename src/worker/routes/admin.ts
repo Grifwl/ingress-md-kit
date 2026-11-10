@@ -10,6 +10,7 @@
  */
 import { Hono, type MiddlewareHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
+import { mayShowLogo } from '../../shared/partners';
 import { DOCUMENT_MAX_BYTES, IMAGE_MAX_BYTES, IMAGE_SIZE_PX } from '../../shared/rules';
 import type { CurrentUser, MissionDay } from '../../shared/types';
 import type { AppEnv } from '../env';
@@ -31,6 +32,7 @@ import {
   replaceWaypoints,
   saveLetterDefaults,
   saveMissionDayFile,
+  saveParticipantView,
   savePhoto,
   saveSamplePartner,
   saveSelection,
@@ -46,6 +48,7 @@ import {
   parseMissionDayCreate,
   parseMissionDayPatch,
   parseMissionPatch,
+  parseParticipantView,
   parseProfile,
   parseSelection,
   parseWaypoints,
@@ -246,7 +249,7 @@ scoped.put('/sample', async (c) => {
     if (partner === null) {
       throw new HTTPException(404, { message: 'not_found' });
     }
-    if (partner.status !== 'accepted' || !partner.hasApproval) {
+    if (!mayShowLogo(partner)) {
       throw new HTTPException(403, { message: 'partner_not_approved' });
     }
   }
@@ -257,6 +260,33 @@ scoped.put('/sample', async (c) => {
   }
   await saveSamplePartner(c.env.DB, missionDay.id, partnerId === '' ? null : partnerId);
   return storeMissionDayFile(c, 'sample', bytes, 'image/png', missionDay.sampleVersion);
+});
+
+// Publishing the participant view is an owner's decision, since it opens
+// the Mission Day to anyone holding the address.
+scoped.put('/participant-view', async (c) => {
+  assertOwner(c);
+  const missionDay = c.get('missionDay');
+  const { enabled, partnerId } = parseParticipantView(await jsonBody(c));
+  if (partnerId !== null) {
+    const partner = await findPartner(c.env.DB, missionDay.id, partnerId);
+    if (partner === null) {
+      throw new HTTPException(404, { message: 'not_found' });
+    }
+    if (!mayShowLogo(partner)) {
+      throw new HTTPException(403, { message: 'partner_not_approved' });
+    }
+    if (!partner.hasOverlay) {
+      throw new HTTPException(409, { message: 'partner_without_overlay' });
+    }
+  }
+  await saveParticipantView(c.env.DB, missionDay.id, enabled, partnerId);
+  return c.json({
+    ...missionDay,
+    participantViewEnabled: enabled,
+    participantPartnerId: partnerId,
+    role: c.get('role'),
+  });
 });
 
 scoped.get('/', (c) => c.json({ ...c.get('missionDay'), role: c.get('role') }));

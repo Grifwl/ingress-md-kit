@@ -28,3 +28,15 @@ export const PARTNER_STATUSES = [
 
 /** A stage of the conversation with a partner. */
 export type PartnerStatus = (typeof PARTNER_STATUSES)[number];
+
+/**
+ * Tells whether a partner's logo may appear in pictures shown outside the
+ * team: the partner must have accepted and its signed approval must be on
+ * file, which is the written proof the handbook asks for.
+ *
+ * @param partner - Status and whether the approval document exists.
+ * @returns True when its overlay may be used.
+ */
+export function mayShowLogo(partner: { status: PartnerStatus; hasApproval: boolean }): boolean {
+  return partner.status === 'accepted' && partner.hasApproval;
+}

@@ -62,6 +62,8 @@ export interface MissionDay {
   letter: LetterSections;
   myMapsUrl: string | null;
   participantViewEnabled: boolean;
+  /** Partner whose overlay the participant view uses; null for the default. */
+  participantPartnerId: string | null;
   hasDefaultOverlay: boolean;
   defaultOverlayVersion: number;
   hasMapScreenshot: boolean;
@@ -194,6 +196,39 @@ export interface ProposalView {
   myMapsUrl: string | null;
   hasMapScreenshot: boolean;
   mapScreenshotVersion: number;
+}
+
+/**
+ * A selected mission as participants see it. The description keeps every
+ * language, because the page follows the visitor's choice of language.
+ */
+export interface ParticipantMission {
+  id: string;
+  name: string;
+  description: LocalizedText;
+  colour: string;
+  order: number;
+  hasPhoto: boolean;
+  photoVersion: number;
+  waypoints: Pick<Waypoint, 'title' | 'lat' | 'lng'>[];
+}
+
+/**
+ * Everything the participant view shows. Like a proposal, it is built
+ * field by field, so that notes, contacts and partner talks never reach it.
+ */
+export interface ParticipantView {
+  city: string;
+  year: number;
+  date: string | null;
+  missions: ParticipantMission[];
+  myMapsUrl: string | null;
+  /**
+   * Identifies the overlay being applied, for the address of its image;
+   * null when there is none. It changes whenever the overlay does, even
+   * when the switch is between two files with the same version number.
+   */
+  overlayTag: string | null;
 }
 
 /**

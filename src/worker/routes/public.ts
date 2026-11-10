@@ -1,11 +1,14 @@
 /**
- * Public side of the application: the proposal page and the read-only data
- * it needs. There is no sign-in here, so the secret token in the address is
- * the only credential, and an unknown token reveals nothing.
+ * Public side of the application: the proposal pages, the participant
+ * view and the read-only data they need. There is no sign-in here. A
+ * proposal's secret token is its only credential, and an unknown token
+ * reveals nothing; the participant view answers only once an owner has
+ * published it, and until then looks the same as no Mission Day at all.
  */
 import { Hono, type MiddlewareHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { PROPOSAL_WORDS, parseProposalSegment } from '../../shared/letter';
+import { mayShowLogo } from '../../shared/partners';
 import type { MissionDay, Partner } from '../../shared/types';
 import type { AppEnv } from '../env';
 import {
@@ -17,6 +20,7 @@ import {
   listMissions,
 } from '../lib/db';
 import { findPartner, findPartnerByToken, findPartnerFile } from '../lib/partners';
+import { buildParticipantView, findParticipantOverlay } from '../lib/participant';
 import { buildProposalView } from '../lib/proposal';
 import { serveObject, type AppContext } from './helpers';
 
@@ -33,6 +37,18 @@ const PUBLIC_IMAGE_CACHE = { 'Cache-Control': 'private, max-age=3600' };
 const NOT_FOUND_PAGE = `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>404</title></head>
 <body><h1>404</h1></body></html>`;
+
+// Shown at the address of a Mission Day whose participant view is not
+// public yet. The visitor's language is unknown, so it says it in all three.
+const NOT_PUBLISHED_PAGE = `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Mission Day</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;font:16px/1.6 system-ui,sans-serif;background:#eef0f3;color:#1c2128}main{padding:1.5rem;text-align:center}p{margin:.25rem 0}</style>
+</head><body><main>
+<p lang="ca">Aquest Mission Day encara no s'ha publicat.</p>
+<p lang="es">Este Mission Day aún no se ha publicado.</p>
+<p lang="en">This Mission Day has not been published yet.</p>
+</main></body></html>`;
 
 /**
  * Finds a proposal and its Mission Day.
@@ -62,6 +78,21 @@ async function requireProposal(c: AppContext): Promise<FoundProposal> {
     throw new HTTPException(404, { message: 'not_found' });
   }
   return found;
+}
+
+/**
+ * Loads the Mission Day named in the path, provided its participant view
+ * has been published.
+ *
+ * @param c - Request context.
+ * @returns The Mission Day.
+ */
+async function requirePublished(c: AppContext): Promise<MissionDay> {
+  const missionDay = await findMissionDayBySlug(c.env.DB, c.req.param('slug') ?? '');
+  if (missionDay === null || !missionDay.participantViewEnabled) {
+    throw new HTTPException(404, { message: 'not_found' });
+  }
+  return missionDay;
 }
 
 /**
@@ -127,6 +158,72 @@ publicApi.get('/proposals/:token/map-screenshot', async (c) => {
   return serveObject(c, file.key, file.type, PUBLIC_IMAGE_CACHE);
 });
 
+// The participant view: shared only through chosen channels, so it is kept
+// out of search engines like everything else here.
+publicApi.get('/mission-days/:slug', async (c) => {
+  const missionDay = await requirePublished(c);
+  const [missions, overlay] = await Promise.all([
+    listMissions(c.env.DB, missionDay.id),
+    findParticipantOverlay(c.env.DB, missionDay),
+  ]);
+  c.header('Cache-Control', 'no-cache');
+  return c.json(buildParticipantView(missionDay, missions, overlay?.tag ?? null));
+});
+
+publicApi.get('/mission-days/:slug/missions/:missionId/photo', async (c) => {
+  const missionDay = await requirePublished(c);
+  const mission = await findMission(c.env.DB, missionDay.id, c.req.param('missionId'));
+  const key =
+    mission === null || !mission.selected
+      ? null
+      : await findPhotoKey(c.env.DB, missionDay.id, mission.id);
+  if (key === null) {
+    throw new HTTPException(404, { message: 'not_found' });
+  }
+  return serveObject(c, key, 'image/png', PUBLIC_IMAGE_CACHE);
+});
+
+publicApi.get('/mission-days/:slug/overlay', async (c) => {
+  const overlay = await findParticipantOverlay(c.env.DB, await requirePublished(c));
+  if (overlay === null) {
+    throw new HTTPException(404, { message: 'not_found' });
+  }
+  return serveObject(c, overlay.key, overlay.type, PUBLIC_IMAGE_CACHE);
+});
+
+/**
+ * Answers `/:slug`, the participant view. A Mission Day whose view is not
+ * published gets a short notice; any other address carries on to the next
+ * handler, which serves static files.
+ *
+ * @param c - Request context.
+ * @param next - Next handler.
+ * @returns The page, the notice, or the next handler's answer.
+ */
+export const serveParticipantPage: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const slug = c.req.param('slug') ?? '';
+  // Slugs never contain a dot, so files at the root skip the lookup.
+  const missionDay = slug.includes('.') ? null : await findMissionDayBySlug(c.env.DB, slug);
+  if (missionDay === null) {
+    return next();
+  }
+  if (!missionDay.participantViewEnabled) {
+    return c.html(NOT_PUBLISHED_PAGE, 404, {
+      'X-Robots-Tag': 'noindex',
+      'Cache-Control': 'no-store',
+    });
+  }
+  const url = new URL(c.req.url);
+  url.pathname = '/participant/';
+  url.search = '';
+  const asset = await c.env.ASSETS.fetch(new Request(url, c.req.raw));
+  const page = new Response(asset.body, asset);
+  page.headers.set('X-Robots-Tag', 'noindex');
+  page.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  page.headers.set('Cache-Control', 'no-cache');
+  return page;
+};
+
 /**
  * Answers `/:slug/sample` with the picture sent with the application: a
  * plain PNG, so that it also works for a program that fetches the address.
@@ -146,7 +243,7 @@ export const serveSample: MiddlewareHandler<AppEnv> = async (c, next) => {
   let allowed = file !== null;
   if (allowed && missionDay.samplePartnerId !== null) {
     const partner = await findPartner(c.env.DB, missionDay.id, missionDay.samplePartnerId);
-    allowed = partner !== null && partner.status === 'accepted' && partner.hasApproval;
+    allowed = partner !== null && mayShowLogo(partner);
   }
   if (file === null || !allowed) {
     return c.html(NOT_FOUND_PAGE, 404, { 'X-Robots-Tag': 'noindex' });

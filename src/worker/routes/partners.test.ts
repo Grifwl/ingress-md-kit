@@ -137,6 +137,20 @@ async function createMission(landmark: string, selected: boolean): Promise<Missi
   return mission;
 }
 
+/**
+ * Creates a partner that has given its signed permission.
+ *
+ * @returns The partner.
+ */
+async function approvedPartner(): Promise<Partner> {
+  const partner = await createPartner();
+  const pdf = new Uint8Array(40);
+  pdf.set(new TextEncoder().encode('%PDF-1.7'));
+  await partnersApi(`/${partner.id}/approval`, { method: 'PUT', rawBody: pdf });
+  await partnersApi(`/${partner.id}/status`, { method: 'POST', body: { status: 'accepted' } });
+  return partner;
+}
+
 beforeEach(async () => {
   await env.DB.batch([
     env.DB.prepare('DELETE FROM mission_days'),
@@ -332,20 +346,6 @@ describe('partner files', () => {
 describe('sample picture', () => {
   const generate = `/api/admin/mission-days/${SLUG}/sample`;
   const image = pngHeader(IMAGE_SIZE_PX, 6);
-
-  /**
-   * Creates a partner that has given its signed permission.
-   *
-   * @returns The partner.
-   */
-  async function approvedPartner(): Promise<Partner> {
-    const partner = await createPartner();
-    const pdf = new Uint8Array(40);
-    pdf.set(new TextEncoder().encode('%PDF-1.7'));
-    await partnersApi(`/${partner.id}/approval`, { method: 'PUT', rawBody: pdf });
-    await partnersApi(`/${partner.id}/status`, { method: 'POST', body: { status: 'accepted' } });
-    return partner;
-  }
 
   /**
    * Fetches the picture the way a program would: no session, in production.
@@ -554,5 +554,128 @@ describe('public proposal', () => {
       const response = await send('/assets/admin.js');
       expect(await response.text()).toBe('<html>page</html>');
     });
+  });
+});
+
+describe('participant view', () => {
+  const day = `/api/admin/mission-days/${SLUG}`;
+  const api = `/api/public/mission-days/${SLUG}`;
+
+  /**
+   * Publishes or withdraws the participant view.
+   *
+   * @param enabled - Whether it is public.
+   * @param partnerId - Partner whose overlay it uses.
+   * @param as - Identity of the requester.
+   * @returns The response.
+   */
+  function configure(enabled: boolean, partnerId: string | null = null, as = OWNER) {
+    return send(`${day}/participant-view`, { method: 'PUT', body: { enabled, partnerId }, as });
+  }
+
+  /**
+   * Fetches a public address the way a participant would: no session.
+   *
+   * @param path - Path to request.
+   * @returns The response.
+   */
+  async function visit(path: string): Promise<Response> {
+    return app.fetch(new Request(`https://md.example.org${path}`), {
+      ...testEnv(STRANGER),
+      ENVIRONMENT: 'production',
+      INSTANCE_ADMINS: '',
+    } as unknown as Env);
+  }
+
+  it('says it is not published until an owner publishes it', async () => {
+    const page = await visit(`/${SLUG}`);
+    expect(page.status).toBe(404);
+    expect(page.headers.get('X-Robots-Tag')).toBe('noindex');
+    expect(await page.text()).toContain('not been published yet');
+    expect((await visit(api)).status).toBe(404);
+  });
+
+  it('can only be published by an owner', async () => {
+    expect((await configure(true, null, EDITOR)).status).toBe(403);
+    const response = await configure(true);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      participantViewEnabled: true,
+      participantPartnerId: null,
+    });
+  });
+
+  it('serves the page and only public data of the selected missions', async () => {
+    const chosen = await createMission('Old Bridge', true);
+    const other = await createMission('Hidden Corner', false);
+    await configure(true);
+
+    const page = await visit(`/${SLUG}`);
+    expect(page.status).toBe(200);
+    expect(page.headers.get('X-Robots-Tag')).toBe('noindex');
+
+    const body = await (await visit(api)).text();
+    expect(body).not.toContain('secret note');
+    expect(body).not.toContain(other.id);
+    expect(JSON.parse(body)).toMatchObject({
+      city: 'Example City',
+      overlayTag: null,
+      missions: [
+        {
+          id: chosen.id,
+          name: 'MD 2027: Example City, Old Bridge',
+          description: { ca: 'Un passeig.' },
+          order: 1,
+        },
+      ],
+    });
+  });
+
+  it('serves photos of selected missions only, and nothing once withdrawn', async () => {
+    const chosen = await createMission('Old Bridge', true);
+    const other = await createMission('Hidden Corner', false);
+    for (const mission of [chosen, other]) {
+      await send(`${day}/missions/${mission.id}/photo?x=0&y=0&size=10`, {
+        method: 'PUT',
+        rawBody: pngHeader(IMAGE_SIZE_PX, 2),
+      });
+    }
+    await configure(true);
+    expect((await visit(`${api}/missions/${chosen.id}/photo`)).status).toBe(200);
+    expect((await visit(`${api}/missions/${other.id}/photo`)).status).toBe(404);
+
+    await configure(false);
+    expect((await visit(`${api}/missions/${chosen.id}/photo`)).status).toBe(404);
+  });
+
+  it('uses an approved partner overlay while the permission lasts', async () => {
+    await send(`${day}/default-overlay`, { method: 'PUT', rawBody: pngHeader(IMAGE_SIZE_PX, 6) });
+    const partner = await approvedPartner();
+    expect((await configure(true, partner.id)).status).toBe(409);
+
+    const overlay = pngHeader(IMAGE_SIZE_PX, 6);
+    overlay[32] = 7;
+    await partnersApi(`/${partner.id}/overlay`, { method: 'PUT', rawBody: overlay });
+    expect((await configure(true, partner.id)).status).toBe(200);
+
+    const view = (await (await visit(api)).json()) as { overlayTag: string };
+    expect(view.overlayTag).toMatch(/^p1-/);
+    const served = await visit(`${api}/overlay`);
+    expect(new Uint8Array(await served.arrayBuffer())).toEqual(overlay);
+
+    // A withdrawn permission brings back the default overlay by itself.
+    await partnersApi(`/${partner.id}/status`, { method: 'POST', body: { status: 'declined' } });
+    const after = (await (await visit(api)).json()) as { overlayTag: string };
+    expect(after.overlayTag).toBe('d1');
+  });
+
+  it('refuses a partner without signed permission', async () => {
+    const partner = await createPartner();
+    expect((await configure(true, partner.id)).status).toBe(403);
+  });
+
+  it('leaves other addresses to the static files', async () => {
+    expect(await (await visit('/no-such-day')).text()).toBe('<html>page</html>');
+    expect(await (await visit('/favicon.ico')).text()).toBe('<html>page</html>');
   });
 });

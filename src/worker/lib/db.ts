@@ -31,6 +31,7 @@ interface MissionDayRow {
   letter_json: string;
   my_maps_url: string | null;
   participant_view_enabled: number;
+  participant_partner_id: string | null;
   default_overlay_key: string | null;
   default_overlay_version: number;
   map_screenshot_key: string | null;
@@ -143,6 +144,7 @@ function toMissionDay(row: MissionDayRow): MissionDay {
     letter: parseLetterJson(row.letter_json),
     myMapsUrl: row.my_maps_url,
     participantViewEnabled: row.participant_view_enabled === 1,
+    participantPartnerId: row.participant_partner_id,
     hasDefaultOverlay: row.default_overlay_key !== null,
     defaultOverlayVersion: row.default_overlay_version,
     hasMapScreenshot: row.map_screenshot_key !== null,
@@ -302,6 +304,30 @@ export async function saveSamplePartner(
   await db
     .prepare('UPDATE mission_days SET sample_partner_id = ? WHERE id = ?')
     .bind(partnerId, missionDayId)
+    .run();
+}
+
+/**
+ * Publishes or withdraws the participant view and chooses whose overlay
+ * it applies. The caller has checked the partner, if any.
+ *
+ * @param db - D1 binding.
+ * @param missionDayId - Mission Day being edited.
+ * @param enabled - Whether the page is public.
+ * @param partnerId - Partner whose overlay it uses, or null for the default.
+ */
+export async function saveParticipantView(
+  db: D1Database,
+  missionDayId: string,
+  enabled: boolean,
+  partnerId: string | null,
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE mission_days SET participant_view_enabled = ?, participant_partner_id = ?
+       WHERE id = ?`,
+    )
+    .bind(enabled ? 1 : 0, partnerId, missionDayId)
     .run();
 }
 

@@ -21,6 +21,9 @@ export const MISSION_FORMATS = {
 /** Identifier of a Mission Day format. */
 export type MissionFormat = keyof typeof MISSION_FORMATS;
 
+/** Missions an agent must complete on the day of the event to earn the medal. */
+export const MEDAL_MISSIONS = 6;
+
 /** Maximum length of a full mission name, in characters. */
 export const MISSION_NAME_MAX_LENGTH = 50;
 
@@ -52,6 +55,7 @@ export const RESERVED_SLUGS: readonly string[] = [
   'assets',
   'letter-defaults',
   'new',
+  'participant',
   'profile',
   'public',
 ];

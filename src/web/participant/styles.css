@@ -1,0 +1,200 @@
+/*
+ * The participant view is read mostly on phones, in the street, so it is
+ * a single column with large touch targets. It follows the visitor's light
+ * or dark preference, since agents often play at night.
+ */
+:root {
+  color-scheme: light dark;
+  --bg: #eef0f3;
+  --surface: #ffffff;
+  --text: #1c2128;
+  --muted: #5f6b7a;
+  --border: #d7dce3;
+  --accent: #0b6e8f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c;
+    --surface: #1d2229;
+    --text: #e6e9ed;
+    --muted: #9aa4b1;
+    --border: #2f3640;
+    --accent: #4fb3d6;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    16px/1.55 system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+a {
+  color: var(--accent);
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.3rem;
+}
+
+h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+
+p {
+  margin: 0 0 0.5rem;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 1rem 16px 2.5rem;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.toolbar select {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.date {
+  margin: 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.note,
+.status {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.medal {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.medal img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mosaic {
+  display: grid;
+  gap: 6px;
+}
+
+.map {
+  width: 100%;
+  height: 420px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  z-index: 0;
+}
+
+.map-frame {
+  margin-bottom: 0.75rem;
+}
+
+.missions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mission {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 1rem;
+  align-items: start;
+  padding: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.mission-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+details summary {
+  padding: 0.35rem 0;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.portals {
+  margin: 0.25rem 0 0;
+  padding-left: 1.4rem;
+}
+
+.portals li {
+  padding: 0.2rem 0;
+}
+
+@media (max-width: 560px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .mosaic {
+    gap: 3px;
+  }
+
+  .map {
+    height: 320px;
+  }
+
+  .mission {
+    grid-template-columns: 64px 1fr;
+    gap: 0.75rem;
+  }
+}

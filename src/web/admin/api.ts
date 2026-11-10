@@ -398,6 +398,22 @@ export function uploadSample(
 }
 
 /**
+ * Publishes or withdraws the participant view, and chooses its overlay.
+ *
+ * @param slug - Mission Day slug.
+ * @param enabled - Whether the page is public.
+ * @param partnerId - Partner whose overlay it uses, or null for the default.
+ * @returns The updated Mission Day.
+ */
+export function saveParticipantView(
+  slug: string,
+  enabled: boolean,
+  partnerId: string | null,
+): Promise<MissionDayWithRole> {
+  return request(`${dayPath(slug)}/participant-view`, json('PUT', { enabled, partnerId }));
+}
+
+/**
  * Builds the API path of a partner.
  *
  * @param slug - Mission Day slug.

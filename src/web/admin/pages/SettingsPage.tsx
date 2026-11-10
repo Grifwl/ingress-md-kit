@@ -7,6 +7,7 @@ import type {
   LetterSections,
   MissionDayStatus,
   MissionDayWithRole,
+  Partner,
   PointOfContact,
   Team,
   TeamContact,
@@ -22,6 +23,7 @@ import {
 } from '../api';
 import { ConfirmButton, ErrorMessage, Field, FileUpload } from '../components/common';
 import { LetterEditor } from '../components/LetterEditor';
+import { ParticipantViewSettings } from '../components/ParticipantViewSettings';
 import { navigate } from '../router';
 
 const FORMATS = Object.keys(MISSION_FORMATS) as MissionFormat[];
@@ -107,14 +109,16 @@ function PocInputs({
 /**
  * The settings screen.
  *
- * @param props - The Mission Day and a callback receiving saved changes.
+ * @param props - The Mission Day, its partners and a callback receiving saved changes.
  * @returns The page element.
  */
 export function SettingsPage({
   missionDay,
+  partners,
   onChange,
 }: {
   missionDay: MissionDayWithRole;
+  partners: readonly Partner[];
   onChange: (missionDay: MissionDayWithRole) => void;
 }) {
   const { t } = useI18n();
@@ -300,6 +304,8 @@ export function SettingsPage({
           {saved && <span class="muted">{t('common.saved')}</span>}
         </div>
       </form>
+
+      <ParticipantViewSettings missionDay={missionDay} partners={partners} onChange={onChange} />
 
       <section class="card">
         <h2>{t('settings.images')}</h2>
