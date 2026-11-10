@@ -87,10 +87,15 @@ export function kmlColour(colour: string): string {
   return `ff${blue}${green}${red}`.toLowerCase();
 }
 
+/** Blank pin My Maps writes in its own files; a colour without an icon is lost on import. */
+const KML_POINT_ICON = 'https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png';
+
 /**
- * Builds the map file. It has only two top-level folders because My Maps
- * allows ten layers: portals grouped per mission, and one independent line
- * per mission, with nothing that joins two missions.
+ * Builds the map file. My Maps turns each innermost folder into a layer and
+ * stops at its limit of ten, dropping the rest, so there are exactly two
+ * folders and no nesting: every portal in one, and in the other one
+ * independent line per mission, with nothing that joins two missions. Since
+ * the portals share a layer, each one names its mission and has its colour.
  *
  * @param missionDay - Provides the names.
  * @param selected - Selected missions, in order.
@@ -108,20 +113,18 @@ export function buildKml(
 
   const styles = named.map(
     ({ mission, styleId }) =>
-      `<Style id="${styleId}"><IconStyle><color>${kmlColour(mission.colour)}</color></IconStyle>` +
+      `<Style id="${styleId}"><IconStyle><color>${kmlColour(mission.colour)}</color>` +
+      `<scale>1</scale><Icon><href>${KML_POINT_ICON}</href></Icon></IconStyle>` +
       `<LineStyle><color>${kmlColour(mission.colour)}</color><width>4</width></LineStyle></Style>`,
   );
 
-  const portals = named.map(
-    ({ mission, styleId, name }) =>
-      `<Folder><name>${name}</name>${mission.waypoints
-        .map(
-          (waypoint, position) =>
-            `<Placemark><name>${position + 1}. ${xml(waypoint.title)}</name>` +
-            `<styleUrl>#${styleId}</styleUrl>` +
-            `<Point><coordinates>${waypoint.lng},${waypoint.lat},0</coordinates></Point></Placemark>`,
-        )
-        .join('')}</Folder>`,
+  const portals = named.flatMap(({ mission, styleId, name }) =>
+    mission.waypoints.map(
+      (waypoint, position) =>
+        `<Placemark><name>${position + 1}. ${xml(waypoint.title)}</name>` +
+        `<description>${name}</description><styleUrl>#${styleId}</styleUrl>` +
+        `<Point><coordinates>${waypoint.lng},${waypoint.lat},0</coordinates></Point></Placemark>`,
+    ),
   );
 
   // A line needs two points, so a mission with fewer portals has no route.

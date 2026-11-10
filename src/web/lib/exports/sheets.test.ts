@@ -84,6 +84,22 @@ describe('buildKml', () => {
     expect(count(kml, '<Point>')).toBe(2);
   });
 
+  it('stays within two folders however many missions there are', () => {
+    const many = Array.from({ length: 24 }, (_, index) => mission(`M${index}`));
+    const kml = buildKml(missionDay, many);
+    expect(count(kml, '<Folder>')).toBe(2);
+    expect(count(kml, '<Point>')).toBe(48);
+    expect(count(kml, '<LineString>')).toBe(24);
+  });
+
+  it('gives each portal its mission and a coloured icon', () => {
+    const kml = buildKml(missionDay, [mission('A')]);
+    expect(kml).toContain(
+      '<description>MD 2027: Example City, A</description><styleUrl>#mission-1</styleUrl>',
+    );
+    expect(kml).toMatch(/<color>ff996633<\/color><scale>1<\/scale><Icon><href>https:/);
+  });
+
   it('escapes titles', () => {
     expect(buildKml(missionDay, [mission('A', 'Fish & <Chips>')])).toContain(
       'Fish &amp; &lt;Chips&gt;',
