@@ -19,7 +19,7 @@ import type { Mission, MissionDay, MissionDayWithRole, Partner } from '../../../
 import { useI18n } from '../../i18n';
 import { translate, type MessageKey } from '../../i18n/messages';
 import { composeImage } from '../../lib/compose';
-import { buildApplicationBlocks } from '../../lib/exports/application';
+import { APPLICATION_LANGUAGE, buildApplicationBlocks } from '../../lib/exports/application';
 import { downloadFile } from '../../lib/exports/download';
 import { buildKml, buildMissionSheet } from '../../lib/exports/sheets';
 import { buildZip, missionImageName, type ZipEntry } from '../../lib/exports/zip';
@@ -283,10 +283,9 @@ export function ExportsPage({
         missionDay,
         selected,
         applicationPartner,
-        language,
         applicationPartner === null
           ? ''
-          : translate(language, `partnerStatus.${applicationPartner.status}`),
+          : translate(APPLICATION_LANGUAGE, `partnerStatus.${applicationPartner.status}`),
         sampleUrl,
       );
 

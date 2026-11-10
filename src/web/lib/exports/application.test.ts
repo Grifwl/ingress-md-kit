@@ -6,7 +6,7 @@ const SAMPLE_URL = 'https://md.example.org/example-2027/sample';
 
 const missionDay = {
   city: 'Example City',
-  letter: { whyThisCity: { ca: 'Perquè {city} és bonica.' } },
+  letter: { whyThisCity: { ca: 'Perquè {city} és bonica.', en: 'Because {city} is lovely.' } },
   applicationTheme: 'Heritage',
   applicationDifference: '',
   myMapsUrl: 'https://example.org/map',
@@ -28,16 +28,17 @@ const selected = [{ landmark: 'Bridge' }, { landmark: 'Tower' }] as Mission[];
  */
 function answers(partner: Partner | null, day: MissionDay = missionDay): Record<string, string> {
   return Object.fromEntries(
-    buildApplicationBlocks(day, selected, partner, 'ca', 'En converses', SAMPLE_URL).map(
-      (block) => [block.key, block.text],
-    ),
+    buildApplicationBlocks(day, selected, partner, 'In talks', SAMPLE_URL).map((block) => [
+      block.key,
+      block.text,
+    ]),
   );
 }
 
 describe('buildApplicationBlocks', () => {
   it('fills every answer of the form', () => {
     expect(answers(null)).toEqual({
-      whyThisCity: 'Perquè Example City és bonica.',
+      whyThisCity: 'Because Example City is lovely.',
       theme: 'Heritage',
       attractions: 'Bridge\nTower',
       mapLink: 'https://example.org/map',
@@ -49,7 +50,15 @@ describe('buildApplicationBlocks', () => {
   });
 
   it('names the partner and how far the talks have got', () => {
-    expect(answers({ name: 'The Museum' } as Partner).partner).toBe('The Museum (En converses)');
+    expect(answers({ name: 'The Museum' } as Partner).partner).toBe('The Museum (In talks)');
+  });
+
+  it('falls back to another language when there is no English text', () => {
+    const day = {
+      ...missionDay,
+      letter: { whyThisCity: { ca: 'Perquè {city} és bonica.' } },
+    } as unknown as MissionDay;
+    expect(answers(null, day).whyThisCity).toBe('Perquè Example City és bonica.');
   });
 
   it('adds what makes it different only when there is something to say', () => {

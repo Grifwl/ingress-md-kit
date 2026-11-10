@@ -6,6 +6,9 @@ import { fillLetterPlaceholders, resolveLocalized } from '../../../shared/letter
 import type { Language } from '../../../shared/rules';
 import type { Mission, MissionDay, Partner, PointOfContact } from '../../../shared/types';
 
+/** The form is in English, so its answers are too, whatever the interface uses. */
+export const APPLICATION_LANGUAGE: Language = 'en';
+
 /** Identifies each answer of the form. */
 export type ApplicationBlockKey =
   | 'whyThisCity'
@@ -46,8 +49,7 @@ function contactLines(faction: string, person: PointOfContact): string {
  * @param missionDay - The Mission Day.
  * @param selected - Selected missions, in order.
  * @param partner - The partner, or null when there is none.
- * @param language - Language of the texts.
- * @param partnerStatusLabel - Translated status of the partner.
+ * @param partnerStatusLabel - Status of the partner, in the application's language.
  * @param sampleUrl - Address of the picture of the logo/medal.
  * @returns The answers, in the order of the form.
  */
@@ -55,17 +57,16 @@ export function buildApplicationBlocks(
   missionDay: MissionDay,
   selected: readonly Mission[],
   partner: Partner | null,
-  language: Language,
   partnerStatusLabel: string,
   sampleUrl: string,
 ): ApplicationBlock[] {
   const blocks: ApplicationBlock[] = [
     {
       key: 'whyThisCity',
-      text: fillLetterPlaceholders(resolveLocalized(missionDay.letter.whyThisCity, language), {
-        partner: partner?.name ?? '',
-        city: missionDay.city,
-      }),
+      text: fillLetterPlaceholders(
+        resolveLocalized(missionDay.letter.whyThisCity, APPLICATION_LANGUAGE),
+        { partner: partner?.name ?? '', city: missionDay.city },
+      ),
     },
     { key: 'theme', text: missionDay.applicationTheme },
     { key: 'attractions', text: selected.map((mission) => mission.landmark).join('\n') },
