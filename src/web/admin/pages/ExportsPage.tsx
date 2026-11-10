@@ -32,6 +32,46 @@ import { candidatesForList, selectedInOrder } from '../lib/selection';
 const CSV_MIME_TYPE = 'text/csv;charset=utf-8';
 const KML_MIME_TYPE = 'application/vnd.google-earth.kml+xml';
 
+/** Where organisers create the map. */
+const MY_MAPS_URL = 'https://www.google.com/maps/d/';
+
+/** Steps of the My Maps guide, in the order they are followed. */
+const MY_MAPS_GUIDE_STEPS = [
+  'exports.kmlGuideStep1',
+  'exports.kmlGuideStep2',
+  'exports.kmlGuideStep3',
+  'exports.kmlGuideStep4',
+  'exports.kmlGuideStep5',
+] as const;
+
+/**
+ * Short guide to turn the KML into the shared map the application links to.
+ * My Maps can only be filled by hand, so these steps are the whole process.
+ *
+ * @returns The guide element.
+ */
+function MyMapsGuide() {
+  const { t } = useI18n();
+  return (
+    <div>
+      <span class="field-label">{t('exports.kmlGuideTitle')}</span>
+      <ol class="guide-steps">
+        {MY_MAPS_GUIDE_STEPS.map((step, index) => (
+          <li key={step}>
+            {index === 0 ? (
+              <a href={MY_MAPS_URL} target="_blank" rel="noopener">
+                {t(step)}
+              </a>
+            ) : (
+              t(step)
+            )}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 /**
  * One export: its description, what prevents it, and its button.
  *
@@ -374,7 +414,9 @@ export function ExportsPage({
               KML_MIME_TYPE,
             )
           }
-        />
+        >
+          <MyMapsGuide />
+        </ExportCard>
       </div>
 
       <UmmImport missionDay={missionDay} missions={missions} onImported={onMissionsChange} />

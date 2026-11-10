@@ -246,6 +246,12 @@ textarea {
   align-items: start;
 }
 
+.guide-steps {
+  margin-top: 0.35rem;
+  padding-left: 1.25rem;
+  list-style: decimal;
+}
+
 .answer {
   display: flex;
   flex-direction: column;
