@@ -140,6 +140,12 @@ a {
   background: var(--accent-soft);
 }
 
+.signoff {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .consent {
   padding: 1.25rem 1.5rem;
   border: 1px solid var(--border);
@@ -295,6 +301,10 @@ a {
 
   .sheet.cover {
     break-before: auto;
+  }
+
+  .signoff {
+    break-before: page;
   }
 
   /*

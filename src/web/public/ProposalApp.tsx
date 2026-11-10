@@ -68,7 +68,9 @@ function LetterBlock({ title, text }: { title?: string; text: string }) {
 
 /**
  * Block the partner can sign to give its written approval, either by hand
- * on a printed copy or with an electronic signature on the saved PDF.
+ * on a printed copy or with an electronic signature on the saved PDF. The
+ * signed copy ends up with Niantic Spatial, so outside English it also
+ * carries the English wording next to that of the partner.
  *
  * @param props - The proposal and a translation function.
  * @returns The block element.
@@ -80,25 +82,35 @@ function ConsentBlock({
   view: ProposalView;
   t: (key: MessageKey, params?: MessageParams) => string;
 }) {
+  const isBilingual = view.language !== 'en';
+  const params = { partner: view.partnerName, city: view.city, year: view.year };
+
+  /**
+   * Builds a short label, in both languages when the block is bilingual.
+   *
+   * @param key - Message key.
+   * @returns The label.
+   */
+  const label = (key: MessageKey) => (isBilingual ? `${t(key)} / ${translate('en', key)}` : t(key));
+
   return (
     <div class="consent">
-      <h2>{t('proposal.consent')}</h2>
-      <p class="prose">
-        {t('proposal.consentText', {
-          partner: view.partnerName,
-          city: view.city,
-          year: view.year,
-        })}
-      </p>
+      <h2>{label('proposal.consent')}</h2>
+      <p class="prose">{t('proposal.consentText', params)}</p>
+      {isBilingual && (
+        <p class="prose" lang="en">
+          {translate('en', 'proposal.consentText', params)}
+        </p>
+      )}
       <dl class="consent-fields">
         {CONSENT_FIELDS.map((field) => (
           <div key={field} class="consent-field">
-            <dt>{t(field)}</dt>
+            <dt>{label(field)}</dt>
             <dd />
           </div>
         ))}
         <div class="consent-field signature">
-          <dt>{t('proposal.consentSignature')}</dt>
+          <dt>{label('proposal.consentSignature')}</dt>
           <dd />
         </div>
       </dl>
@@ -226,8 +238,8 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
   const title = t('proposal.title', { city: view.city, year: view.year });
   const overlayUrl = view.hasOverlay ? `${base}/overlay?v=${view.overlayVersion}` : null;
   const hasRequest = view.letter.logoRequest.trim() !== '';
-  const hasPartnerSheet =
-    hasRequest || view.letter.whyYou.trim() !== '' || view.letter.closing.trim() !== '';
+  const hasClosing = view.letter.closing.trim() !== '';
+  const hasPartnerSheet = hasRequest || hasClosing || view.letter.whyYou.trim() !== '';
   const mapMissions = useMemo(
     () => view.missions.map(({ id, colour, waypoints }) => ({ id, colour, waypoints })),
     [view],
@@ -269,8 +281,15 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
               <p class="prose">{view.letter.logoRequest}</p>
             </div>
           )}
-          <LetterBlock text={view.letter.closing} />
-          {hasRequest && <ConsentBlock view={view} t={t} />}
+          {/* The farewell starts a new page, so the page break of a long
+              request can never fall in the middle of it, and the block to
+              sign stays right below it. */}
+          {(hasClosing || hasRequest) && (
+            <div class="signoff">
+              <LetterBlock text={view.letter.closing} />
+              {hasRequest && <ConsentBlock view={view} t={t} />}
+            </div>
+          )}
         </Sheet>
       )}
 
