@@ -181,7 +181,7 @@ Google no ofrece ninguna API para crear My Maps, así que la herramienta exporta
 
 La Mission Authoring Tool (missions.ingress.com) no tiene importación propia, pero el complemento comunitario **[Ultimate Mission Maker](https://umm.vashiru.tech/)** (UMM) añade una: instálalo en Tampermonkey, abre MAT, carga un archivo JSON de UMM y, para cada misión nueva, elígela de la lista: el título, la descripción y los portales quedan rellenados. Todavía tienes que subir la imagen y terminar cada misión a mano.
 
-Ingress MD Kit exporta las misiones seleccionadas como **archivo UMM (versión de formato 2)**, en el orden recomendado, con los nombres finales `MD <AÑO>: <Ciudad>, <Punto de interés>` y las descripciones. Después, en MAT, para cada misión:
+Ingress MD Kit exporta las misiones seleccionadas como **archivo UMM (versión de formato 2)**, en el orden recomendado, con los nombres finales `MD <AÑO>: <Ciudad>, <Punto de interés>` y las descripciones. Si el idioma elegido no es el inglés, cada descripción va seguida de una línea en blanco y del texto en inglés, siempre que quepa dentro de los 200 caracteres en todas las misiones; si en una misión no es posible, todas quedan solo en el idioma elegido. Después, en MAT, para cada misión:
 1. Misión nueva → elígela de la lista de UMM → Import;
 2. pon el tipo en **ANY ORDER** (compruébalo cada vez);
 3. sube su PNG del ZIP (los archivos están numerados en el mismo orden);

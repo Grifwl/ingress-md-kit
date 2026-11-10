@@ -227,7 +227,7 @@
   "exports.partnerHelp": "Without a partner, the default overlay is used.",
   "exports.noPartner": "None",
   "exports.language": "Language of the texts",
-  "exports.languageHelp": "For the descriptions and the application answers.",
+  "exports.languageHelp": "For the descriptions and the application answers. Unless it is English, the descriptions also include the English text, but only if it fits in every mission.",
   "exports.download": "Download",
   "exports.generating": "Generating…",
   "exports.progress": "Image {done} of {total}…",

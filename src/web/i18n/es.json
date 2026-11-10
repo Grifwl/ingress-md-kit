@@ -227,7 +227,7 @@
   "exports.partnerHelp": "Sin colaborador, se usa la capa por defecto.",
   "exports.noPartner": "Ninguno",
   "exports.language": "Idioma de los textos",
-  "exports.languageHelp": "Para las descripciones y las respuestas de la solicitud.",
+  "exports.languageHelp": "Para las descripciones y las respuestas de la solicitud. Si no es el inglés, las descripciones añaden también el texto en inglés, pero solo si cabe en todas las misiones.",
   "exports.download": "Descargar",
   "exports.generating": "Generando…",
   "exports.progress": "Imagen {done} de {total}…",

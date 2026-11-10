@@ -2,9 +2,9 @@
  * Text exports of the selected missions: the mission sheet (CSV) and the
  * map file for Google My Maps (KML).
  */
-import { resolveLocalized } from '../../../shared/letter';
 import { fullMissionName, type Language } from '../../../shared/rules';
 import type { Mission, MissionDay } from '../../../shared/types';
+import { exportedDescriptions } from './descriptions';
 
 /** Header row of the mission sheet. */
 const CSV_HEADER = [
@@ -44,12 +44,13 @@ export function buildMissionSheet(
   selected: readonly Mission[],
   language: Language,
 ): string {
+  const descriptions = exportedDescriptions(selected, language);
   const rows = selected.flatMap((mission, index) =>
     mission.waypoints.map((waypoint, position) =>
       [
         String(index + 1),
         textCell(fullMissionName(missionDay, mission.landmark)),
-        textCell(resolveLocalized(mission.description, language)),
+        textCell(descriptions[index]!),
         String(position + 1),
         textCell(waypoint.title),
         String(waypoint.lat),

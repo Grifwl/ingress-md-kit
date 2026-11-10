@@ -5,9 +5,9 @@
  * and all knowledge of them stays here, so that a future change of format
  * is a change in this one file.
  */
-import { resolveLocalized } from '../../shared/letter';
 import { WAYPOINTS_MAX, WAYPOINTS_MIN, fullMissionName, type Language } from '../../shared/rules';
 import type { Mission, MissionDay, Waypoint } from '../../shared/types';
+import { exportedDescriptions } from './exports/descriptions';
 
 /** The only version of the format this application understands. */
 const SUPPORTED_FORMAT_VERSION = 2;
@@ -125,6 +125,7 @@ export function buildUmmFile(
   missions: readonly Mission[],
   language: Language,
 ): UmmFile {
+  const descriptions = exportedDescriptions(missions, language);
   return {
     missionSetName: `MD ${missionDay.year}: ${missionDay.city}`,
     missionSetDescription: '',
@@ -132,9 +133,9 @@ export function buildUmmFile(
     plannedBannerLength: missions.length,
     titleFormat: 'T NN-M',
     fileFormatVersion: SUPPORTED_FORMAT_VERSION,
-    missions: missions.map((mission) => ({
+    missions: missions.map((mission, index) => ({
       missionTitle: fullMissionName(missionDay, mission.landmark),
-      missionDescription: resolveLocalized(mission.description, language),
+      missionDescription: descriptions[index]!,
       portals: mission.waypoints.map(toPortal),
     })),
   };

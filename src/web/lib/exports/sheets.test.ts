@@ -44,6 +44,11 @@ describe('buildMissionSheet', () => {
     expect(text).toContain(`"'=HYPERLINK(""x"")"`);
   });
 
+  it('writes the same bilingual description as the other exports', () => {
+    const bilingual = { ...mission('Bridge'), description: { ca: 'Un passeig.', en: 'A walk.' } };
+    expect(buildMissionSheet(missionDay, [bilingual], 'ca')).toContain('"Un passeig.\n\nA walk."');
+  });
+
   it('numbers missions in the order received', () => {
     const text = buildMissionSheet(missionDay, [mission('A'), mission('B')], 'en');
     expect(text.split('\r\n')[3]).toMatch(/^2,"MD 2027: Example City, B"/);

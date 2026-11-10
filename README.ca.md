@@ -181,7 +181,7 @@ Google no ofereix cap API per crear My Maps, així que l'eina exporta un **KML**
 
 La Mission Authoring Tool (missions.ingress.com) no té importació pròpia, però el connector comunitari **[Ultimate Mission Maker](https://umm.vashiru.tech/)** (UMM) n'hi afegeix una: instal·la'l a Tampermonkey, obre MAT, carrega un fitxer JSON d'UMM i, per a cada missió nova, tria-la de la llista: el títol, la descripció i els portals queden preomplerts. Encara has de pujar la imatge i acabar cada missió a mà.
 
-Ingress MD Kit exporta les missions seleccionades com a **fitxer UMM (versió de format 2)**, en l'ordre recomanat, amb els noms finals `MD <ANY>: <Ciutat>, <Punt d'interès>` i les descripcions. Després, a MAT, per a cada missió:
+Ingress MD Kit exporta les missions seleccionades com a **fitxer UMM (versió de format 2)**, en l'ordre recomanat, amb els noms finals `MD <ANY>: <Ciutat>, <Punt d'interès>` i les descripcions. Si l'idioma triat no és l'anglès, cada descripció va seguida d'una línia en blanc i del text en anglès, sempre que hi càpiga dins els 200 caràcters a totes les missions; si en una missió no és possible, totes queden només en l'idioma triat. Després, a MAT, per a cada missió:
 1. Missió nova → tria-la de la llista d'UMM → Import;
 2. posa el tipus a **ANY ORDER** (comprova-ho cada vegada);
 3. puja el seu PNG del ZIP (els fitxers estan numerats en el mateix ordre);

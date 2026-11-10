@@ -227,7 +227,7 @@
   "exports.partnerHelp": "Sense col·laborador, es fa servir la capa per defecte.",
   "exports.noPartner": "Cap",
   "exports.language": "Idioma dels textos",
-  "exports.languageHelp": "Per a les descripcions i les respostes de la sol·licitud.",
+  "exports.languageHelp": "Per a les descripcions i les respostes de la sol·licitud. Si no és l'anglès, les descripcions afegeixen també el text en anglès, però només si hi cap a totes les missions.",
   "exports.download": "Descarrega",
   "exports.generating": "S'està generant…",
   "exports.progress": "Imatge {done} de {total}…",

@@ -55,7 +55,7 @@ describe('buildUmmFile', () => {
     });
     expect(file.missions[0]).toMatchObject({
       missionTitle: 'MD 2027: Example City, Old Bridge',
-      missionDescription: 'Un passeig.',
+      missionDescription: 'Un passeig.\n\nA walk.',
     });
     expect(file.missions[0]!.portals[0]).toMatchObject({
       guid: 'g1',
