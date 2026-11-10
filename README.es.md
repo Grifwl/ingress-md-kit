@@ -32,14 +32,14 @@ Una sola instancia puede alojar **varios Mission Days** (p. ej. `/example-2027`,
   - el mapa de todas las misiones y la ruta de cada una, con líneas rectas entre sus portales y nunca entre misiones (mapa interactivo + imagen estática + enlace al Google My Maps compartido);
   - la petición de permiso para usar el logotipo y las fotos del colaborador: un texto por defecto que hereda cada colaborador nuevo y que se puede adaptar a cada uno.
   - Una hoja de estilo de impresión para que la página se pueda guardar como PDF y adjuntar a un correo.
-- **Vista para participantes** (opcional, una vez aprobado el Mission Day): las mismas misiones, mapas y orden recomendado, sin la carta.
+- **Vista para participantes** (cuando un propietario la publica, normalmente después de la aprobación): lo que los agentes necesitan para jugar, pensado para el móvil. Incluye las misiones seleccionadas en el orden recomendado, el mosaico, el mapa con cada ruta, el enlace a My Maps y, de cada misión, la descripción en el idioma del visitante, el portal de inicio y los portales con enlaces a Intel. Mientras no se publica, su dirección solo dice que el Mission Day aún no se ha publicado. Las imágenes llevan la capa predeterminada o la de un colaborador que elija un propietario entre los que han aceptado con el permiso firmado; si ese permiso decae, la capa predeterminada vuelve sola.
 
-Las páginas de propuesta son `noindex` y no están listadas: muestran logotipos que todavía no tienes permiso para usar.
+Todas las páginas públicas son `noindex`. Las de propuesta, además, no están listadas, porque muestran logotipos que todavía no tienes permiso para usar; la vista para participantes está pensada para compartirla donde quieras, como los canales de tus agentes.
 
 ### Parte privada (administración, detrás de Cloudflare Access)
 - **Mission Days**: puedes crear varios; cada uno tiene su dirección, ciudad, año, fecha, formato (18 / 24, o 6 para Lite), equipo (los puntos de contacto de ENL y RES), capa por defecto (sin colaborador) y textos compartidos de la carta.
 - **Textos por defecto de la carta**: textos de toda la instancia (quiénes somos, qué es Ingress…) que cada Mission Day nuevo copia al crearse y después puede adaptar.
-- **Organizadores**: cada Mission Day tiene sus propietarios y editores (por correo); cada organizador solo ve los Mission Days de los que forma parte.
+- **Organizadores**: cada Mission Day tiene su equipo, que se gestiona en la pestaña Organizadores. Los propietarios añaden personas por el correo con el que entrarán, cambian su rol y las quitan; los editores pueden cambiar todo lo demás, pero no gestionar el equipo ni borrar nada. Un Mission Day siempre conserva al menos un propietario, y cualquiera puede salir de un equipo. Cada organizador solo ve los Mission Days de los que forma parte, salvo que los administradores de la instancia pueden gestionar el equipo de cualquiera. Cada organizador tiene un perfil (nombre de agente y facción) que se muestra en la lista del equipo y en el historial de los colaboradores.
 - **Gestor de misiones**: crea *todas las misiones candidatas que quieras* (más de 24): nombre, descripción, punto de interés o tema, foto, portales y ruta.
 - **Selección y orden**: elige qué 18 o 24 candidatas forman el conjunto final, arrástralas para fijar el orden recomendado y mira el mosaico de 6 columnas en directo.
 - **Gestor de colaboradores**: colaboradores candidatos con datos de contacto, logotipo, PNG de la capa, el texto «por qué vosotros», estado (sin contactar → contactado → en conversaciones → aceptado / rechazado) y el documento de permiso firmado.
@@ -121,8 +121,11 @@ npm run deploy
 
 Después, en el panel de Cloudflare:
 1. **Dominio personalizado**: asocia el Worker a tu subdominio (p. ej. `md.example.org`).
-2. **Zero Trust → Access**: crea una aplicación para `md.example.org/admin*` y `md.example.org/api/admin*`, y permite los correos de todas las personas que organicen un Mission Day en esta instancia. Qué Mission Days puede editar cada una se decide dentro de la herramienta.
-3. Todo lo demás (páginas de los Mission Days y propuestas) queda fuera de Access.
+2. **Zero Trust → Settings → Authentication**: añade el método de entrada **One-time PIN**. Quien entra escribe su correo y Cloudflare le envía un código; no hace falta servidor de correo ni contraseña.
+3. **Zero Trust → Access → Applications**: crea una aplicación *self-hosted* para `md.example.org/admin*` y `md.example.org/api/admin*`, con una política *Allow* que incluya **Everyone**. Así Access solo comprueba quién es cada persona, y la herramienta decide qué ve: quien no forma parte de ningún Mission Day ve una lista vacía, y los propietarios pueden añadir organizadores sin tocar Cloudflare. Si prefieres revisar a cada persona tú mismo, incluye solo sus correos y añade también ahí a cada organizador nuevo.
+4. Todo lo demás (páginas de los Mission Days y propuestas) queda fuera de Access.
+
+El plan gratuito de Zero Trust cubre hasta 50 personas, contadas a medida que entran; puedes quitar las inactivas en Zero Trust → Users.
 
 `wrangler.toml` está ignorado por git: tu dominio, los identificadores y los datos nunca acaban en el repositorio.
 
@@ -138,20 +141,20 @@ npm run seed:local          # Mission Day de demostración ficticio
 npm run dev                 # después abre /admin
 ```
 
-`.dev.vars` define `ENVIRONMENT=dev`, el único modo en que el área de administración no pasa por Cloudflare Access.
+`.dev.vars` define `ENVIRONMENT=dev`, el único modo en que el área de administración no pasa por Cloudflare Access. En ese modo, la página de perfil (el nombre de arriba a la derecha) también permite cambiar a otra identidad de prueba, para ver qué ven los propietarios y los editores.
 
 ---
 
 ## Flujo de trabajo habitual
 
-1. Crea el Mission Day (ciudad, año, formato 18/24) y los textos compartidos de la carta.
+1. Crea el Mission Day (ciudad, año, formato 18/24) y los textos compartidos de la carta, y añade a los demás organizadores en la pestaña Organizadores.
 2. Esboza las misiones candidatas; elige los portales en IITC con Ultimate Mission Maker; sube una foto para cada una.
 3. Añade los colaboradores candidatos con su logotipo y el PNG de la capa.
 4. Selecciona las 18 o 24 misiones finales y su orden recomendado. Corrige los avisos de validación.
 5. Exporta el KML, impórtalo en Google My Maps, pega el enlace y sube una captura.
 6. Envía a cada colaborador el enlace de su propuesta (o el PDF). Haz el seguimiento de las respuestas.
 7. Cuando un colaborador diga que sí: sube su aprobación escrita, genera los PNG finales y la hoja de misiones, y rellena la solicitud de Niantic con el ayudante de solicitud.
-8. Después de la aprobación: crea las misiones en la Mission Authoring Tool con el archivo UMM y el ZIP de PNG, y publica la vista para participantes.
+8. Después de la aprobación: crea las misiones en la Mission Authoring Tool con el archivo UMM y el ZIP de PNG, publica la vista para participantes en Configuración y comparte su dirección con los agentes.
 
 ---
 
@@ -197,7 +200,7 @@ La hoja de misiones (CSV) sigue disponible como lista de comprobación imprimibl
 - [x] v0.2 — Colaboradores, compositor de capas, página pública de propuesta, impresión a PDF
 - [x] v0.3 — Importación/exportación UMM, otras exportaciones (ZIP de PNG, hoja de misiones, KML, ayudante de solicitud)
 - [ ] v0.4 — (opcional) complemento propio para IITC con sincronización en directo
-- [ ] v0.5 — Vista para participantes, varios organizadores por Mission Day
+- [x] v0.5 — Vista para participantes, varios organizadores por Mission Day
 
 ## Licencia
 

@@ -32,14 +32,14 @@ One instance can host **several Mission Days** (e.g. `/example-2027`, `/sample-t
   - the map of all missions and the route of each one — straight lines between its portals, never between missions (interactive map + static image + link to the shared Google My Maps);
   - the request for permission to use the partner's logo and photos: a default text every new partner inherits and that can be adapted to each one.
   - A print stylesheet so the page can be saved as PDF and attached to an email.
-- **Participant view** (optional, after the Mission Day is approved) — the same missions, maps and recommended order, without the letter.
+- **Participant view** (once an owner publishes it, usually after approval) — what agents need to play, laid out for phones: the selected missions in recommended order, the mosaic, the map with each route, the My Maps link, and for every mission its description in the visitor's language, its start portal and its portals with Intel links. Until it is published, its address only says that the Mission Day is not published yet. Its images carry the default overlay, or the overlay of one partner chosen by an owner among those that accepted with a signed permission; if that permission lapses, the default overlay comes back by itself.
 
-Proposal pages are `noindex` and unlisted: they show logos you do not have permission to use yet.
+All public pages are `noindex`. Proposal pages are also unlisted, because they show logos you do not have permission to use yet; the participant view is meant to be shared wherever you choose, such as your agents' channels.
 
 ### Private side (admin, behind Cloudflare Access)
 - **Mission Days** — create several; each has its slug, city, year, date, format (18 / 24, or 6 for Lite), team (both ENL and RES Points of Contact), default overlay (no partner) and shared letter texts.
 - **Default letter texts** — instance-wide texts (who we are, what Ingress is…) that every new Mission Day copies when it is created and can then adapt.
-- **Organisers** — each Mission Day has its own owners/editors (by email); an organiser only sees the Mission Days they belong to.
+- **Organisers** — each Mission Day has its own team, managed in its Organisers tab. Owners add people by the email they sign in with, change their role and remove them; editors can change everything else, but cannot manage the team or delete things. A Mission Day always keeps at least one owner, and anyone can leave a team. An organiser only sees the Mission Days they belong to, except that instance administrators can manage the team of any of them. Each organiser has a profile (codename, faction) that the team list and the partner history show.
 - **Mission manager** — create *as many candidate missions as you want* (more than 24): name, description, landmark/theme, photo, portals (waypoints) and route.
 - **Selection and order** — choose which 18 or 24 candidates make the final set, drag to set the recommended order, see the 6-column mosaic live.
 - **Partner manager** — candidate partners with contact info, logo, overlay PNG, the "why you" text, status (not contacted → contacted → in talks → accepted / declined) and the signed permission document.
@@ -121,8 +121,11 @@ npm run deploy
 
 Then, in the Cloudflare dashboard:
 1. **Custom domain**: attach the Worker to your subdomain (e.g. `md.example.org`).
-2. **Zero Trust → Access**: create an application for `md.example.org/admin*` and `md.example.org/api/admin*`, allowing the emails of everyone who organises a Mission Day on this instance. Which Mission Days each of them can edit is decided inside the tool.
-3. Everything else (Mission Day pages and proposals) stays outside Access.
+2. **Zero Trust → Settings → Authentication**: add the **One-time PIN** login method. Whoever signs in types their email and Cloudflare sends them a code; no mail server or password is needed.
+3. **Zero Trust → Access → Applications**: create a self-hosted application for `md.example.org/admin*` and `md.example.org/api/admin*`, with an *Allow* policy that includes **Everyone**. Access then only proves who someone is, and the tool decides what they see: a person who belongs to no Mission Day gets an empty list, and owners can add organisers without touching Cloudflare. If you prefer to vet every person yourself, include only their emails instead, and add each new organiser there too.
+4. Everything else (Mission Day pages and proposals) stays outside Access.
+
+The Zero Trust free plan covers up to 50 people, counted as they sign in; you can remove inactive ones under Zero Trust → Users.
 
 `wrangler.toml` is git-ignored: your domain, IDs and data never end up in the repository.
 
@@ -138,20 +141,20 @@ npm run seed:local          # fictional demo Mission Day
 npm run dev                 # then open /admin
 ```
 
-`.dev.vars` sets `ENVIRONMENT=dev`, the only mode in which the admin area skips Cloudflare Access.
+`.dev.vars` sets `ENVIRONMENT=dev`, the only mode in which the admin area skips Cloudflare Access. In that mode, the profile page (the name at the top right) can also switch to another test identity, to try what owners and editors see.
 
 ---
 
 ## Typical workflow
 
-1. Create the Mission Day (city, year, format 18/24) and the shared letter texts.
+1. Create the Mission Day (city, year, format 18/24) and the shared letter texts, and add the other organisers in its Organisers tab.
 2. Draft candidate missions; pick portals in IITC with Ultimate Mission Maker; upload a photo for each.
 3. Add candidate partners with their logo and overlay PNG.
 4. Select the final 18 or 24 missions and their recommended order. Fix validation warnings.
 5. Export the KML, import it into Google My Maps, paste the link and upload a screenshot.
 6. Send each partner its proposal link (or the PDF). Track the answers.
 7. When a partner says yes: upload their written approval, generate the final PNGs and the mission sheet, and fill in the Niantic application with the application helper.
-8. After approval: create the missions in the Mission Authoring Tool with the UMM file and the PNG ZIP, and publish the participant view.
+8. After approval: create the missions in the Mission Authoring Tool with the UMM file and the PNG ZIP, publish the participant view in Settings and share its address with the agents.
 
 ---
 
@@ -197,7 +200,7 @@ The mission sheet (CSV) is still there as a printable checklist.
 - [x] v0.2 — Partners, overlay composer, public proposal page, PDF print
 - [x] v0.3 — UMM import/export, other exports (PNG ZIP, mission sheet, KML, application helper)
 - [ ] v0.4 — (optional) own IITC plugin with live sync
-- [ ] v0.5 — Participant view, several organisers per Mission Day
+- [x] v0.5 — Participant view, several organisers per Mission Day
 
 ## License
 

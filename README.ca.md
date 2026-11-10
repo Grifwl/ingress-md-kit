@@ -32,14 +32,14 @@ Una sola instància pot allotjar **diversos Mission Days** (p. ex. `/example-202
   - el mapa de totes les missions i la ruta de cadascuna, amb línies rectes entre els seus portals i mai entre missions (mapa interactiu + imatge estàtica + enllaç al Google My Maps compartit);
   - la petició de permís per fer servir el logotip i les fotos del col·laborador: un text per defecte que hereta cada col·laborador nou i que es pot adaptar a cadascun.
   - Un full d'estil d'impressió perquè la pàgina es pugui desar com a PDF i adjuntar a un correu.
-- **Vista per als participants** (opcional, un cop aprovat el Mission Day): les mateixes missions, mapes i ordre recomanat, sense la carta.
+- **Vista per als participants** (quan un propietari la publica, normalment després de l'aprovació): el que els agents necessiten per jugar, pensat per al mòbil. Hi ha les missions seleccionades en l'ordre recomanat, el mosaic, el mapa amb cada ruta, l'enllaç a My Maps i, de cada missió, la descripció en l'idioma del visitant, el portal d'inici i els portals amb enllaços a Intel. Mentre no es publica, la seva adreça només diu que el Mission Day encara no s'ha publicat. Les imatges porten la capa per defecte o la d'un col·laborador que triï un propietari entre els que han acceptat amb el permís signat; si aquest permís decau, la capa per defecte torna sola.
 
-Les pàgines de proposta són `noindex` i no estan llistades: mostren logotips que encara no tens permís per fer servir.
+Totes les pàgines públiques són `noindex`. Les de proposta, a més, no estan llistades, perquè mostren logotips que encara no tens permís per fer servir; la vista per als participants està pensada per compartir-la on vulguis, com els canals dels teus agents.
 
 ### Part privada (administració, darrere de Cloudflare Access)
 - **Mission Days**: en pots crear diversos; cadascun té la seva adreça, ciutat, any, data, format (18 / 24, o 6 per a Lite), equip (els punts de contacte d'ENL i RES), capa per defecte (sense col·laborador) i textos compartits de la carta.
 - **Textos per defecte de la carta**: textos de tota la instància (qui som, què és Ingress…) que cada Mission Day nou copia en crear-se i després pot adaptar.
-- **Organitzadors**: cada Mission Day té els seus propietaris i editors (per correu); cada organitzador només veu els Mission Days dels quals forma part.
+- **Organitzadors**: cada Mission Day té el seu equip, que es gestiona a la pestanya Organitzadors. Els propietaris hi afegeixen gent pel correu amb què entrarà, en canvien el rol i la treuen; els editors poden canviar tota la resta, però no gestionar l'equip ni esborrar res. Un Mission Day sempre conserva com a mínim un propietari, i qualsevol pot sortir d'un equip. Cada organitzador només veu els Mission Days dels quals forma part, tret que els administradors de la instància poden gestionar l'equip de qualsevol. Cada organitzador té un perfil (nom d'agent i facció) que es mostra a la llista de l'equip i a l'historial dels col·laboradors.
 - **Gestor de missions**: crea *totes les missions candidates que vulguis* (més de 24): nom, descripció, punt d'interès o tema, foto, portals i ruta.
 - **Selecció i ordre**: tria quines 18 o 24 candidates formen el conjunt final, arrossega-les per fixar l'ordre recomanat i mira el mosaic de 6 columnes en directe.
 - **Gestor de col·laboradors**: col·laboradors candidats amb dades de contacte, logotip, PNG de la capa, el text «per què vosaltres», estat (sense contactar → contactat → en converses → acceptat / rebutjat) i el document de permís signat.
@@ -121,8 +121,11 @@ npm run deploy
 
 Després, al tauler de Cloudflare:
 1. **Domini personalitzat**: associa el Worker al teu subdomini (p. ex. `md.example.org`).
-2. **Zero Trust → Access**: crea una aplicació per a `md.example.org/admin*` i `md.example.org/api/admin*`, i permet els correus de tothom qui organitzi un Mission Day en aquesta instància. Quins Mission Days pot editar cadascú es decideix dins de l'eina.
-3. Tota la resta (pàgines dels Mission Days i propostes) queda fora d'Access.
+2. **Zero Trust → Settings → Authentication**: afegeix el mètode d'entrada **One-time PIN**. Qui entra escriu el seu correu i Cloudflare li envia un codi; no cal cap servidor de correu ni contrasenya.
+3. **Zero Trust → Access → Applications**: crea una aplicació *self-hosted* per a `md.example.org/admin*` i `md.example.org/api/admin*`, amb una política *Allow* que inclogui **Everyone**. Així Access només comprova qui és cadascú, i l'eina decideix què veu: qui no forma part de cap Mission Day veu una llista buida, i els propietaris poden afegir organitzadors sense tocar Cloudflare. Si prefereixes revisar cada persona tu mateix, inclou-hi només els seus correus i afegeix-hi també cada organitzador nou.
+4. Tota la resta (pàgines dels Mission Days i propostes) queda fora d'Access.
+
+El pla gratuït de Zero Trust cobreix fins a 50 persones, comptades a mesura que entren; pots treure les inactives a Zero Trust → Users.
 
 `wrangler.toml` està ignorat per git: el teu domini, els identificadors i les dades mai acaben al repositori.
 
@@ -138,20 +141,20 @@ npm run seed:local          # Mission Day de demostració fictici
 npm run dev                 # després obre /admin
 ```
 
-`.dev.vars` defineix `ENVIRONMENT=dev`, l'únic mode en què l'àrea d'administració no passa per Cloudflare Access.
+`.dev.vars` defineix `ENVIRONMENT=dev`, l'únic mode en què l'àrea d'administració no passa per Cloudflare Access. En aquest mode, la pàgina de perfil (el nom de dalt a la dreta) també permet canviar a una altra identitat de prova, per veure què veuen els propietaris i els editors.
 
 ---
 
 ## Flux de treball habitual
 
-1. Crea el Mission Day (ciutat, any, format 18/24) i els textos compartits de la carta.
+1. Crea el Mission Day (ciutat, any, format 18/24) i els textos compartits de la carta, i afegeix els altres organitzadors a la pestanya Organitzadors.
 2. Esbossa les missions candidates; tria els portals a IITC amb Ultimate Mission Maker; puja una foto per a cadascuna.
 3. Afegeix els col·laboradors candidats amb el seu logotip i el PNG de la capa.
 4. Selecciona les 18 o 24 missions finals i el seu ordre recomanat. Corregeix els avisos de validació.
 5. Exporta el KML, importa'l a Google My Maps, enganxa l'enllaç i puja una captura.
 6. Envia a cada col·laborador l'enllaç de la seva proposta (o el PDF). Fes el seguiment de les respostes.
 7. Quan un col·laborador digui que sí: puja la seva aprovació escrita, genera els PNG finals i el full de missions, i omple la sol·licitud de Niantic amb l'ajudant de sol·licitud.
-8. Després de l'aprovació: crea les missions a la Mission Authoring Tool amb el fitxer UMM i el ZIP de PNG, i publica la vista per als participants.
+8. Després de l'aprovació: crea les missions a la Mission Authoring Tool amb el fitxer UMM i el ZIP de PNG, publica la vista per als participants a Configuració i comparteix-ne l'adreça amb els agents.
 
 ---
 
@@ -197,7 +200,7 @@ El full de missions (CSV) continua disponible com a llista de comprovació impri
 - [x] v0.2 — Col·laboradors, compositor de capes, pàgina pública de proposta, impressió a PDF
 - [x] v0.3 — Importació/exportació UMM, altres exportacions (ZIP de PNG, full de missions, KML, ajudant de sol·licitud)
 - [ ] v0.4 — (opcional) connector propi per a IITC amb sincronització en directe
-- [ ] v0.5 — Vista per als participants, diversos organitzadors per Mission Day
+- [x] v0.5 — Vista per als participants, diversos organitzadors per Mission Day
 
 ## Llicència
 
