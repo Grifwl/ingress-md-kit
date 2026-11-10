@@ -163,6 +163,25 @@ export function createCertLoader(teamDomain: string): KeyLoader {
 }
 
 /**
+ * Reads the identity chosen in local development, if any.
+ *
+ * @param headers - Headers of the request.
+ * @returns The email in the `dev_user` cookie, or null.
+ */
+function devUserFromCookie(headers: Headers): string | null {
+  const match = /(?:^|;\s*)dev_user=([^;]+)/.exec(headers.get('Cookie') ?? '');
+  if (match === null) {
+    return null;
+  }
+  try {
+    const email = decodeURIComponent(match[1]!).trim();
+    return email.includes('@') ? email : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Determines who is making a request. The development bypass requires
  * `ENVIRONMENT=dev`, which only `.dev.vars` sets; the tracked configuration
  * declares `production`, so a deployment fails closed.
@@ -173,7 +192,9 @@ export function createCertLoader(teamDomain: string): KeyLoader {
  */
 export async function resolveEmail(headers: Headers, env: Env): Promise<string | null> {
   if (env.ENVIRONMENT === 'dev' && env.DEV_USER_EMAIL) {
-    return env.DEV_USER_EMAIL.toLowerCase();
+    // On a developer's computer, a cookie can stand in for another
+    // organiser, to try what each role sees without a real sign-in.
+    return (devUserFromCookie(headers) ?? env.DEV_USER_EMAIL).toLowerCase();
   }
   const token = headers.get('Cf-Access-Jwt-Assertion');
   if (token === null) {

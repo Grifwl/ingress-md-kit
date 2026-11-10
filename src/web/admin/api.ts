@@ -6,7 +6,11 @@ import type { Language, MissionFormat } from '../../shared/rules';
 import type {
   CropRect,
   CurrentUser,
+  Faction,
+  InstanceMissionDay,
   LetterSections,
+  Member,
+  MembershipRole,
   Mission,
   MissionDay,
   MissionDayWithRole,
@@ -93,6 +97,88 @@ function missionPath(slug: string, missionId: string): string {
  */
 export function getMe(): Promise<CurrentUser> {
   return request('/me');
+}
+
+/**
+ * Saves the signed-in organiser's own profile.
+ *
+ * @param profile - Codename and faction; null faction means none.
+ * @returns The current user after the change.
+ */
+export function saveProfile(profile: {
+  codename: string;
+  faction: Faction | null;
+}): Promise<CurrentUser> {
+  return request('/me', json('PATCH', profile));
+}
+
+/**
+ * Lists every Mission Day of the instance; for instance administrators.
+ *
+ * @returns The Mission Days, with the requester's role in each.
+ */
+export function listInstanceMissionDays(): Promise<InstanceMissionDay[]> {
+  return request('/instance/mission-days');
+}
+
+/**
+ * Builds the API path of a team member.
+ *
+ * @param slug - Mission Day slug.
+ * @param email - Member's email.
+ * @returns The path.
+ */
+function memberPath(slug: string, email: string): string {
+  return `${dayPath(slug)}/members/${encodeURIComponent(email)}`;
+}
+
+/**
+ * Lists the team of a Mission Day.
+ *
+ * @param slug - Mission Day slug.
+ * @returns The members, owners first.
+ */
+export function listMembers(slug: string): Promise<Member[]> {
+  return request(`${dayPath(slug)}/members`);
+}
+
+/**
+ * Adds someone to the team of a Mission Day.
+ *
+ * @param slug - Mission Day slug.
+ * @param email - Email they sign in with.
+ * @param role - Their role.
+ * @returns The team after the change.
+ */
+export function addMember(slug: string, email: string, role: MembershipRole): Promise<Member[]> {
+  return request(`${dayPath(slug)}/members`, json('POST', { email, role }));
+}
+
+/**
+ * Changes the role of a team member.
+ *
+ * @param slug - Mission Day slug.
+ * @param email - Member's email.
+ * @param role - New role.
+ * @returns The team after the change.
+ */
+export function setMemberRole(
+  slug: string,
+  email: string,
+  role: MembershipRole,
+): Promise<Member[]> {
+  return request(memberPath(slug, email), json('PATCH', { role }));
+}
+
+/**
+ * Removes someone from a team, or lets the requester leave it.
+ *
+ * @param slug - Mission Day slug.
+ * @param email - Member's email.
+ * @returns The team after the change.
+ */
+export function removeMember(slug: string, email: string): Promise<Member[]> {
+  return request(memberPath(slug, email), { method: 'DELETE' });
 }
 
 /**

@@ -52,6 +52,8 @@ export const RESERVED_SLUGS: readonly string[] = [
   'assets',
   'letter-defaults',
   'new',
+  'profile',
+  'public',
 ];
 
 /** Longest address a Mission Day can have. */

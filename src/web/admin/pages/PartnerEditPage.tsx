@@ -11,7 +11,13 @@ import {
   type PartnerStatus,
 } from '../../../shared/partners';
 import { LANGUAGES, type Language } from '../../../shared/rules';
-import type { LocalizedText, Mission, MissionDayWithRole, Partner } from '../../../shared/types';
+import type {
+  LocalizedText,
+  Member,
+  Mission,
+  MissionDayWithRole,
+  Partner,
+} from '../../../shared/types';
 import { useI18n } from '../../i18n';
 import {
   changePartnerStatus,
@@ -25,6 +31,7 @@ import {
 } from '../api';
 import { ConfirmButton, ErrorMessage, Field, FileUpload } from '../components/common';
 import { Mosaic } from '../components/Mosaic';
+import { organiserName } from '../lib/members';
 import { selectedInOrder } from '../lib/selection';
 import { Link, navigate } from '../router';
 
@@ -102,16 +109,19 @@ function ProposalLink({
 /**
  * Records the progress of the conversation and shows its history.
  *
- * @param props - The Mission Day slug, the partner and a change callback.
+ * @param props - The Mission Day slug, the partner, the team that names
+ *   who made each change, and a change callback.
  * @returns The section element.
  */
 function StatusSection({
   slug,
   partner,
+  members,
   onChange,
 }: {
   slug: string;
   partner: Partner;
+  members: readonly Member[];
   onChange: (partner: Partner) => void;
 }) {
   const { t, language } = useI18n();
@@ -159,7 +169,8 @@ function StatusSection({
           <li key={index}>
             <strong>{t(`partnerStatus.${change.status}`)}</strong>
             <span class="muted">
-              {new Date(change.changedAt).toLocaleDateString(language)} · {change.changedBy}
+              {new Date(change.changedAt).toLocaleDateString(language)} ·{' '}
+              {organiserName(change.changedBy, members)}
             </span>
             {change.note !== '' && <span>{change.note}</span>}
           </li>
@@ -172,18 +183,20 @@ function StatusSection({
 /**
  * The partner editor.
  *
- * @param props - The Mission Day, its missions, the partner and callbacks.
+ * @param props - The Mission Day, its missions and team, the partner and callbacks.
  * @returns The page element.
  */
 export function PartnerEditPage({
   missionDay,
   missions,
+  members,
   partner,
   onChange,
   onDeleted,
 }: {
   missionDay: MissionDayWithRole;
   missions: readonly Mission[];
+  members: readonly Member[];
   partner: Partner;
   onChange: (partner: Partner) => void;
   onDeleted: (partnerId: string) => void;
@@ -343,7 +356,7 @@ export function PartnerEditPage({
         </div>
       </form>
 
-      <StatusSection slug={slug} partner={partner} onChange={onChange} />
+      <StatusSection slug={slug} partner={partner} members={members} onChange={onChange} />
 
       <section class="card">
         <h2>{t('partner.files')}</h2>

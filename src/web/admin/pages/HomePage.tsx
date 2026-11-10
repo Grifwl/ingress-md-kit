@@ -3,10 +3,46 @@
  */
 import type { CurrentUser } from '../../../shared/types';
 import { useI18n } from '../../i18n';
-import { listMissionDays } from '../api';
+import { listInstanceMissionDays, listMissionDays } from '../api';
 import { ErrorMessage } from '../components/common';
 import { useAsync } from '../hooks';
 import { Link } from '../router';
+
+/**
+ * Mission Days of the instance that the administrator is not part of.
+ * They can only open the team of each one, to recover a Mission Day whose
+ * owners have gone or to add themself.
+ *
+ * @returns The section element, or nothing when there are none.
+ */
+function OtherMissionDays() {
+  const { t } = useI18n();
+  const all = useAsync(listInstanceMissionDays, []);
+  const others = all.data?.filter((day) => day.role === null) ?? [];
+
+  if (all.error === undefined && others.length === 0) {
+    return null;
+  }
+  return (
+    <section class="stack">
+      <h2>{t('home.othersTitle')}</h2>
+      <p class="muted">{t('home.othersHelp')}</p>
+      <ErrorMessage error={all.error} />
+      <ul class="tiles">
+        {others.map((day) => (
+          <li key={day.slug}>
+            <Link href={`/admin/${day.slug}/team`} class="tile">
+              <strong>
+                {day.city} {day.year}
+              </strong>
+              <span class="muted">{t('nav.team')}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 /**
  * The first screen of the admin area.
@@ -50,6 +86,7 @@ export function HomePage({ user }: { user: CurrentUser }) {
           </li>
         ))}
       </ul>
+      {user.isInstanceAdmin && <OtherMissionDays />}
     </main>
   );
 }

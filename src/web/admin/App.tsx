@@ -2,10 +2,10 @@
  * Root of the admin application: header, session and screen selection.
  */
 import { LANGUAGES, type Language } from '../../shared/rules';
-import type { Mission, MissionDayWithRole, Partner } from '../../shared/types';
+import type { CurrentUser, Member, Mission, MissionDayWithRole, Partner } from '../../shared/types';
 import { useI18n } from '../i18n';
 import type { MessageKey } from '../i18n/messages';
-import { getMe, getMissionDay, listMissions, listPartners } from './api';
+import { ApiError, getMe, getMissionDay, listMembers, listMissions, listPartners } from './api';
 import { ErrorMessage } from './components/common';
 import { useAsync } from './hooks';
 import type { Route } from './lib/routes';
@@ -18,8 +18,10 @@ import { MissionsPage } from './pages/MissionsPage';
 import { NewMissionDayPage } from './pages/NewMissionDayPage';
 import { PartnerEditPage } from './pages/PartnerEditPage';
 import { PartnersPage } from './pages/PartnersPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { SelectionPage } from './pages/SelectionPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { OutsiderTeamPage, TeamPage } from './pages/TeamPage';
 import { Link, useRoute } from './router';
 
 /** A route that belongs to one Mission Day. */
@@ -32,21 +34,27 @@ const TABS: { name: MissionDayRoute['name']; path: string; label: MessageKey }[]
   { name: 'partners', path: 'partners', label: 'nav.partners' },
   { name: 'exports', path: 'exports', label: 'nav.exports' },
   { name: 'settings', path: 'settings', label: 'nav.settings' },
+  { name: 'team', path: 'team', label: 'nav.team' },
 ];
 
 /**
- * Everything under one Mission Day. Mission Day and missions are loaded
- * once here and handed down, so moving between tabs is instant and every
- * tab sees the same data.
+ * Everything under one Mission Day. Mission Day, missions, partners and
+ * team are loaded once here and handed down, so moving between tabs is
+ * instant and every tab sees the same data.
  *
- * @param props - The current route.
+ * @param props - The current route and the signed-in organiser.
  * @returns The page element.
  */
-function MissionDayArea({ route }: { route: MissionDayRoute }) {
+function MissionDayArea({ route, user }: { route: MissionDayRoute; user: CurrentUser }) {
   const { t } = useI18n();
   const loaded = useAsync(
     () =>
-      Promise.all([getMissionDay(route.slug), listMissions(route.slug), listPartners(route.slug)]),
+      Promise.all([
+        getMissionDay(route.slug),
+        listMissions(route.slug),
+        listPartners(route.slug),
+        listMembers(route.slug),
+      ]),
     [route.slug],
   );
 
@@ -54,36 +62,59 @@ function MissionDayArea({ route }: { route: MissionDayRoute }) {
     return <main class="page">{t('app.loading')}</main>;
   }
   if (loaded.data === undefined) {
+    // An instance administrator outside the team can still manage it.
+    const outsider =
+      route.name === 'team' &&
+      user.isInstanceAdmin &&
+      loaded.error instanceof ApiError &&
+      loaded.error.status === 404;
     return (
       <main class="page">
-        <ErrorMessage error={loaded.error} />
-        <Link href="/admin">{t('nav.allMissionDays')}</Link>
+        <div class="heading-row">
+          <h1>{outsider ? route.slug : ''}</h1>
+          <Link href="/admin" class="back-link">
+            {t('nav.allMissionDays')}
+          </Link>
+        </div>
+        {outsider ? (
+          <OutsiderTeamPage slug={route.slug} user={user} />
+        ) : (
+          <ErrorMessage error={loaded.error} />
+        )}
       </main>
     );
   }
 
-  const [missionDay, missions, partners] = loaded.data;
+  const [missionDay, missions, partners, members] = loaded.data;
 
   /**
    * Replaces the missions after a change.
    *
    * @param next - The new list.
    */
-  const setMissions = (next: Mission[]) => loaded.setData([missionDay, next, partners]);
+  const setMissions = (next: Mission[]) => loaded.setData([missionDay, next, partners, members]);
 
   /**
    * Replaces the Mission Day after a change.
    *
    * @param next - The new Mission Day.
    */
-  const setMissionDay = (next: MissionDayWithRole) => loaded.setData([next, missions, partners]);
+  const setMissionDay = (next: MissionDayWithRole) =>
+    loaded.setData([next, missions, partners, members]);
 
   /**
    * Replaces the partners after a change.
    *
    * @param next - The new list.
    */
-  const setPartners = (next: Partner[]) => loaded.setData([missionDay, missions, next]);
+  const setPartners = (next: Partner[]) => loaded.setData([missionDay, missions, next, members]);
+
+  /**
+   * Replaces the team after a change.
+   *
+   * @param next - The new list.
+   */
+  const setMembers = (next: Member[]) => loaded.setData([missionDay, missions, partners, next]);
 
   /**
    * Replaces one edited partner.
@@ -138,6 +169,17 @@ function MissionDayArea({ route }: { route: MissionDayRoute }) {
         return <SelectionPage missionDay={missionDay} missions={missions} onChange={setMissions} />;
       case 'settings':
         return <SettingsPage missionDay={missionDay} onChange={setMissionDay} />;
+      case 'team':
+        return (
+          <TeamPage
+            slug={missionDay.slug}
+            user={user}
+            role={missionDay.role}
+            members={members}
+            onChange={setMembers}
+            onOwnRoleChange={(role) => setMissionDay({ ...missionDay, role })}
+          />
+        );
       case 'exports':
         return (
           <ExportsPage
@@ -166,6 +208,7 @@ function MissionDayArea({ route }: { route: MissionDayRoute }) {
             key={partner.id}
             missionDay={missionDay}
             missions={missions}
+            members={members}
             partner={partner}
             onChange={replacePartner}
             onDeleted={(id) => setPartners(partners.filter((item) => item.id !== id))}
@@ -221,7 +264,11 @@ export function App() {
           {t('app.title')}
         </Link>
         <div class="header-end">
-          {me.data !== undefined && <span class="muted user-email">{me.data.email}</span>}
+          {me.data !== undefined && (
+            <Link href="/admin/profile" class="muted user-email">
+              {me.data.codename === '' ? me.data.email : me.data.codename}
+            </Link>
+          )}
           <select
             aria-label={t('app.language')}
             value={language}
@@ -243,6 +290,9 @@ export function App() {
       )}
       {me.data !== undefined && route.name === 'home' && <HomePage user={me.data} />}
       {me.data !== undefined && route.name === 'letterDefaults' && <LetterDefaultsPage />}
+      {me.data !== undefined && route.name === 'profile' && (
+        <ProfilePage user={me.data} onChange={me.setData} />
+      )}
       {me.data !== undefined && route.name === 'newMissionDay' && (
         <NewMissionDayPage user={me.data} />
       )}
@@ -251,7 +301,7 @@ export function App() {
           <p class="alert">{t('error.not_found')}</p>
         </main>
       )}
-      {me.data !== undefined && 'slug' in route && <MissionDayArea route={route} />}
+      {me.data !== undefined && 'slug' in route && <MissionDayArea route={route} user={me.data} />}
     </>
   );
 }

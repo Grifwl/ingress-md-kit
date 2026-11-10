@@ -130,6 +130,18 @@ describe('resolveEmail', () => {
     const production = { ...devEnv, ENVIRONMENT: 'production' } as Env;
     expect(await resolveEmail(new Headers(), production)).toBeNull();
   });
+
+  it('lets a cookie pick another identity in the dev environment only', async () => {
+    const devEnv = { ...baseEnv, ENVIRONMENT: 'dev', DEV_USER_EMAIL: 'dev@example.org' } as Env;
+    const headers = new Headers({ Cookie: 'other=1; dev_user=Editor%40Example.org' });
+    expect(await resolveEmail(headers, devEnv)).toBe('editor@example.org');
+
+    const malformed = new Headers({ Cookie: 'dev_user=nobody' });
+    expect(await resolveEmail(malformed, devEnv)).toBe('dev@example.org');
+
+    const production = { ...devEnv, ENVIRONMENT: 'production' } as Env;
+    expect(await resolveEmail(headers, production)).toBeNull();
+  });
 });
 
 describe('isInstanceAdmin', () => {

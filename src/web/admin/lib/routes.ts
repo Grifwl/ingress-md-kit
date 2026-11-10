@@ -7,6 +7,8 @@ export type Route =
   | { name: 'home' }
   | { name: 'letterDefaults' }
   | { name: 'newMissionDay' }
+  | { name: 'profile' }
+  | { name: 'team'; slug: string }
   | { name: 'missions'; slug: string }
   | { name: 'mission'; slug: string; missionId: string }
   | { name: 'partners'; slug: string }
@@ -56,6 +58,9 @@ export function parseRoute(pathname: string): Route {
   if (slug === 'letter-defaults') {
     return section === undefined ? { name: 'letterDefaults' } : { name: 'notFound' };
   }
+  if (slug === 'profile') {
+    return section === undefined ? { name: 'profile' } : { name: 'notFound' };
+  }
   if (section === undefined || section === 'missions') {
     return missionId === undefined
       ? { name: 'missions', slug }
@@ -74,6 +79,9 @@ export function parseRoute(pathname: string): Route {
   }
   if (missionId === undefined && section === 'settings') {
     return { name: 'settings', slug };
+  }
+  if (missionId === undefined && section === 'team') {
+    return { name: 'team', slug };
   }
   return { name: 'notFound' };
 }

@@ -247,6 +247,7 @@ export function SettingsPage({
 
         <section class="card">
           <h2>{t('settings.team')}</h2>
+          <p class="muted">{t('settings.teamHelp')}</p>
           <h3>{t('settings.enlPoc')}</h3>
           <PocInputs value={team.enlPoc} onChange={(enlPoc) => setTeam({ ...team, enlPoc })} />
           <h3>{t('settings.resPoc')}</h3>

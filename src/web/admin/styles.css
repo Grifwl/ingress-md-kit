@@ -270,6 +270,43 @@ textarea {
   text-align: left;
 }
 
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table td,
+.data-table th {
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.data-table td > .badge {
+  margin-left: 0.4rem;
+}
+
+.data-table select {
+  width: auto;
+}
+
+/* A fixed width keeps a confirm button in place when its text grows, so
+   the second click lands on it. */
+.data-table .cell-end {
+  width: 15rem;
+  text-align: right;
+}
+
+.small {
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.row-end.wrap {
+  flex-wrap: wrap;
+}
+
 .slug-preview {
   font-weight: 600;
   overflow-wrap: anywhere;
