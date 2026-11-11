@@ -62,6 +62,8 @@ export interface MissionDay {
   letter: LetterSections;
   myMapsUrl: string | null;
   participantViewEnabled: boolean;
+  /** The Mission Day's own presentation to agents, per language. */
+  participantIntro: LocalizedText;
   /** Partner whose overlay the participant view uses; null for the default. */
   participantPartnerId: string | null;
   hasDefaultOverlay: boolean;
@@ -221,6 +223,8 @@ export interface ParticipantView {
   city: string;
   year: number;
   date: string | null;
+  /** The organisers' own presentation, per language; may be empty. */
+  intro: LocalizedText;
   missions: ParticipantMission[];
   myMapsUrl: string | null;
   /**

@@ -72,6 +72,7 @@ export function buildParticipantView(
     city: missionDay.city,
     year: missionDay.year,
     date: missionDay.date,
+    intro: { ...missionDay.participantIntro },
     missions: selected,
     myMapsUrl: missionDay.myMapsUrl,
     overlayTag,

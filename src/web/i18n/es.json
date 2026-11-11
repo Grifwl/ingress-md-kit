@@ -379,5 +379,8 @@
   "instance.preview": "Se verá así:",
   "instance.noContact": "sin contacto",
   "error.invalid_contact_label": "El texto del contacto es demasiado largo.",
-  "error.invalid_contact_url": "El enlace del contacto debe empezar por https://, http:// o mailto:."
+  "error.invalid_contact_url": "El enlace del contacto debe empezar por https://, http:// o mailto:.",
+  "settings.participantIntro": "Presentación para los agentes",
+  "settings.participantIntroHelp": "Aparece en la página de participantes, bajo el título y la fecha, en el idioma que elija cada visitante; si no hay texto en ese idioma, se muestra otro. Por ejemplo, qué harán descubrir las misiones o dónde conviene empezar. Puedes dejarlo vacío.",
+  "error.invalid_participant_intro": "La presentación para los agentes es demasiado larga."
 }

@@ -11,6 +11,7 @@ import type {
   HomeMissionDay,
   InstanceSettings,
   LetterSections,
+  LocalizedText,
   Mission,
   MissionDay,
   MissionDayWithRole,
@@ -34,6 +35,7 @@ interface MissionDayRow {
   letter_json: string;
   my_maps_url: string | null;
   participant_view_enabled: number;
+  participant_intro_json: string;
   participant_partner_id: string | null;
   default_overlay_key: string | null;
   default_overlay_version: number;
@@ -147,6 +149,7 @@ function toMissionDay(row: MissionDayRow): MissionDay {
     letter: parseLetterJson(row.letter_json),
     myMapsUrl: row.my_maps_url,
     participantViewEnabled: row.participant_view_enabled === 1,
+    participantIntro: JSON.parse(row.participant_intro_json) as LocalizedText,
     participantPartnerId: row.participant_partner_id,
     hasDefaultOverlay: row.default_overlay_key !== null,
     defaultOverlayVersion: row.default_overlay_version,
@@ -533,7 +536,7 @@ export async function updateMissionDay(
       `UPDATE mission_days
        SET city = ?, year = ?, date = ?, format = ?, status = ?,
            team_json = ?, letter_json = ?, my_maps_url = ?, application_theme = ?,
-           application_difference = ?
+           application_difference = ?, participant_intro_json = ?
        WHERE id = ?`,
     )
     .bind(
@@ -547,6 +550,7 @@ export async function updateMissionDay(
       next.myMapsUrl,
       next.applicationTheme,
       next.applicationDifference,
+      JSON.stringify(next.participantIntro),
       missionDay.id,
     )
     .run();

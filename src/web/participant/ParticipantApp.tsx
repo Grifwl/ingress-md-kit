@@ -113,6 +113,9 @@ function MissionItem({
 function Participant({ view, base }: { view: ParticipantView; base: string }) {
   const { t, language } = useI18n();
   const title = t('participant.title', { city: view.city, year: view.year });
+  // The organisers' words come first; the generic sentence after them
+  // still states how many missions earn the medal.
+  const intro = resolveLocalized(view.intro, language);
   const overlayUrl = view.overlayTag === null ? null : `${base}/overlay?v=${view.overlayTag}`;
   const mapMissions = useMemo(
     () => view.missions.map(({ id, colour, waypoints }) => ({ id, colour, waypoints })),
@@ -128,6 +131,7 @@ function Participant({ view, base }: { view: ParticipantView; base: string }) {
       <header class="hero">
         <h1>{title}</h1>
         {view.date !== null && <p class="date">{formatDate(view.date, language)}</p>}
+        {intro !== '' && <p class="intro">{intro}</p>}
         <p>{t('participant.intro', { count: view.missions.length, medal: MEDAL_MISSIONS })}</p>
       </header>
 

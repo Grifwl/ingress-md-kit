@@ -379,5 +379,8 @@
   "instance.preview": "Es veurà així:",
   "instance.noContact": "sense contacte",
   "error.invalid_contact_label": "El text del contacte és massa llarg.",
-  "error.invalid_contact_url": "L'enllaç del contacte ha de començar per https://, http:// o mailto:."
+  "error.invalid_contact_url": "L'enllaç del contacte ha de començar per https://, http:// o mailto:.",
+  "settings.participantIntro": "Presentació per als agents",
+  "settings.participantIntroHelp": "Surt a la pàgina dels participants, sota el títol i la data, en l'idioma que triï cada visitant; si no hi ha text en aquell idioma, se'n mostra un altre. Per exemple, què faran descobrir les missions o on és bo començar. Pots deixar-ho buit.",
+  "error.invalid_participant_intro": "La presentació per als agents és massa llarga."
 }

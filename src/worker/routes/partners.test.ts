@@ -631,6 +631,24 @@ describe('participant view', () => {
     });
   });
 
+  it("shows the organisers' own presentation, which editors may change", async () => {
+    const intro = { ca: 'Descobreix el barri vell.', en: 'Discover the old town.' };
+    const saved = await send(day, {
+      method: 'PATCH',
+      as: EDITOR,
+      body: { participantIntro: intro },
+    });
+    expect(saved.status).toBe(200);
+    await configure(true);
+    expect(await (await visit(api)).json()).toMatchObject({ intro });
+
+    const tooLong = await send(day, {
+      method: 'PATCH',
+      body: { participantIntro: { ca: 'x'.repeat(5001) } },
+    });
+    expect(tooLong.status).toBe(400);
+  });
+
   it('serves photos of selected missions only, and nothing once withdrawn', async () => {
     const chosen = await createMission('Old Bridge', true);
     const other = await createMission('Hidden Corner', false);

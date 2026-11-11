@@ -379,5 +379,8 @@
   "instance.preview": "It will look like this:",
   "instance.noContact": "no contact",
   "error.invalid_contact_label": "The contact text is too long.",
-  "error.invalid_contact_url": "The contact link must start with https://, http:// or mailto:."
+  "error.invalid_contact_url": "The contact link must start with https://, http:// or mailto:.",
+  "settings.participantIntro": "Presentation for agents",
+  "settings.participantIntroHelp": "Shown on the participant page, under the title and date, in each visitor's chosen language; when there is no text in that language, another one is shown. For example, what the missions let agents discover or where it is best to start. It may stay empty.",
+  "error.invalid_participant_intro": "The presentation for agents is too long."
 }

@@ -2,9 +2,10 @@
  * Settings of a Mission Day: general data, team and shared letter texts.
  */
 import { useState } from 'preact/hooks';
-import { MISSION_FORMATS, type MissionFormat } from '../../../shared/rules';
+import { LANGUAGES, MISSION_FORMATS, type MissionFormat } from '../../../shared/rules';
 import type {
   LetterSections,
+  LocalizedText,
   MissionDayStatus,
   MissionDayWithRole,
   Partner,
@@ -134,6 +135,9 @@ export function SettingsPage({
   );
   const [team, setTeam] = useState<Team>(missionDay.team);
   const [letter, setLetter] = useState<LetterSections>(missionDay.letter);
+  const [participantIntro, setParticipantIntro] = useState<LocalizedText>(
+    missionDay.participantIntro,
+  );
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<unknown>();
@@ -161,6 +165,7 @@ export function SettingsPage({
           applicationDifference,
           team,
           letter,
+          participantIntro,
         }),
       );
       setSaved(true);
@@ -294,6 +299,22 @@ export function SettingsPage({
           <h2>{t('settings.letter')}</h2>
           <p class="muted">{t('settings.letterHelp')}</p>
           <LetterEditor value={letter} onChange={setLetter} />
+        </section>
+
+        <section class="card">
+          <h2>{t('settings.participantIntro')}</h2>
+          <p class="muted">{t('settings.participantIntroHelp')}</p>
+          {LANGUAGES.map((language) => (
+            <Field key={language} label={language.toUpperCase()}>
+              <textarea
+                rows={3}
+                value={participantIntro[language] ?? ''}
+                onInput={(e) =>
+                  setParticipantIntro({ ...participantIntro, [language]: e.currentTarget.value })
+                }
+              />
+            </Field>
+          ))}
         </section>
 
         <ErrorMessage error={error} />
