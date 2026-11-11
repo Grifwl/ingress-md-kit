@@ -5,6 +5,7 @@ import {
   biocardFileName,
   biocardGeometry,
   biocardName,
+  chosenBiocardKeys,
   collageCells,
   completeBiocardSettings,
   fitText,
@@ -175,5 +176,21 @@ describe('collageCells', () => {
     const cells = collageCells(24, area);
     expect(cells[0]!.width).toBe(120);
     expect(cells[0]!.height).toBe(120);
+  });
+});
+
+describe('chosenBiocardKeys', () => {
+  const missions = [
+    { id: 'a', selected: true },
+    { id: 'b', selected: false },
+  ];
+
+  it('defaults to the Mission Day card and every selected mission', () => {
+    expect([...chosenBiocardKeys({ cards: null }, missions)]).toEqual(['generic', 'a']);
+  });
+
+  it('follows the ticks once they have been changed', () => {
+    expect([...chosenBiocardKeys({ cards: ['b'] }, missions)]).toEqual(['b']);
+    expect(chosenBiocardKeys({ cards: [] }, missions).size).toBe(0);
   });
 });

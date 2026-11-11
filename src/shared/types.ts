@@ -229,26 +229,40 @@ export interface ProposalView {
   myMapsUrl: string | null;
   hasMapScreenshot: boolean;
   mapScreenshotVersion: number;
-  /** The Mission Day's own card, when the organisers show it. */
-  biocard: PublicBiocard | null;
+  /** The ticked Biocards, when the organisers show them on proposals. */
+  biocards: PublicBiocards | null;
 }
 
 /**
- * The Mission Day's own Biocard, as public pages compose it. It is only
- * sent once both templates and the photo exist, so it can always be drawn.
+ * The Biocards a public page shows, as it composes them. They are only
+ * sent once both templates exist, and only cards that have a picture, so
+ * every one of them can be drawn.
  */
-export interface PublicBiocard {
+export interface PublicBiocards {
   layout: BiocardSettings['layout'];
-  name: string;
-  /** Its own photo, or a collage of the photos of the missions on the page. */
-  photo: BiocardGenericPhoto;
-  /** Description per language; a proposal sends only its own language. */
-  description: LocalizedText;
   frontVersion: number;
   backVersion: number;
-  photoVersion: number;
   /** Version of the Mission Day's own font, or null for the default one. */
   fontVersion: number | null;
+  /** The Mission Day's own card first, then missions in recommended order. */
+  cards: PublicBiocardCard[];
+}
+
+/** One Biocard on a public page. */
+export interface PublicBiocardCard {
+  /** `generic` for the Mission Day's own card, otherwise the mission id. */
+  key: string;
+  name: string;
+  /**
+   * Where the picture comes from: the Mission Day card's own photo, a
+   * collage of the photos of the missions on the page, or the photo of
+   * the card's mission.
+   */
+  picture: BiocardGenericPhoto | 'mission';
+  /** Version of that photo; unused for a collage. */
+  photoVersion: number;
+  /** Description per language; a proposal sends only its own language. */
+  description: LocalizedText;
 }
 
 /**
@@ -284,8 +298,8 @@ export interface ParticipantView {
    * when the switch is between two files with the same version number.
    */
   overlayTag: string | null;
-  /** The Mission Day's own card, when the organisers show it. */
-  biocard: PublicBiocard | null;
+  /** The ticked Biocards, when the organisers show them to agents. */
+  biocards: PublicBiocards | null;
 }
 
 /**

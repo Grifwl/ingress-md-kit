@@ -370,3 +370,24 @@ export async function encodeBiocardSide(side: DrawnSide): Promise<Blob> {
   const bytes = withPixelDensity(new Uint8Array(await blob.arrayBuffer()), side.dpi);
   return new Blob([bytes], { type: 'image/png' });
 }
+
+/** JPEG quality of the cards shown on public pages. */
+const PREVIEW_JPEG_QUALITY = 0.9;
+
+/**
+ * Encodes a drawn side for showing it on a page. A JPEG takes a fraction
+ * of the time of a PNG to encode, which matters when a page draws a whole
+ * set of cards; the PNG of `encodeBiocardSide` stays for printing.
+ *
+ * @param side - The drawn side.
+ * @returns The JPEG file.
+ */
+export function encodeBiocardPreview(side: DrawnSide): Promise<Blob> {
+  return new Promise<Blob>((resolve, reject) => {
+    side.canvas.toBlob(
+      (result) => (result === null ? reject(new Error('Encoding failed')) : resolve(result)),
+      'image/jpeg',
+      PREVIEW_JPEG_QUALITY,
+    );
+  });
+}

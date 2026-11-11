@@ -93,13 +93,49 @@ export interface BiocardSettings {
   /** Description on the back of that card, per language. */
   genericDescription: LocalizedText;
   /**
-   * Whether proposals show that card. Off by default because the template
-   * may carry a partner's logo, which other partners should not see
-   * before the organisers decide so.
+   * Cards ticked in the list of cards: `generic` for the Mission Day's own
+   * card, otherwise mission ids. Null until the organisers change the
+   * ticks, meaning the Mission Day's card plus every selected mission.
+   */
+  cards: string[] | null;
+  /**
+   * Whether proposals show the ticked cards. Off by default because the
+   * template may carry a partner's logo, which other partners should not
+   * see before the organisers decide so.
    */
   showOnProposals: boolean;
-  /** Whether the participant view shows that card. */
+  /** Whether the participant view shows the ticked cards. */
   showOnParticipantView: boolean;
+}
+
+/** Key of the Mission Day's own card among the ticked cards. */
+export const BIOCARD_GENERIC_KEY = 'generic';
+
+/** Which cards are ticked and where they are shown, saved apart from the rest. */
+export type BiocardPublication = Pick<
+  BiocardSettings,
+  'cards' | 'showOnProposals' | 'showOnParticipantView'
+>;
+
+/**
+ * Lists the keys of the ticked cards, applying the default when the
+ * organisers never changed the ticks.
+ *
+ * @param settings - Biocard settings of the Mission Day.
+ * @param missions - Its missions; only selection and ids are read.
+ * @returns The keys of the ticked cards.
+ */
+export function chosenBiocardKeys(
+  settings: Pick<BiocardSettings, 'cards'>,
+  missions: readonly { id: string; selected: boolean }[],
+): ReadonlySet<string> {
+  if (settings.cards !== null) {
+    return new Set(settings.cards);
+  }
+  return new Set([
+    BIOCARD_GENERIC_KEY,
+    ...missions.filter((mission) => mission.selected).map((mission) => mission.id),
+  ]);
 }
 
 /** Layout of a new Mission Day: the name below a square photo, the description filling the back. */
@@ -132,6 +168,7 @@ export const DEFAULT_BIOCARD_SETTINGS: BiocardSettings = {
   genericName: '',
   genericPhoto: 'upload',
   genericDescription: {},
+  cards: null,
   showOnProposals: false,
   showOnParticipantView: false,
 };

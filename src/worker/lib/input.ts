@@ -12,6 +12,7 @@ import {
   BIOCARD_TEXT_ALIGNS,
   BIOCARD_VERTICAL_ALIGNS,
   type BiocardGenericPhoto,
+  type BiocardPublication,
   type BiocardSettings,
   type BiocardTextAlign,
   type BiocardTextBox,
@@ -649,12 +650,6 @@ function biocardTextBox(value: unknown): BiocardTextBox {
 export function parseBiocardSettings(body: unknown): BiocardSettings {
   const object = asObject(body);
   const layout = asObject(object.layout);
-  if (
-    typeof object.showOnProposals !== 'boolean' ||
-    typeof object.showOnParticipantView !== 'boolean'
-  ) {
-    badRequest('invalid_biocard');
-  }
   return {
     layout: {
       name: biocardTextBox(layout.name),
@@ -663,6 +658,44 @@ export function parseBiocardSettings(body: unknown): BiocardSettings {
     genericName: text(object.genericName, 'biocard'),
     genericPhoto: oneOf<BiocardGenericPhoto>(object.genericPhoto, BIOCARD_GENERIC_PHOTOS),
     genericDescription: localizedText(object.genericDescription, 'biocard'),
+    ...parseBiocardPublication(body),
+  };
+}
+
+/** Most cards a Mission Day can tick: far more than any set of candidates. */
+const MAX_BIOCARD_CARDS = 500;
+
+/** Longest key of a ticked card: a mission id or `generic`. */
+const MAX_BIOCARD_KEY_LENGTH = 64;
+
+/**
+ * Validates which Biocards are ticked and where they are shown. Keys
+ * that name no mission are harmless, since they are only ever compared
+ * with existing ids, so they are not looked up.
+ *
+ * @param body - Parsed JSON.
+ * @returns The validated choice.
+ */
+export function parseBiocardPublication(body: unknown): BiocardPublication {
+  const object = asObject(body);
+  const { cards } = object;
+  const validCards =
+    cards === undefined ||
+    cards === null ||
+    (Array.isArray(cards) &&
+      cards.length <= MAX_BIOCARD_CARDS &&
+      cards.every(
+        (key) => typeof key === 'string' && key !== '' && key.length <= MAX_BIOCARD_KEY_LENGTH,
+      ));
+  if (
+    !validCards ||
+    typeof object.showOnProposals !== 'boolean' ||
+    typeof object.showOnParticipantView !== 'boolean'
+  ) {
+    badRequest('invalid_biocard');
+  }
+  return {
+    cards: Array.isArray(cards) ? [...new Set(cards as string[])] : null,
     showOnProposals: object.showOnProposals,
     showOnParticipantView: object.showOnParticipantView,
   };

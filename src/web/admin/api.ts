@@ -2,7 +2,7 @@
  * Client of the private API.
  */
 import type { PartnerStatus } from '../../shared/partners';
-import type { BiocardSettings } from '../../shared/biocard';
+import type { BiocardPublication, BiocardSettings } from '../../shared/biocard';
 import type { Language, MissionFormat } from '../../shared/rules';
 import type {
   BiocardFileKind,
@@ -631,6 +631,21 @@ export function saveBiocardSettings(
   settings: BiocardSettings,
 ): Promise<MissionDayWithRole> {
   return request(`${dayPath(slug)}/biocard`, json('PUT', settings));
+}
+
+/**
+ * Saves which Biocards are ticked and where they are shown, apart from
+ * the rest of the settings.
+ *
+ * @param slug - Mission Day slug.
+ * @param publication - The ticked cards and the two places to show them.
+ * @returns The updated Mission Day.
+ */
+export function saveBiocardPublication(
+  slug: string,
+  publication: BiocardPublication,
+): Promise<MissionDayWithRole> {
+  return request(`${dayPath(slug)}/biocard-publication`, json('PUT', publication));
 }
 
 /**

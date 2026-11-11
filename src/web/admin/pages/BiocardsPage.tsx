@@ -7,15 +7,18 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import {
+  BIOCARD_GENERIC_KEY,
   BIOCARD_GENERIC_PHOTOS,
   BIOCARD_TEXT_ALIGNS,
   BIOCARD_VERTICAL_ALIGNS,
   biocardDescription,
   biocardFileName,
   biocardName,
+  chosenBiocardKeys,
   type BiocardGenericPhoto,
   type BiocardGeometry,
   type BiocardLayout,
+  type BiocardPublication,
   type BiocardSettings,
   type BiocardTextAlign,
   type BiocardTextBox,
@@ -28,6 +31,7 @@ import { useI18n } from '../../i18n';
 import {
   drawBiocardBack,
   drawBiocardFront,
+  encodeBiocardPreview,
   encodeBiocardSide,
   loadBiocardTemplates,
   type BiocardPicture,
@@ -40,6 +44,7 @@ import {
   deleteBiocardFont,
   photoUrl,
   printPhotoUrl,
+  saveBiocardPublication,
   saveBiocardSettings,
   updateMission,
   uploadBiocardFile,
@@ -65,7 +70,7 @@ function photoSide(mission: Mission): number {
 }
 
 /** Key of the Mission Day's own card among the cards of the screen. */
-const GENERIC_KEY = 'generic';
+const GENERIC_KEY = BIOCARD_GENERIC_KEY;
 
 /** Delay before a preview is redrawn, so that dragging a box stays smooth. */
 const PREVIEW_DELAY_MS = 150;
@@ -115,10 +120,11 @@ function usePreview(
       try {
         const front = await drawBiocardFront(templates, card.picture, card.name, layout);
         const back = drawBiocardBack(templates, description, layout);
-        // Canvases are shown as images, which scale well in the editor.
+        // Canvases are shown as images, which scale well in the editor;
+        // JPEG keeps redrawing quick while a box is being dragged.
         const [frontBlob, backBlob] = await Promise.all([
-          encodeBiocardSide(front),
-          encodeBiocardSide(back),
+          encodeBiocardPreview(front),
+          encodeBiocardPreview(back),
         ]);
         if (active) {
           urls.push(URL.createObjectURL(frontBlob), URL.createObjectURL(backBlob));
@@ -341,6 +347,7 @@ function CardRow({
   mission,
   photoWindow,
   chosen,
+  disabled,
   onToggle,
   onRename,
 }: {
@@ -348,6 +355,7 @@ function CardRow({
   mission: Mission | null;
   photoWindow: { rect: Rect | null; dpi: number } | null;
   chosen: boolean;
+  disabled: boolean;
   onToggle: (chosen: boolean) => void;
   onRename: (name: string) => Promise<void>;
 }) {
@@ -368,6 +376,7 @@ function CardRow({
         <input
           type="checkbox"
           checked={chosen}
+          disabled={disabled}
           onChange={(e) => onToggle(e.currentTarget.checked)}
         />
         <span>{card.label}</span>
@@ -390,8 +399,10 @@ function CardRow({
           }}
         />
       )}
-      {mission !== null && !mission.hasPhoto && (
-        <span class="badge warn">{t('biocard.noPhoto')}</span>
+      {card.picture === null && <span class="badge warn">{t('biocard.noPhoto')}</span>}
+      {/* Public pages only know the selected missions. */}
+      {mission !== null && !mission.selected && (
+        <span class="badge">{t('biocard.notSelected')}</span>
       )}
       {softDpi !== null && (
         <span class="badge warn">{t('biocard.softPhoto', { dpi: Math.round(softDpi) })}</span>
@@ -469,7 +480,9 @@ export function BiocardsPage({
   const cards = useMemo<CardSpec[]>(() => {
     const genericPicture: BiocardPicture =
       settings.genericPhoto === 'collage'
-        ? { kind: 'collage', urls: collageUrls }
+        ? collageUrls.length === 0
+          ? null
+          : { kind: 'collage', urls: collageUrls }
         : genericPhotoUrl === null
           ? null
           : { kind: 'photo', url: genericPhotoUrl };
@@ -494,9 +507,14 @@ export function BiocardsPage({
     ];
   }, [settings, collageUrls, genericPhotoUrl, ordered, slug, t]);
 
-  const [chosen, setChosen] = useState<ReadonlySet<string>>(
-    () => new Set([GENERIC_KEY, ...selected.map((mission) => mission.id)]),
+  // Ticks and where the cards are shown are saved as soon as they change,
+  // so they are read from the stored Mission Day, not from the draft.
+  const chosen = useMemo(
+    () => chosenBiocardKeys(missionDay.biocard, missions),
+    [missionDay.biocard, missions],
   );
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<unknown>();
 
   const previewCard = cards.find((card) => card.key === previewKey) ?? cards[0] ?? null;
   const previewDescription =
@@ -555,6 +573,32 @@ export function BiocardsPage({
       setError(failure);
     } finally {
       setBusy(false);
+    }
+  };
+
+  /**
+   * Saves which cards are ticked and where they are shown. The draft
+   * settings take the same values, so that saving the layout later does
+   * not undo them.
+   *
+   * @param changes - What changes.
+   */
+  const publish = async (changes: Partial<BiocardPublication>) => {
+    const next: BiocardPublication = {
+      cards: missionDay.biocard.cards,
+      showOnProposals: missionDay.biocard.showOnProposals,
+      showOnParticipantView: missionDay.biocard.showOnParticipantView,
+      ...changes,
+    };
+    setPublishing(true);
+    setPublishError(undefined);
+    try {
+      onMissionDayChange(await saveBiocardPublication(slug, next));
+      setSettings((draft) => ({ ...draft, ...next }));
+    } catch (failure) {
+      setPublishError(failure);
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -833,25 +877,6 @@ export function BiocardsPage({
             }
           />
         </Field>
-        <label class="check">
-          <input
-            type="checkbox"
-            checked={settings.showOnProposals}
-            onChange={(e) => change({ ...settings, showOnProposals: e.currentTarget.checked })}
-          />
-          <span>{t('biocard.showOnProposals')}</span>
-        </label>
-        <label class="check">
-          <input
-            type="checkbox"
-            checked={settings.showOnParticipantView}
-            onChange={(e) =>
-              change({ ...settings, showOnParticipantView: e.currentTarget.checked })
-            }
-          />
-          <span>{t('biocard.showOnParticipantView')}</span>
-        </label>
-        <p class="field-help">{t('biocard.showHelp')}</p>
       </section>
 
       <div class="actions">
@@ -878,11 +903,12 @@ export function BiocardsPage({
                   : { rect: templates.window, dpi: templates.frontGeometry.dpi }
               }
               chosen={chosen.has(card.key)}
+              disabled={publishing}
               onToggle={(isChosen) => {
                 const next = new Set(chosen);
                 if (isChosen) next.add(card.key);
                 else next.delete(card.key);
-                setChosen(next);
+                return publish({ cards: [...next] });
               }}
               onRename={(name) => {
                 const mission = missions.find((item) => item.id === card.key);
@@ -891,6 +917,26 @@ export function BiocardsPage({
             />
           ))}
         </ul>
+        <label class="check">
+          <input
+            type="checkbox"
+            checked={missionDay.biocard.showOnProposals}
+            disabled={publishing}
+            onChange={(e) => publish({ showOnProposals: e.currentTarget.checked })}
+          />
+          <span>{t('biocard.showOnProposals')}</span>
+        </label>
+        <label class="check">
+          <input
+            type="checkbox"
+            checked={missionDay.biocard.showOnParticipantView}
+            disabled={publishing}
+            onChange={(e) => publish({ showOnParticipantView: e.currentTarget.checked })}
+          />
+          <span>{t('biocard.showOnParticipantView')}</span>
+        </label>
+        <p class="field-help">{t('biocard.showHelp')}</p>
+        <ErrorMessage error={publishError} />
         <div class="grid-2">
           <LanguageFields
             language={language}

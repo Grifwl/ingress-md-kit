@@ -12,7 +12,7 @@ import { LANGUAGES, MEDAL_MISSIONS, MOSAIC_COLUMNS, type Language } from '../../
 import type { ParticipantMission, ParticipantView } from '../../shared/types';
 import { MissionMap } from '../admin/components/MissionMap';
 import { useI18n } from '../i18n';
-import { BiocardImages } from '../lib/BiocardImages';
+import { BiocardGallery } from '../lib/BiocardGallery';
 import { ComposedImage } from '../lib/ComposedImage';
 import { formatDate } from '../lib/dates';
 import { intelUrl } from '../lib/intel';
@@ -185,11 +185,11 @@ function Participant({ view, base }: { view: ParticipantView; base: string }) {
         </section>
       )}
 
-      {view.biocard !== null && (
+      {view.biocards !== null && (
         <section>
           <h2>{t('participant.biocard')}</h2>
-          <BiocardImages
-            biocard={view.biocard}
+          <BiocardGallery
+            biocards={view.biocards}
             base={base}
             language={language}
             collageUrls={collageUrls}

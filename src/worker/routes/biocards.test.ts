@@ -215,7 +215,7 @@ describe('Biocards on public pages', () => {
     const partner = await createPartner();
     const api = `/api/public/proposals/${partner.proposalToken}`;
 
-    expect(((await (await visit(api)).json()) as ProposalView).biocard).toBeNull();
+    expect(((await (await visit(api)).json()) as ProposalView).biocards).toBeNull();
     expect((await visit(`${api}/biocard/front`)).status).toBe(404);
 
     await saveSettings({
@@ -224,13 +224,16 @@ describe('Biocards on public pages', () => {
       genericDescription: { ca: 'Hola', en: 'Hello' },
     });
     const view = (await (await visit(api)).json()) as ProposalView;
-    expect(view.biocard).toMatchObject({
-      name: 'MD',
-      photo: 'upload',
-      description: { ca: 'Hola' },
-      frontVersion: 1,
-      fontVersion: null,
-    });
+    expect(view.biocards).toMatchObject({ frontVersion: 1, fontVersion: null });
+    expect(view.biocards?.cards).toEqual([
+      {
+        key: 'generic',
+        name: 'MD',
+        picture: 'upload',
+        photoVersion: 1,
+        description: { ca: 'Hola' },
+      },
+    ]);
     expect((await visit(`${api}/biocard/front`)).status).toBe(200);
     expect((await visit(`${api}/biocard/font`)).status).toBe(404);
   });
@@ -243,12 +246,74 @@ describe('Biocards on public pages', () => {
     });
     await saveSettings({ showOnParticipantView: true, genericPhoto: 'collage' });
     const api = `/api/public/mission-days/${SLUG}`;
-    expect(((await (await visit(api)).json()) as ParticipantView).biocard).toBeNull();
+    expect(((await (await visit(api)).json()) as ParticipantView).biocards).toBeNull();
 
     await saveSettings({ showOnParticipantView: true, genericPhoto: 'upload' });
     const view = (await (await visit(api)).json()) as ParticipantView;
-    expect(view.biocard).toMatchObject({ photo: 'upload', photoVersion: 1 });
+    expect(view.biocards?.cards).toMatchObject([{ picture: 'upload', photoVersion: 1 }]);
     expect((await visit(`${api}/biocard/back`)).status).toBe(200);
+  });
+
+  it('show the ticked mission cards that are selected and have a photo', async () => {
+    await uploadCard();
+    const [first, second, unselected] = await Promise.all(
+      ['Ajuntament', 'Pont', 'Catedral'].map(async (landmark) => {
+        const response = await send(`${DAY}/missions`, { method: 'POST', body: { landmark } });
+        return (await response.json()) as Mission;
+      }),
+    );
+    for (const mission of [first!, second!, unselected!]) {
+      await send(`${DAY}/missions/${mission.id}/photo?x=0&y=0&size=512`, {
+        method: 'PUT',
+        rawBody: pngHeader(512, 512, 2),
+      });
+    }
+    await send(`${DAY}/missions/${first!.id}`, {
+      method: 'PATCH',
+      body: { biocardName: 'Ajt.', description: { ca: 'Plaça', en: 'Square' } },
+    });
+    await send(`${DAY}/selection`, {
+      method: 'PUT',
+      body: { missionIds: [second!.id, first!.id] },
+    });
+    await send(`${DAY}/participant-view`, {
+      method: 'PUT',
+      body: { enabled: true, partnerId: null },
+    });
+    const api = `/api/public/mission-days/${SLUG}`;
+
+    // Until the ticks change: the Mission Day's card and every selected mission.
+    const published = await send(`${DAY}/biocard-publication`, {
+      method: 'PUT',
+      body: { cards: null, showOnProposals: false, showOnParticipantView: true },
+    });
+    expect(((await published.json()) as MissionDay).biocard.showOnParticipantView).toBe(true);
+    const byDefault = (await (await visit(api)).json()) as ParticipantView;
+    expect(byDefault.biocards?.cards.map((card) => card.name)).toEqual(['', 'Pont', 'Ajt.']);
+    expect(byDefault.biocards?.cards[2]).toMatchObject({
+      key: first!.id,
+      picture: 'mission',
+      photoVersion: 1,
+      description: { ca: 'Plaça', en: 'Square' },
+    });
+
+    // A ticked mission outside the selection is never shown.
+    await send(`${DAY}/biocard-publication`, {
+      method: 'PUT',
+      body: {
+        cards: [first!.id, unselected!.id],
+        showOnProposals: false,
+        showOnParticipantView: true,
+      },
+    });
+    const ticked = (await (await visit(api)).json()) as ParticipantView;
+    expect(ticked.biocards?.cards.map((card) => card.key)).toEqual([first!.id]);
+
+    const wrong = await send(`${DAY}/biocard-publication`, {
+      method: 'PUT',
+      body: { cards: [1], showOnProposals: false, showOnParticipantView: true },
+    });
+    expect(wrong.status).toBe(400);
   });
 
   it('carry the partner request and the Biocard text in the letter', async () => {

@@ -56,6 +56,7 @@ import {
   type MissionDayFileKind,
 } from '../lib/db';
 import {
+  parseBiocardPublication,
   parseBiocardSettings,
   parseCrop,
   parseInstanceSettings,
@@ -331,6 +332,17 @@ scoped.get('/map-screenshot', (c) => serveMissionDayFile(c, 'map_screenshot'));
 scoped.put('/biocard', async (c) => {
   const missionDay = c.get('missionDay');
   const settings = parseBiocardSettings(await jsonBody(c));
+  await saveBiocardSettings(c.env.DB, missionDay.id, settings);
+  return c.json({ ...missionDay, biocard: settings, role: c.get('role') });
+});
+
+// Ticking a card or choosing where the cards are shown takes effect at
+// once, without the save button of the layout and texts, so it only
+// touches those fields of the stored settings.
+scoped.put('/biocard-publication', async (c) => {
+  const missionDay = c.get('missionDay');
+  const publication = parseBiocardPublication(await jsonBody(c));
+  const settings = { ...missionDay.biocard, ...publication };
   await saveBiocardSettings(c.env.DB, missionDay.id, settings);
   return c.json({ ...missionDay, biocard: settings, role: c.get('role') });
 });

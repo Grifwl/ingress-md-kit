@@ -4,7 +4,7 @@
 import { mayShowLogo } from '../../shared/partners';
 import { fullMissionName } from '../../shared/rules';
 import type { Mission, MissionDay, ParticipantMission, ParticipantView } from '../../shared/types';
-import { buildPublicBiocard } from './biocard';
+import { buildPublicBiocards } from './biocard';
 import { findMissionDayFile } from './db';
 import { findPartner, findPartnerFile } from './partners';
 
@@ -77,8 +77,12 @@ export function buildParticipantView(
     missions: selected,
     myMapsUrl: missionDay.myMapsUrl,
     overlayTag,
-    biocard: buildPublicBiocard(missionDay, missions, missionDay.biocard.showOnParticipantView, {
-      ...missionDay.biocard.genericDescription,
-    }),
+    // The page follows the visitor's language, so every language is sent.
+    biocards: buildPublicBiocards(
+      missionDay,
+      missions,
+      missionDay.biocard.showOnParticipantView,
+      (description) => ({ ...description }),
+    ),
   };
 }

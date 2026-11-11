@@ -210,17 +210,24 @@ a {
   border-radius: 2px;
 }
 
-/* Front and back of a Biocard, side by side like a card turned over. */
-.biocard-pair {
-  display: flex;
-  flex-wrap: wrap;
+/* Every card shown, as many to a row as fit, each one never split. */
+.biocard-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
   gap: 1.5rem;
-  justify-content: center;
   margin-top: 1rem;
 }
 
+/* Front and back of a Biocard, side by side like a card turned over. */
+.biocard-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  break-inside: avoid;
+}
+
 .biocard-pair img {
-  width: min(16rem, 100%);
+  width: 100%;
   height: auto;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgb(0 0 0 / 18%);
@@ -347,9 +354,21 @@ a {
     break-before: page;
   }
 
-  /* About the size of a printed card, so the partner sees it as it is. */
+  /*
+   * Two cards to a row, front and back each, so that a full set of cards
+   * takes a couple of pages rather than one page per card.
+   */
+  .biocard-gallery {
+    grid-template-columns: repeat(2, 83mm);
+    justify-content: center;
+    gap: 6mm 10mm;
+  }
+
+  .biocard-pair {
+    gap: 3mm;
+  }
+
   .biocard-pair img {
-    width: 63mm;
     box-shadow: none;
   }
 

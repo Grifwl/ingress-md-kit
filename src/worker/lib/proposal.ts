@@ -3,7 +3,7 @@
  */
 import { fillLetterPlaceholders, resolveLocalized } from '../../shared/letter';
 import { fullMissionName } from '../../shared/rules';
-import { buildPublicBiocard } from './biocard';
+import { buildPublicBiocards } from './biocard';
 import type {
   LocalizedText,
   Mission,
@@ -91,9 +91,12 @@ export function buildProposalView(
     myMapsUrl: missionDay.myMapsUrl,
     hasMapScreenshot: missionDay.hasMapScreenshot,
     mapScreenshotVersion: missionDay.mapScreenshotVersion,
-    // A proposal is read in one language, so the card carries only that one.
-    biocard: buildPublicBiocard(missionDay, missions, missionDay.biocard.showOnProposals, {
-      [language]: resolveLocalized(missionDay.biocard.genericDescription, language),
-    }),
+    // A proposal is read in one language, so the cards carry only that one.
+    biocards: buildPublicBiocards(
+      missionDay,
+      missions,
+      missionDay.biocard.showOnProposals,
+      (description) => ({ [language]: resolveLocalized(description, language) }),
+    ),
   };
 }

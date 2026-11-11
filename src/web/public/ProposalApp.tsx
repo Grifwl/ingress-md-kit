@@ -3,7 +3,7 @@
  * language, whatever the language of the visitor's browser, and it is laid
  * out so that printing it produces a document ready to attach to an email.
  */
-import type { ComponentChildren } from 'preact';
+import { Fragment, type ComponentChildren } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { languageOfProposalWord, parseProposalSegment } from '../../shared/letter';
 import { mosaicCells } from '../../shared/mosaic';
@@ -11,7 +11,7 @@ import { MOSAIC_COLUMNS, type Language } from '../../shared/rules';
 import type { ProposalMission, ProposalView } from '../../shared/types';
 import { MissionMap } from '../admin/components/MissionMap';
 import { translate, type MessageKey, type MessageParams } from '../i18n/messages';
-import { BiocardImages } from '../lib/BiocardImages';
+import { BiocardGallery } from '../lib/BiocardGallery';
 import { ComposedImage } from '../lib/ComposedImage';
 import { TILE_SIZE, routeMapView } from './routeSketch';
 
@@ -239,6 +239,48 @@ function Sheet({
 }
 
 /**
+ * What a Biocard is, with the cards the organisers show on proposals.
+ * The title stays when only the cards are shown, so they never appear
+ * unexplained under the previous section.
+ *
+ * @param props - The proposal, the root of its API, a translation
+ *   function and the photos for a collage.
+ * @returns The block, or nothing when there is neither text nor cards.
+ */
+function BiocardBlock({
+  view,
+  base,
+  t,
+  collageUrls,
+}: {
+  view: ProposalView;
+  base: string;
+  t: (key: MessageKey) => string;
+  collageUrls: readonly string[];
+}) {
+  const text = view.letter.whatIsBiocard;
+  if (text.trim() === '' && view.biocards === null) {
+    return null;
+  }
+  return (
+    <div class="letter-block">
+      <h2>{t('settings.whatIsBiocard')}</h2>
+      {text.trim() !== '' && <p class="prose">{text}</p>}
+      {view.biocards !== null && (
+        <BiocardGallery
+          biocards={view.biocards}
+          base={base}
+          language={view.language}
+          collageUrls={collageUrls}
+          frontAlt={t('biocard.front')}
+          backAlt={t('biocard.back')}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
  * Displays a loaded proposal.
  *
  * @param props - The proposal and the root of its API.
@@ -261,7 +303,6 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
   const hasConsent = hasRequest || hasBiocardRequest;
   const hasClosing = view.letter.closing.trim() !== '';
   const hasPartnerSheet = hasConsent || hasClosing || view.letter.whyYou.trim() !== '';
-  const hasBiocardSheet = view.biocard !== null || view.letter.whatIsBiocard.trim() !== '';
   const collageUrls = useMemo(
     () =>
       view.missions
@@ -296,26 +337,16 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
         <h1>{title}</h1>
         <p class="subtitle">{t('proposal.forPartner', { partner: view.partnerName })}</p>
         {INTRODUCTION.map(({ key, title: blockTitle }) => (
-          <LetterBlock key={key} title={t(blockTitle)} text={view.letter[key]} />
+          <Fragment key={key}>
+            <LetterBlock title={t(blockTitle)} text={view.letter[key]} />
+            {/* What a Biocard is follows what a Mission Day is, in the same
+                flow of text, and comes before the partner is asked about them. */}
+            {key === 'whatIsMissionDay' && (
+              <BiocardBlock view={view} base={base} t={t} collageUrls={collageUrls} />
+            )}
+          </Fragment>
         ))}
       </Sheet>
-
-      {/* What a Biocard is comes before the partner is asked about them. */}
-      {hasBiocardSheet && (
-        <Sheet class="biocard-sheet">
-          <LetterBlock title={t('settings.whatIsBiocard')} text={view.letter.whatIsBiocard} />
-          {view.biocard !== null && (
-            <BiocardImages
-              biocard={view.biocard}
-              base={base}
-              language={view.language}
-              collageUrls={collageUrls}
-              frontAlt={t('biocard.front')}
-              backAlt={t('biocard.back')}
-            />
-          )}
-        </Sheet>
-      )}
 
       {/* Everything specific to this partner goes on a sheet of its own. */}
       {hasPartnerSheet && (
