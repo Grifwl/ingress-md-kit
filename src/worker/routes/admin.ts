@@ -12,7 +12,12 @@ import { Hono, type MiddlewareHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { BIOCARD_FONT_MAX_BYTES, BIOCARD_TEMPLATE_MAX_PX } from '../../shared/biocard';
 import { mayShowLogo } from '../../shared/partners';
-import { DOCUMENT_MAX_BYTES, IMAGE_MAX_BYTES, IMAGE_SIZE_PX } from '../../shared/rules';
+import {
+  DOCUMENT_MAX_BYTES,
+  IMAGE_MAX_BYTES,
+  IMAGE_SIZE_PX,
+  PHOTO_FULL_MAX_PX,
+} from '../../shared/rules';
 import type { BiocardFileKind, CurrentUser, MissionDay } from '../../shared/types';
 import type { AppEnv } from '../env';
 import { isInstanceAdmin, resolveEmail } from '../lib/access';
@@ -27,6 +32,7 @@ import {
   findMissionDayFile,
   findMissionDayFileVersion,
   findMissionDayForOrganiser,
+  findFullPhotoKey,
   findPhotoKey,
   getInstanceSettings,
   getLetterDefaults,
@@ -39,6 +45,7 @@ import {
   saveLetterDefaults,
   saveMissionDayFile,
   saveParticipantView,
+  saveFullPhoto,
   savePhoto,
   saveSamplePartner,
   saveSelection,
@@ -66,6 +73,7 @@ import { findPartner } from '../lib/partners';
 import {
   detectFileType,
   detectFontType,
+  readJpegSize,
   readPngInfo,
   type FileType,
   type FontType,
@@ -273,6 +281,19 @@ function checkBiocardFile(kind: BiocardFileKind, bytes: ArrayBuffer): FileType |
   return type;
 }
 
+/**
+ * Removes stored objects that are no longer referenced.
+ *
+ * @param c - Request context.
+ * @param keys - Their R2 keys; null entries are skipped.
+ */
+async function removeStored(c: AppContext, keys: readonly (string | null)[]): Promise<void> {
+  const present = keys.filter((key): key is string => key !== null);
+  if (present.length > 0) {
+    await c.env.BUCKET.delete(present);
+  }
+}
+
 const scoped = new Hono<AppEnv>();
 scoped.use('*', requireMembership);
 
@@ -450,11 +471,12 @@ scoped.patch('/missions/:missionId', async (c) => {
 scoped.delete('/missions/:missionId', async (c) => {
   assertOwner(c);
   const mission = await requireMission(c);
-  const photoKey = await findPhotoKey(c.env.DB, mission.missionDayId, mission.id);
+  const keys = await Promise.all([
+    findPhotoKey(c.env.DB, mission.missionDayId, mission.id),
+    findFullPhotoKey(c.env.DB, mission.missionDayId, mission.id),
+  ]);
   await deleteMission(c.env.DB, mission.missionDayId, mission.id);
-  if (photoKey !== null) {
-    await c.env.BUCKET.delete(photoKey);
-  }
+  await removeStored(c, keys);
   return c.body(null, 204);
 });
 
@@ -477,15 +499,55 @@ scoped.put('/missions/:missionId/photo', async (c) => {
 
   // A new key per version lets browsers cache photos for good, and the
   // old object is removed only once the database points at the new one.
-  const previousKey = await findPhotoKey(c.env.DB, mission.missionDayId, mission.id);
+  const previousKeys = await Promise.all([
+    findPhotoKey(c.env.DB, mission.missionDayId, mission.id),
+    findFullPhotoKey(c.env.DB, mission.missionDayId, mission.id),
+  ]);
   const version = mission.photoVersion + 1;
   const key = `${missionDayPrefix(mission.missionDayId)}missions/${mission.id}/photo-${version}.png`;
   await c.env.BUCKET.put(key, bytes, { httpMetadata: { contentType: 'image/png' } });
   await savePhoto(c.env.DB, mission, key, version, crop);
-  if (previousKey !== null) {
+  await removeStored(c, previousKeys);
+  return c.json({ ...mission, hasPhoto: true, photoVersion: version, crop, photoFullSize: null });
+});
+
+// The full-quality copy of the photo, for printing Biocards. The browser
+// sends it right after the 512 px PNG, naming the version it belongs to,
+// so a copy can never end up next to a different photo. It must be a
+// square JPEG larger than 512 px: anything smaller adds nothing.
+scoped.put('/missions/:missionId/photo/full', async (c) => {
+  const mission = await requireMission(c);
+  if (!mission.hasPhoto || c.req.query('version') !== String(mission.photoVersion)) {
+    throw new HTTPException(409, { message: 'photo_changed' });
+  }
+  const bytes = await readUpload(c, DOCUMENT_MAX_BYTES);
+  const size = readJpegSize(bytes);
+  if (
+    size === null ||
+    size.width !== size.height ||
+    size.width <= IMAGE_SIZE_PX ||
+    size.width > PHOTO_FULL_MAX_PX
+  ) {
+    throw new HTTPException(415, { message: 'invalid_photo' });
+  }
+  const previousKey = await findFullPhotoKey(c.env.DB, mission.missionDayId, mission.id);
+  const prefix = `${missionDayPrefix(mission.missionDayId)}missions/${mission.id}`;
+  const key = `${prefix}/photo-${mission.photoVersion}-full.jpg`;
+  await c.env.BUCKET.put(key, bytes, { httpMetadata: { contentType: 'image/jpeg' } });
+  await saveFullPhoto(c.env.DB, mission, key, size.width);
+  if (previousKey !== null && previousKey !== key) {
     await c.env.BUCKET.delete(previousKey);
   }
-  return c.json({ ...mission, hasPhoto: true, photoVersion: version, crop });
+  return c.json({ ...mission, photoFullSize: size.width });
+});
+
+scoped.get('/missions/:missionId/photo/full', async (c) => {
+  const mission = await requireMission(c);
+  const key = await findFullPhotoKey(c.env.DB, mission.missionDayId, mission.id);
+  if (key === null) {
+    throw new HTTPException(404, { message: 'not_found' });
+  }
+  return serveObject(c, key, 'image/jpeg', { 'Cache-Control': PRIVATE_IMMUTABLE });
 });
 
 scoped.get('/missions/:missionId/photo', async (c) => {

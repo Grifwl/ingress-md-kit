@@ -436,6 +436,24 @@ describe('selection', () => {
   });
 });
 
+/**
+ * Builds the start of a JPEG: an APP0 segment, then a baseline
+ * start-of-frame segment with the given dimensions.
+ *
+ * @param width - Width in pixels.
+ * @param height - Height in pixels.
+ * @returns The file contents.
+ */
+function jpegHeader(width: number, height: number): Uint8Array<ArrayBuffer> {
+  const bytes = new Uint8Array(2 + 18 + 19);
+  bytes.set([0xff, 0xd8, 0xff, 0xe0, 0, 16]);
+  bytes.set([0xff, 0xc0, 0, 17, 8], 20);
+  const view = new DataView(bytes.buffer);
+  view.setUint16(25, height);
+  view.setUint16(27, width);
+  return bytes;
+}
+
 describe('photos', () => {
   const crop = '?x=0&y=0&size=1000';
 
@@ -475,6 +493,49 @@ describe('photos', () => {
     const body = new Uint8Array(IMAGE_MAX_BYTES + 1);
     body.set(pngHeader(IMAGE_SIZE_PX));
     expect((await call(path, { method: 'PUT', rawBody: body })).status).toBe(413);
+  });
+
+  it('keeps a full-quality copy of the current photo until it is replaced', async () => {
+    const mission = await createMission('example-2027');
+    const path = `/mission-days/example-2027/missions/${mission.id}/photo`;
+    await call(`${path}${crop}`, { method: 'PUT', rawBody: pngHeader(IMAGE_SIZE_PX) });
+
+    const body = jpegHeader(1500, 1500);
+    const stored = await call(`${path}/full?version=1`, { method: 'PUT', rawBody: body });
+    expect(((await stored.json()) as Mission).photoFullSize).toBe(1500);
+    const read = await call(`${path}/full`);
+    expect(read.headers.get('Content-Type')).toBe('image/jpeg');
+    expect(new Uint8Array(await read.arrayBuffer())).toEqual(body);
+
+    // A new photo forgets the copy, and a copy for an older photo is refused.
+    const replaced = await call(`${path}${crop}`, {
+      method: 'PUT',
+      rawBody: pngHeader(IMAGE_SIZE_PX),
+    });
+    expect(((await replaced.json()) as Mission).photoFullSize).toBeNull();
+    expect((await call(`${path}/full`)).status).toBe(404);
+    const late = await call(`${path}/full?version=1`, { method: 'PUT', rawBody: body });
+    expect(late.status).toBe(409);
+    const prefix = `mission-days/${mission.missionDayId}/missions/${mission.id}/`;
+    const objects = await env.BUCKET.list({ prefix });
+    expect(objects.objects.map((object) => object.key)).toEqual([`${prefix}photo-2.png`]);
+  });
+
+  it('refuses a full-quality copy that is not a large square JPEG', async () => {
+    const mission = await createMission('example-2027');
+    const path = `/mission-days/example-2027/missions/${mission.id}/photo`;
+    expect(
+      (await call(`${path}/full?version=0`, { method: 'PUT', rawBody: jpegHeader(900, 900) }))
+        .status,
+    ).toBe(409);
+    await call(`${path}${crop}`, { method: 'PUT', rawBody: pngHeader(IMAGE_SIZE_PX) });
+    for (const body of [jpegHeader(900, 600), jpegHeader(512, 512), jpegHeader(4000, 4000)]) {
+      const response = await call(`${path}/full?version=1`, { method: 'PUT', rawBody: body });
+      expect(response.status).toBe(415);
+    }
+    expect(
+      (await call(`${path}/full?version=1`, { method: 'PUT', rawBody: pngHeader(1000) })).status,
+    ).toBe(415);
   });
 
   it('removes stored objects when the Mission Day is deleted', async () => {

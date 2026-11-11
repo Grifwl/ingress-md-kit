@@ -111,6 +111,57 @@ export function detectFileType(bytes: ArrayBuffer): FileType | null {
   return fourCharacters(view, 0) === '%PDF' ? 'application/pdf' : null;
 }
 
+/** Dimensions of an image, in pixels. */
+export interface ImageSize {
+  width: number;
+  height: number;
+}
+
+// JPEG start-of-frame markers, which carry the dimensions: C0 to CF,
+// except C4 (Huffman tables), C8 (reserved) and CC (arithmetic coding).
+const JPEG_NOT_FRAME_MARKERS = [0xc4, 0xc8, 0xcc];
+
+/**
+ * Reads the dimensions of a JPEG by walking its segments up to the
+ * start-of-frame one, without decoding any image data.
+ *
+ * @param bytes - Contents of the file.
+ * @returns Its dimensions, or null when it is not a readable JPEG.
+ */
+export function readJpegSize(bytes: ArrayBuffer): ImageSize | null {
+  const view = new DataView(bytes);
+  if (bytes.byteLength < 4 || view.getUint16(0) !== 0xffd8) {
+    return null;
+  }
+  let offset = 2;
+  while (offset + 4 <= view.byteLength) {
+    if (view.getUint8(offset) !== 0xff) {
+      return null;
+    }
+    const marker = view.getUint8(offset + 1);
+    // Fill bytes: a marker may be preceded by any number of 0xFF.
+    if (marker === 0xff) {
+      offset += 1;
+      continue;
+    }
+    const length = view.getUint16(offset + 2);
+    const isFrame = marker >= 0xc0 && marker <= 0xcf && !JPEG_NOT_FRAME_MARKERS.includes(marker);
+    if (isFrame) {
+      // Length (2) + precision (1) + height (2) + width (2).
+      if (offset + 9 > view.byteLength) {
+        return null;
+      }
+      return { height: view.getUint16(offset + 5), width: view.getUint16(offset + 7) };
+    }
+    // Start of scan: image data follows and no frame header was seen.
+    if (marker === 0xda || length < 2) {
+      return null;
+    }
+    offset += 2 + length;
+  }
+  return null;
+}
+
 /** Font file types accepted for Biocards. */
 export type FontType = 'font/ttf' | 'font/otf' | 'font/woff' | 'font/woff2';
 

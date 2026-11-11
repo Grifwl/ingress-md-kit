@@ -42,6 +42,13 @@ export const IMAGE_SIZE_PX = 512;
 /** Upper bound for an uploaded 512×512 PNG, which protects the free-tier storage. */
 export const IMAGE_MAX_BYTES = 4 * 1024 * 1024;
 
+/**
+ * Largest side of the full-quality copy of a mission photo, kept for
+ * printing Biocards. Not a handbook rule: it keeps uploads small while
+ * staying well above print resolution for a card-sized picture.
+ */
+export const PHOTO_FULL_MAX_PX = 2048;
+
 /** Upper bound for a signed approval document or a map screenshot. */
 export const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
 

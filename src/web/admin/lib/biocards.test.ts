@@ -19,7 +19,8 @@ describe('templateWarnings', () => {
   it('has nothing to say about a well-made pair', () => {
     // A 512 px photo over 600 px at 300 dpi prints at 256 dpi.
     const window = { x: 72, y: 40, width: 600, height: 600 };
-    expect(templateWarnings({ front: CARD, back: CARD, window })).toEqual([]);
+    const facts = { front: CARD, back: CARD, window, photoSides: [512, 2048] };
+    expect(templateWarnings(facts)).toEqual([]);
   });
 
   it('warns about proportions, sizes and a front without transparency', () => {
@@ -27,31 +28,41 @@ describe('templateWarnings', () => {
       front: template(1000, 1000),
       back: CARD,
       window: null,
+      photoSides: [],
     }).map((warning) => warning.code);
     expect(codes).toEqual(['frontProportions', 'sizesDiffer', 'noWindow']);
   });
 
   it('warns about a see-through part that is low or not square', () => {
     const window = { x: 0, y: 500, width: 744, height: 300 };
-    const codes = templateWarnings({ front: CARD, back: CARD, window }).map((item) => item.code);
+    const facts = { front: CARD, back: CARD, window, photoSides: [] };
+    const codes = templateWarnings(facts).map((item) => item.code);
     expect(codes).toContain('windowNotTop');
     expect(codes).toContain('windowNotSquare');
   });
 
   it('warns about low resolution, giving the figure', () => {
     const small = template(372, 520);
-    const warnings = templateWarnings({ front: small, back: small, window: null });
+    const warnings = templateWarnings({ front: small, back: small, window: null, photoSides: [] });
     expect(warnings[0]).toEqual({ code: 'lowResolution', params: { dpi: 150 } });
+  });
 
+  it('counts the photos that would print soft, giving the lowest figure', () => {
     const wide = { x: 0, y: 0, width: 744, height: 744 };
-    const photo = templateWarnings({ front: CARD, back: CARD, window: wide }).at(-1);
-    expect(photo).toEqual({ code: 'lowPhotoResolution', params: { dpi: 206 } });
+    const facts = { front: CARD, back: CARD, window: wide, photoSides: [512, 1500, 400] };
+    expect(templateWarnings(facts).at(-1)).toEqual({
+      code: 'lowPhotoResolution',
+      params: { count: 2, dpi: 161 },
+    });
+    expect(templateWarnings({ ...facts, photoSides: [1500] })).toEqual([]);
   });
 });
 
 describe('missionPhotoDpi', () => {
   it('relates the photo to the printed width of the window', () => {
-    expect(missionPhotoDpi({ x: 0, y: 0, width: 600, height: 600 }, 300)).toBeCloseTo(256);
+    const window = { x: 0, y: 0, width: 600, height: 600 };
+    expect(missionPhotoDpi(window, 300, 512)).toBeCloseTo(256);
+    expect(missionPhotoDpi(window, 300, 1200)).toBeCloseTo(600);
   });
 });
 

@@ -3,7 +3,6 @@
  * templates. Warnings never block anything, like every other check.
  */
 import type { BiocardGeometry, Rect } from '../../../shared/biocard';
-import { IMAGE_SIZE_PX } from '../../../shared/rules';
 
 /** Resolution below which printed cards start to look soft. */
 export const BIOCARD_GOOD_DPI = 250;
@@ -33,18 +32,24 @@ export interface TemplateFacts {
   front: { width: number; height: number; geometry: BiocardGeometry };
   back: { width: number; height: number; geometry: BiocardGeometry };
   window: Rect | null;
+  /**
+   * Side in pixels of the photo of each chosen mission card: the
+   * full-quality copy when there is one, 512 px otherwise.
+   */
+  photoSides: readonly number[];
 }
 
 /**
- * Works out the print resolution of the mission photos on a card. They
- * are stored at 512 px, so a large see-through part enlarges them.
+ * Works out the print resolution of a mission photo on a card: its
+ * pixels spread over the printed width of the see-through part.
  *
  * @param window - See-through part of the front, in its pixels.
  * @param dpi - Resolution of the front.
- * @returns Resolution of the photos once printed.
+ * @param photoSide - Side of the photo, in pixels.
+ * @returns Resolution of the photo once printed.
  */
-export function missionPhotoDpi(window: Rect, dpi: number): number {
-  return IMAGE_SIZE_PX / (window.width / dpi);
+export function missionPhotoDpi(window: Rect, dpi: number, photoSide: number): number {
+  return photoSide / (window.width / dpi);
 }
 
 /**
@@ -79,9 +84,14 @@ export function templateWarnings(facts: TemplateFacts): TemplateWarning[] {
   if (Math.abs(window.width / window.height - 1) > WINDOW_ASPECT_TOLERANCE) {
     warnings.push({ code: 'windowNotSquare' });
   }
-  const photoDpi = missionPhotoDpi(window, front.geometry.dpi);
-  if (photoDpi < BIOCARD_GOOD_DPI) {
-    warnings.push({ code: 'lowPhotoResolution', params: { dpi: Math.round(photoDpi) } });
+  const soft = facts.photoSides
+    .map((side) => missionPhotoDpi(window, front.geometry.dpi, side))
+    .filter((photoDpi) => photoDpi < BIOCARD_GOOD_DPI);
+  if (soft.length > 0) {
+    warnings.push({
+      code: 'lowPhotoResolution',
+      params: { count: soft.length, dpi: Math.round(Math.min(...soft)) },
+    });
   }
   return warnings;
 }

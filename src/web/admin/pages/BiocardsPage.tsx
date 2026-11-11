@@ -20,8 +20,9 @@ import {
   type BiocardTextAlign,
   type BiocardTextBox,
   type BiocardVerticalAlign,
+  type Rect,
 } from '../../../shared/biocard';
-import { LANGUAGES, type Language } from '../../../shared/rules';
+import { IMAGE_SIZE_PX, LANGUAGES, type Language } from '../../../shared/rules';
 import type { LocalizedText, Mission, MissionDayWithRole } from '../../../shared/types';
 import { useI18n } from '../../i18n';
 import {
@@ -38,13 +39,30 @@ import {
   biocardFileUrl,
   deleteBiocardFont,
   photoUrl,
+  printPhotoUrl,
   saveBiocardSettings,
   updateMission,
   uploadBiocardFile,
 } from '../api';
 import { ErrorMessage, Field, FileUpload } from '../components/common';
-import { fractionToMm, mmToFraction, templateWarnings } from '../lib/biocards';
+import {
+  BIOCARD_GOOD_DPI,
+  fractionToMm,
+  missionPhotoDpi,
+  mmToFraction,
+  templateWarnings,
+} from '../lib/biocards';
 import { candidatesForList, selectedInOrder } from '../lib/selection';
+
+/**
+ * Tells the side in pixels of the sharpest stored copy of a mission photo.
+ *
+ * @param mission - A mission with a photo.
+ * @returns The full-quality copy's side, or 512 px when there is none.
+ */
+function photoSide(mission: Mission): number {
+  return mission.photoFullSize ?? IMAGE_SIZE_PX;
+}
 
 /** Key of the Mission Day's own card among the cards of the screen. */
 const GENERIC_KEY = 'generic';
@@ -313,18 +331,22 @@ function BoxFields({
  * One row of the list of cards: whether to generate it, and for a
  * mission, the name on its card, saved when the field is left.
  *
- * @param props - The card, whether it is chosen, the mission behind it and handlers.
+ * @param props - The card, the mission behind it, the see-through part of
+ *   the front (to judge the photo's print resolution), whether it is
+ *   chosen and handlers.
  * @returns The row element.
  */
 function CardRow({
   card,
   mission,
+  photoWindow,
   chosen,
   onToggle,
   onRename,
 }: {
   card: CardSpec;
   mission: Mission | null;
+  photoWindow: { rect: Rect | null; dpi: number } | null;
   chosen: boolean;
   onToggle: (chosen: boolean) => void;
   onRename: (name: string) => Promise<void>;
@@ -332,6 +354,13 @@ function CardRow({
   const { t } = useI18n();
   const [name, setName] = useState(mission?.biocardName ?? '');
   const [error, setError] = useState<unknown>();
+
+  // Print resolution of this mission's photo, shown only when it is low.
+  const photoDpi =
+    mission === null || !mission.hasPhoto || photoWindow === null || photoWindow.rect === null
+      ? null
+      : missionPhotoDpi(photoWindow.rect, photoWindow.dpi, photoSide(mission));
+  const softDpi = photoDpi !== null && photoDpi < BIOCARD_GOOD_DPI ? photoDpi : null;
 
   return (
     <li class="biocard-row">
@@ -363,6 +392,9 @@ function CardRow({
       )}
       {mission !== null && !mission.hasPhoto && (
         <span class="badge warn">{t('biocard.noPhoto')}</span>
+      )}
+      {softDpi !== null && (
+        <span class="badge warn">{t('biocard.softPhoto', { dpi: Math.round(softDpi) })}</span>
       )}
       <ErrorMessage error={error} />
     </li>
@@ -453,7 +485,10 @@ export function BiocardsPage({
         key: mission.id,
         label: mission.landmark === '' ? t('missions.untitled') : mission.landmark,
         name: biocardName(mission),
-        picture: mission.hasPhoto ? { kind: 'photo' as const, url: photoUrl(slug, mission) } : null,
+        // The sharpest copy of the photo, since these cards are printed.
+        picture: mission.hasPhoto
+          ? { kind: 'photo' as const, url: printPhotoUrl(slug, mission) }
+          : null,
         description: mission.description,
       })),
     ];
@@ -483,6 +518,9 @@ export function BiocardsPage({
             geometry: templates.backGeometry,
           },
           window: templates.window,
+          photoSides: missions
+            .filter((mission) => chosen.has(mission.id) && mission.hasPhoto)
+            .map(photoSide),
         });
 
   /**
@@ -834,6 +872,11 @@ export function BiocardsPage({
               key={card.key}
               card={card}
               mission={missions.find((mission) => mission.id === card.key) ?? null}
+              photoWindow={
+                templates === null
+                  ? null
+                  : { rect: templates.window, dpi: templates.frontGeometry.dpi }
+              }
               chosen={chosen.has(card.key)}
               onToggle={(isChosen) => {
                 const next = new Set(chosen);

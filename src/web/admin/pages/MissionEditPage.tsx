@@ -329,6 +329,7 @@ export function MissionEditPage({
               hasPhoto: updated.hasPhoto,
               photoVersion: updated.photoVersion,
               crop: updated.crop,
+              photoFullSize: updated.photoFullSize,
             })
           }
         />

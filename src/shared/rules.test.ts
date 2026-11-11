@@ -52,6 +52,7 @@ function validMission(overrides: Partial<Mission> = {}): Mission {
     photoVersion: 1,
     hasPhoto: true,
     crop: null,
+    photoFullSize: null,
     selected: true,
     recommendedOrder: 1,
     notes: '',

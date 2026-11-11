@@ -371,6 +371,24 @@ export function uploadPhoto(
 }
 
 /**
+ * Stores the full-quality copy of a mission's photo, used to print
+ * Biocards. It must belong to the photo version just uploaded.
+ *
+ * @param slug - Mission Day slug.
+ * @param mission - The mission, as returned by the photo upload.
+ * @param image - Square JPEG of the same crop at full resolution.
+ * @returns The mission after the change.
+ */
+export function uploadFullPhoto(slug: string, mission: Mission, image: Blob): Promise<Mission> {
+  const query = new URLSearchParams({ version: String(mission.photoVersion) });
+  return request(`${missionPath(slug, mission.id)}/photo/full?${query}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'image/jpeg' },
+    body: image,
+  });
+}
+
+/**
  * Stores the final selection.
  *
  * @param slug - Mission Day slug.
@@ -689,4 +707,21 @@ export function mapScreenshotUrl(missionDay: MissionDay): string | null {
  */
 export function photoUrl(slug: string, mission: Pick<Mission, 'id' | 'photoVersion'>): string {
   return `${BASE}${missionPath(slug, mission.id)}/photo?v=${mission.photoVersion}`;
+}
+
+/**
+ * Builds the address of the sharpest copy of a mission's photo: the
+ * full-quality one when it exists, otherwise the 512 px PNG.
+ *
+ * @param slug - Mission Day slug.
+ * @param mission - The mission.
+ * @returns The image address.
+ */
+export function printPhotoUrl(
+  slug: string,
+  mission: Pick<Mission, 'id' | 'photoVersion' | 'photoFullSize'>,
+): string {
+  return mission.photoFullSize === null
+    ? photoUrl(slug, mission)
+    : `${BASE}${missionPath(slug, mission.id)}/photo/full?v=${mission.photoVersion}`;
 }

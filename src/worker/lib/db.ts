@@ -67,6 +67,8 @@ interface MissionRow {
   photo_key: string | null;
   photo_version: number;
   crop_json: string | null;
+  photo_full_key: string | null;
+  photo_full_size: number | null;
   selected: number;
   recommended_order: number | null;
   notes: string;
@@ -216,6 +218,7 @@ function toMission(row: MissionRow, waypoints: Waypoint[]): Mission {
     photoVersion: row.photo_version,
     hasPhoto: row.photo_key !== null,
     crop: row.crop_json === null ? null : (JSON.parse(row.crop_json) as CropRect),
+    photoFullSize: row.photo_full_key === null ? null : row.photo_full_size,
     selected: row.selected === 1,
     recommendedOrder: row.recommended_order,
     notes: row.notes,
@@ -850,7 +853,27 @@ export async function findPhotoKey(
 }
 
 /**
- * Records a newly stored photo.
+ * Returns the R2 key of the full-quality copy of a mission's photo.
+ *
+ * @param db - D1 binding.
+ * @param missionDayId - Mission Day it must belong to.
+ * @param missionId - Mission to read.
+ * @returns The key, or null if the photo has no such copy.
+ */
+export async function findFullPhotoKey(
+  db: D1Database,
+  missionDayId: string,
+  missionId: string,
+): Promise<string | null> {
+  return db
+    .prepare('SELECT photo_full_key FROM missions WHERE id = ? AND mission_day_id = ?')
+    .bind(missionId, missionDayId)
+    .first<string | null>('photo_full_key');
+}
+
+/**
+ * Records a newly stored photo. Any full-quality copy belonged to the
+ * previous photo, so it is forgotten until the new one is sent.
  *
  * @param db - D1 binding.
  * @param mission - The mission that owns it.
@@ -867,10 +890,34 @@ export async function savePhoto(
 ): Promise<void> {
   await db
     .prepare(
-      `UPDATE missions SET photo_key = ?, photo_version = ?, crop_json = ?
+      `UPDATE missions SET photo_key = ?, photo_version = ?, crop_json = ?,
+         photo_full_key = NULL, photo_full_size = NULL
        WHERE id = ? AND mission_day_id = ?`,
     )
     .bind(photoKey, version, JSON.stringify(crop), mission.id, mission.missionDayId)
+    .run();
+}
+
+/**
+ * Records the full-quality copy of a mission's current photo.
+ *
+ * @param db - D1 binding.
+ * @param mission - The mission that owns it.
+ * @param key - R2 key of the copy.
+ * @param size - Side of the copy, in pixels.
+ */
+export async function saveFullPhoto(
+  db: D1Database,
+  mission: Mission,
+  key: string,
+  size: number,
+): Promise<void> {
+  await db
+    .prepare(
+      `UPDATE missions SET photo_full_key = ?, photo_full_size = ?
+       WHERE id = ? AND mission_day_id = ?`,
+    )
+    .bind(key, size, mission.id, mission.missionDayId)
     .run();
 }
 

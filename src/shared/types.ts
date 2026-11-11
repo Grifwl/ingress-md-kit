@@ -134,6 +134,11 @@ export interface Mission {
   photoVersion: number;
   hasPhoto: boolean;
   crop: CropRect | null;
+  /**
+   * Side in pixels of the full-quality copy of the photo, used to print
+   * Biocards; null when the photo was stored only at 512 px.
+   */
+  photoFullSize: number | null;
   selected: boolean;
   recommendedOrder: number | null;
   notes: string;

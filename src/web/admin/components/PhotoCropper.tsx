@@ -3,14 +3,17 @@
  * happens in the browser; the Worker only stores the resulting PNG.
  */
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { IMAGE_SIZE_PX } from '../../../shared/rules';
+import { IMAGE_SIZE_PX, PHOTO_FULL_MAX_PX } from '../../../shared/rules';
 import type { CropRect, Mission } from '../../../shared/types';
 import { useI18n } from '../../i18n';
-import { photoUrl, uploadPhoto } from '../api';
+import { photoUrl, uploadFullPhoto, uploadPhoto } from '../api';
 import { clampCrop, cropSizeRange, defaultCrop, resizeCrop } from '../lib/image';
 import { ErrorMessage, Field } from './common';
 
 const PREVIEW_SIZE_PX = 320;
+
+/** JPEG quality of the full-quality copy: visually lossless, a fraction of a PNG's size. */
+const FULL_JPEG_QUALITY = 0.92;
 
 /**
  * Draws a region of an image onto a canvas, filling it.
@@ -29,21 +32,29 @@ function drawCrop(canvas: HTMLCanvasElement, image: HTMLImageElement, crop: Crop
 }
 
 /**
- * Renders the final 512×512 PNG.
+ * Renders the crop as a square image file.
  *
  * @param image - Source image.
  * @param crop - Region to use.
- * @returns The PNG file.
+ * @param size - Side of the result, in pixels.
+ * @param type - Image format, with its quality when it is lossy.
+ * @returns The encoded file.
  */
-function renderPng(image: HTMLImageElement, crop: CropRect): Promise<Blob> {
+function renderSquare(
+  image: HTMLImageElement,
+  crop: CropRect,
+  size: number,
+  type: { mime: 'image/png' } | { mime: 'image/jpeg'; quality: number },
+): Promise<Blob> {
   const canvas = document.createElement('canvas');
-  canvas.width = IMAGE_SIZE_PX;
-  canvas.height = IMAGE_SIZE_PX;
+  canvas.width = size;
+  canvas.height = size;
   drawCrop(canvas, image, crop);
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => (blob === null ? reject(new Error('Encoding failed')) : resolve(blob)),
-      'image/png',
+      type.mime,
+      'quality' in type ? type.quality : undefined,
     );
   });
 }
@@ -126,7 +137,11 @@ export function PhotoCropper({
     );
   };
 
-  /** Crops the photo and sends it to the server. */
+  /**
+   * Crops the photo and sends it to the server twice: as the 512 px PNG
+   * every page and export uses, and, when the crop is larger than that,
+   * as a full-quality JPEG kept for printing Biocards.
+   */
   const upload = async () => {
     if (image === null || crop === null) {
       return;
@@ -134,7 +149,20 @@ export function PhotoCropper({
     setBusy(true);
     setError(undefined);
     try {
-      onUploaded(await uploadPhoto(slug, mission.id, await renderPng(image, crop), crop));
+      const small = await renderSquare(image, crop, IMAGE_SIZE_PX, { mime: 'image/png' });
+      let stored = await uploadPhoto(slug, mission.id, small, crop);
+      // The 512 px photo is already saved here, so it is reported even if
+      // the full-quality copy fails; the cards then fall back to it.
+      onUploaded(stored);
+      if (crop.size > IMAGE_SIZE_PX) {
+        const side = Math.min(crop.size, PHOTO_FULL_MAX_PX);
+        const full = await renderSquare(image, crop, side, {
+          mime: 'image/jpeg',
+          quality: FULL_JPEG_QUALITY,
+        });
+        stored = await uploadFullPhoto(slug, stored, full);
+        onUploaded(stored);
+      }
       setImage(null);
       setCrop(null);
     } catch (failure) {
@@ -156,6 +184,14 @@ export function PhotoCropper({
           width={PREVIEW_SIZE_PX}
           height={PREVIEW_SIZE_PX}
         />
+      )}
+      {/* Photos from before the full-quality copy existed print soft on Biocards. */}
+      {mission.hasPhoto && image === null && (
+        <p class="field-help">
+          {mission.photoFullSize === null
+            ? t('mission.photoSmallOnly')
+            : t('mission.photoFull', { size: mission.photoFullSize })}
+        </p>
       )}
       <Field label={t('mission.photoChoose')}>
         <input

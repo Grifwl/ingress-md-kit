@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { detectFileType, detectFontType, readPngInfo } from './png';
+import { detectFileType, detectFontType, readJpegSize, readPngInfo } from './png';
 
 /**
  * Builds a PNG made of a header and the given extra chunks.
@@ -19,6 +19,24 @@ function png(colourType: number, chunks: string[] = []): ArrayBuffer {
     bytes.set(new TextEncoder().encode(type), 33 + index * 12 + 4);
   });
   return bytes.buffer;
+}
+
+/**
+ * Builds the start of a JPEG: an APP0 segment, then a baseline
+ * start-of-frame segment with the given dimensions.
+ *
+ * @param width - Width in pixels.
+ * @param height - Height in pixels.
+ * @returns The file contents.
+ */
+function jpegHeader(width: number, height: number): Uint8Array<ArrayBuffer> {
+  const bytes = new Uint8Array(2 + 18 + 19);
+  bytes.set([0xff, 0xd8, 0xff, 0xe0, 0, 16]);
+  bytes.set([0xff, 0xc0, 0, 17, 8], 20);
+  const view = new DataView(bytes.buffer);
+  view.setUint16(25, height);
+  view.setUint16(27, width);
+  return bytes;
 }
 
 /**
@@ -94,5 +112,19 @@ describe('detectFontType', () => {
   it('refuses anything else', () => {
     expect(detectFontType(file([0x89, 0x50, 0x4e, 0x47]))).toBeNull();
     expect(detectFontType(new ArrayBuffer(4))).toBeNull();
+  });
+});
+
+describe('readJpegSize', () => {
+  it('reads the dimensions from the start-of-frame segment', () => {
+    expect(readJpegSize(jpegHeader(2048, 1536).buffer)).toEqual({ width: 2048, height: 1536 });
+  });
+
+  it('refuses files that are not JPEG or have no frame header', () => {
+    expect(readJpegSize(png(6))).toBeNull();
+    expect(readJpegSize(jpegHeader(10, 10).buffer.slice(0, 24))).toBeNull();
+    const scanFirst = jpegHeader(10, 10);
+    scanFirst[21] = 0xda;
+    expect(readJpegSize(scanFirst.buffer)).toBeNull();
   });
 });
