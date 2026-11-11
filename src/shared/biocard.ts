@@ -99,11 +99,12 @@ export interface BiocardSettings {
    */
   cards: string[] | null;
   /**
-   * Whether proposals show the ticked cards. Off by default because the
-   * template may carry a partner's logo, which other partners should not
-   * see before the organisers decide so.
+   * Whether the cards carry the partner's logo. Only then do proposals
+   * speak about Biocards at all: what they are, the request to the
+   * partner, the ticked cards with that partner's overlay, and the boxes
+   * to tick when signing. Off by default.
    */
-  showOnProposals: boolean;
+  withPartnerLogo: boolean;
   /** Whether the participant view shows the ticked cards. */
   showOnParticipantView: boolean;
 }
@@ -114,7 +115,7 @@ export const BIOCARD_GENERIC_KEY = 'generic';
 /** Which cards are ticked and where they are shown, saved apart from the rest. */
 export type BiocardPublication = Pick<
   BiocardSettings,
-  'cards' | 'showOnProposals' | 'showOnParticipantView'
+  'cards' | 'withPartnerLogo' | 'showOnParticipantView'
 >;
 
 /**
@@ -169,7 +170,7 @@ export const DEFAULT_BIOCARD_SETTINGS: BiocardSettings = {
   genericPhoto: 'upload',
   genericDescription: {},
   cards: null,
-  showOnProposals: false,
+  withPartnerLogo: false,
   showOnParticipantView: false,
 };
 

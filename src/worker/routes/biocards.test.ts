@@ -219,12 +219,13 @@ describe('Biocards on public pages', () => {
     expect((await visit(`${api}/biocard/front`)).status).toBe(404);
 
     await saveSettings({
-      showOnProposals: true,
+      withPartnerLogo: true,
       genericName: 'MD',
       genericDescription: { ca: 'Hola', en: 'Hello' },
     });
     const view = (await (await visit(api)).json()) as ProposalView;
-    expect(view.biocards).toMatchObject({ frontVersion: 1, fontVersion: null });
+    // The partner has no overlay of its own, and the default one is never used.
+    expect(view.biocards).toMatchObject({ frontVersion: 1, fontVersion: null, overlay: false });
     expect(view.biocards?.cards).toEqual([
       {
         key: 'generic',
@@ -236,6 +237,13 @@ describe('Biocards on public pages', () => {
     ]);
     expect((await visit(`${api}/biocard/front`)).status).toBe(200);
     expect((await visit(`${api}/biocard/font`)).status).toBe(404);
+
+    // With an overlay of its own, the partner's cards carry it.
+    await send(`${DAY}/partners/${partner.id}/overlay`, {
+      method: 'PUT',
+      rawBody: pngHeader(512, 512),
+    });
+    expect(((await (await visit(api)).json()) as ProposalView).biocards?.overlay).toBe(true);
   });
 
   it('need the photos of selected missions for a collage', async () => {
@@ -285,7 +293,7 @@ describe('Biocards on public pages', () => {
     // Until the ticks change: the Mission Day's card and every selected mission.
     const published = await send(`${DAY}/biocard-publication`, {
       method: 'PUT',
-      body: { cards: null, showOnProposals: false, showOnParticipantView: true },
+      body: { cards: null, withPartnerLogo: false, showOnParticipantView: true },
     });
     expect(((await published.json()) as MissionDay).biocard.showOnParticipantView).toBe(true);
     const byDefault = (await (await visit(api)).json()) as ParticipantView;
@@ -302,7 +310,7 @@ describe('Biocards on public pages', () => {
       method: 'PUT',
       body: {
         cards: [first!.id, unselected!.id],
-        showOnProposals: false,
+        withPartnerLogo: false,
         showOnParticipantView: true,
       },
     });
@@ -311,7 +319,7 @@ describe('Biocards on public pages', () => {
 
     const wrong = await send(`${DAY}/biocard-publication`, {
       method: 'PUT',
-      body: { cards: [1], showOnProposals: false, showOnParticipantView: true },
+      body: { cards: [1], withPartnerLogo: false, showOnParticipantView: true },
     });
     expect(wrong.status).toBe(400);
   });
@@ -335,9 +343,15 @@ describe('Biocards on public pages', () => {
     });
     const partner = await createPartner();
     expect(partner.biocardAnswer).toBe('pending');
-    const view = (await (
-      await visit(`/api/public/proposals/${partner.proposalToken}`)
-    ).json()) as ProposalView;
+    const api = `/api/public/proposals/${partner.proposalToken}`;
+
+    // Unless the cards carry the partner's logo, the letter says nothing about them.
+    const silent = (await (await visit(api)).json()) as ProposalView;
+    expect(silent.letter.whatIsBiocard).toBe('');
+    expect(silent.letter.biocardRequest).toBe('');
+
+    await saveSettings({ withPartnerLogo: true });
+    const view = (await (await visit(api)).json()) as ProposalView;
     expect(view.letter.whatIsBiocard).toBe('Una targeta.');
     expect(view.letter.biocardRequest).toBe('Voleu sortir a les cartes, The Museum?');
 

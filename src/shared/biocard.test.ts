@@ -139,7 +139,7 @@ describe('completeBiocardSettings', () => {
     expect(settings.layout.name.x).toBe(0.5);
     expect(settings.layout.name.fontSizePt).toBe(DEFAULT_BIOCARD_LAYOUT.name.fontSizePt);
     expect(settings.layout.description).toEqual(DEFAULT_BIOCARD_LAYOUT.description);
-    expect(settings.showOnProposals).toBe(false);
+    expect(settings.withPartnerLogo).toBe(false);
   });
 });
 

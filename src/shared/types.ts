@@ -244,6 +244,11 @@ export interface PublicBiocards {
   backVersion: number;
   /** Version of the Mission Day's own font, or null for the default one. */
   fontVersion: number | null;
+  /**
+   * Whether the pictures carry the overlay of the page, which is then a
+   * partner's: the default overlay is never used on Biocards.
+   */
+  overlay: boolean;
   /** The Mission Day's own card first, then missions in recommended order. */
   cards: PublicBiocardCard[];
 }

@@ -14,6 +14,8 @@ export interface ParticipantOverlay {
   type: string;
   /** Changes with the file, so that browsers never keep a replaced one. */
   tag: string;
+  /** True for a partner's overlay, false for the default one. */
+  partner: boolean;
 }
 
 /**
@@ -34,12 +36,18 @@ export async function findParticipantOverlay(
     if (partner !== null && partner.hasOverlay && mayShowLogo(partner)) {
       const file = await findPartnerFile(db, partner.id, 'overlay');
       if (file !== null) {
-        return { ...file, tag: `p${partner.overlayVersion}-${partner.id.slice(0, 8)}` };
+        return {
+          ...file,
+          tag: `p${partner.overlayVersion}-${partner.id.slice(0, 8)}`,
+          partner: true,
+        };
       }
     }
   }
   const file = await findMissionDayFile(db, missionDay.id, 'default_overlay');
-  return file === null ? null : { ...file, tag: `d${missionDay.defaultOverlayVersion}` };
+  return file === null
+    ? null
+    : { ...file, tag: `d${missionDay.defaultOverlayVersion}`, partner: false };
 }
 
 /**
@@ -49,12 +57,15 @@ export async function findParticipantOverlay(
  * @param missionDay - The Mission Day.
  * @param missions - All its candidates; only the selected ones are shown.
  * @param overlayTag - Tag of the overlay applied, or null for none.
+ * @param partnerOverlay - Whether that overlay is a partner's, which the
+ *   Biocards then carry too; they never carry the default one.
  * @returns The data for the public page.
  */
 export function buildParticipantView(
   missionDay: MissionDay,
   missions: readonly Mission[],
   overlayTag: string | null,
+  partnerOverlay: boolean,
 ): ParticipantView {
   const selected: ParticipantMission[] = missions
     .filter((mission) => mission.selected && mission.recommendedOrder !== null)
@@ -82,6 +93,7 @@ export function buildParticipantView(
       missionDay,
       missions,
       missionDay.biocard.showOnParticipantView,
+      partnerOverlay,
       (description) => ({ ...description }),
     ),
   };

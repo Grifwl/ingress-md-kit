@@ -407,6 +407,7 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
           <BiocardGallery
             biocards={view.biocards}
             base={base}
+            overlayUrl={overlayUrl}
             language={view.language}
             collageUrls={collageUrls}
             frontAlt={t('biocard.front')}

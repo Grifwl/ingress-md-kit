@@ -22,6 +22,8 @@ import type {
  * @param missionDay - The Mission Day.
  * @param missions - All its candidates.
  * @param shown - Whether the organisers show the cards on this page.
+ * @param partnerOverlay - Whether the page's overlay is a partner's, which
+ *   the pictures then carry; the default overlay is never used here.
  * @param describe - Reduces a description to what the page needs, such
  *   as the one language of a proposal.
  * @returns The cards, or null when the page must not show any.
@@ -30,6 +32,7 @@ export function buildPublicBiocards(
   missionDay: MissionDay,
   missions: readonly Mission[],
   shown: boolean,
+  partnerOverlay: boolean,
   describe: (description: LocalizedText) => LocalizedText,
 ): PublicBiocards | null {
   const { biocard, biocardFiles } = missionDay;
@@ -75,6 +78,7 @@ export function buildPublicBiocards(
     frontVersion: biocardFiles.front,
     backVersion: biocardFiles.back,
     fontVersion: biocardFiles.font,
+    overlay: partnerOverlay,
     cards,
   };
 }

@@ -316,6 +316,8 @@ function drawTextBox(
  * @param picture - What shows through.
  * @param name - Name to write.
  * @param layout - Where texts go.
+ * @param overlayUrl - A partner's overlay to lay over the picture, as on
+ *   the mission images, or null for none.
  * @returns The drawn side.
  */
 export async function drawBiocardFront(
@@ -323,11 +325,22 @@ export async function drawBiocardFront(
   picture: BiocardPicture,
   name: string,
   layout: BiocardLayout,
+  overlayUrl: string | null = null,
 ): Promise<DrawnSide> {
   const { front, window, frontGeometry, fontFamily } = templates;
   const { canvas, context } = createCanvas(front.naturalWidth, front.naturalHeight);
   if (window !== null) {
     await drawPicture(context, picture, window);
+    // The overlay covers the whole picture, cropped like a single photo,
+    // so that it sits on a mission photo exactly as on its mission image.
+    // A picture-less card gets none, and an overlay that fails to load is
+    // left out rather than stopping the card.
+    if (overlayUrl !== null && picture !== null) {
+      const overlay = await loadImage(overlayUrl).catch(() => null);
+      if (overlay !== null) {
+        drawCover(context, overlay, window);
+      }
+    }
   }
   context.drawImage(front, 0, 0);
   const fits = drawTextBox(context, name, layout.name, frontGeometry.dpi, fontFamily);

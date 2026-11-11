@@ -203,6 +203,7 @@ function Participant({ view, base }: { view: ParticipantView; base: string }) {
           <BiocardGallery
             biocards={view.biocards}
             base={base}
+            overlayUrl={overlayUrl}
             language={language}
             collageUrls={collageUrls}
             frontAlt={t('biocard.front')}

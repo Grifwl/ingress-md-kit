@@ -30,13 +30,15 @@ interface DrawnCard {
  * they are drawn; a card that cannot be drawn is left out rather than
  * shown broken.
  *
- * @param props - The cards, the root of the page's API, the language of
- *   the descriptions, the photos for a collage and the alternative texts.
+ * @param props - The cards, the root of the page's API, the page's
+ *   overlay (used only when the cards carry it), the language of the
+ *   descriptions, the photos for a collage and the alternative texts.
  * @returns The images, or nothing until the first card is drawn.
  */
 export function BiocardGallery({
   biocards,
   base,
+  overlayUrl,
   language,
   collageUrls,
   frontAlt,
@@ -44,6 +46,7 @@ export function BiocardGallery({
 }: {
   biocards: PublicBiocards;
   base: string;
+  overlayUrl: string | null;
   language: Language;
   collageUrls: readonly string[];
   frontAlt: string;
@@ -84,11 +87,13 @@ export function BiocardGallery({
         file('back', biocards.backVersion),
         biocards.fontVersion === null ? null : file('font', biocards.fontVersion),
       );
+      // Only a partner's overlay goes on the cards, never the default one.
+      const overlay = biocards.overlay ? overlayUrl : null;
       for (const card of biocards.cards) {
         try {
           const description = resolveLocalized(card.description, language);
           const sides = [
-            await drawBiocardFront(templates, pictureOf(card), card.name, biocards.layout),
+            await drawBiocardFront(templates, pictureOf(card), card.name, biocards.layout, overlay),
             drawBiocardBack(templates, description, biocards.layout),
           ];
           const blobs = await Promise.all(sides.map(encodeBiocardPreview));
@@ -114,7 +119,7 @@ export function BiocardGallery({
     };
     // The collage is compared by its addresses, which identify the photos,
     // so that a new array with the same photos does not redraw the cards.
-  }, [biocards, base, language, collageKey]);
+  }, [biocards, base, overlayUrl, language, collageKey]);
 
   if (drawn.length === 0) {
     return null;

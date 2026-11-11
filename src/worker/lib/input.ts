@@ -689,14 +689,14 @@ export function parseBiocardPublication(body: unknown): BiocardPublication {
       ));
   if (
     !validCards ||
-    typeof object.showOnProposals !== 'boolean' ||
+    typeof object.withPartnerLogo !== 'boolean' ||
     typeof object.showOnParticipantView !== 'boolean'
   ) {
     badRequest('invalid_biocard');
   }
   return {
     cards: Array.isArray(cards) ? [...new Set(cards as string[])] : null,
-    showOnProposals: object.showOnProposals,
+    withPartnerLogo: object.withPartnerLogo,
     showOnParticipantView: object.showOnParticipantView,
   };
 }

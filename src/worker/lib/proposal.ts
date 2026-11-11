@@ -64,6 +64,8 @@ export function buildProposalView(
    * @param text - Per-language map.
    * @returns The final text.
    */
+  const withBiocards = missionDay.biocard.withPartnerLogo;
+
   const render = (text: LocalizedText) =>
     fillLetterPlaceholders(resolveLocalized(text, language), values);
 
@@ -83,19 +85,23 @@ export function buildProposalView(
       whyThisCity: render(missionDay.letter.whyThisCity),
       whyYou: render(partner.whyYou),
       logoRequest: render(partner.logoRequest),
-      whatIsBiocard: render(missionDay.letter.whatIsBiocard),
-      biocardRequest: render(partner.biocardRequest),
+      // Without the partner's logo on the cards the letter does not speak
+      // about Biocards, and empty texts leave their blocks out.
+      whatIsBiocard: withBiocards ? render(missionDay.letter.whatIsBiocard) : '',
+      biocardRequest: withBiocards ? render(partner.biocardRequest) : '',
       closing: render(missionDay.letter.closing),
     },
     missions: proposalMissions(missionDay, missions, partner),
     myMapsUrl: missionDay.myMapsUrl,
     hasMapScreenshot: missionDay.hasMapScreenshot,
     mapScreenshotVersion: missionDay.mapScreenshotVersion,
-    // A proposal is read in one language, so the cards carry only that one.
+    // A proposal is read in one language, so the cards carry only that one,
+    // and their pictures carry this partner's overlay when it has one.
     biocards: buildPublicBiocards(
       missionDay,
       missions,
-      missionDay.biocard.showOnProposals,
+      withBiocards,
+      partner.hasOverlay,
       (description) => ({ [language]: resolveLocalized(description, language) }),
     ),
   };

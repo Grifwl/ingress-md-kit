@@ -26,7 +26,7 @@ import {
   type Rect,
 } from '../../../shared/biocard';
 import { IMAGE_SIZE_PX, LANGUAGES, type Language } from '../../../shared/rules';
-import type { LocalizedText, Mission, MissionDayWithRole } from '../../../shared/types';
+import type { LocalizedText, Mission, MissionDayWithRole, Partner } from '../../../shared/types';
 import { useI18n } from '../../i18n';
 import {
   drawBiocardBack,
@@ -43,6 +43,7 @@ import {
   biocardFileUrl,
   deleteBiocardFont,
   photoUrl,
+  partnerFileUrl,
   printPhotoUrl,
   saveBiocardPublication,
   saveBiocardSettings,
@@ -94,6 +95,7 @@ type BoxName = keyof BiocardLayout;
  * @param card - The card to draw, or null.
  * @param layout - Where texts go.
  * @param description - Text of the back.
+ * @param overlayUrl - Partner overlay over the picture, or null for none.
  * @returns Addresses of both sides and whether their texts fit, or null.
  */
 function usePreview(
@@ -101,6 +103,7 @@ function usePreview(
   card: CardSpec | null,
   layout: BiocardLayout,
   description: string,
+  overlayUrl: string | null,
 ): { front: string; back: string; frontFits: boolean; backFits: boolean } | null {
   const [preview, setPreview] = useState<{
     front: string;
@@ -118,7 +121,13 @@ function usePreview(
     const urls: string[] = [];
     const timer = setTimeout(async () => {
       try {
-        const front = await drawBiocardFront(templates, card.picture, card.name, layout);
+        const front = await drawBiocardFront(
+          templates,
+          card.picture,
+          card.name,
+          layout,
+          overlayUrl,
+        );
         const back = drawBiocardBack(templates, description, layout);
         // Canvases are shown as images, which scale well in the editor;
         // JPEG keeps redrawing quick while a box is being dragged.
@@ -146,7 +155,7 @@ function usePreview(
       // so they are released a little later than the effect is undone.
       setTimeout(() => urls.forEach((url) => URL.revokeObjectURL(url)), 1000);
     };
-  }, [templates, card, layout, description]);
+  }, [templates, card, layout, description, overlayUrl]);
 
   return preview;
 }
@@ -421,11 +430,13 @@ function CardRow({
 export function BiocardsPage({
   missionDay,
   missions,
+  partners,
   onMissionDayChange,
   onMissionChange,
 }: {
   missionDay: MissionDayWithRole;
   missions: readonly Mission[];
+  partners: readonly Partner[];
   onMissionDayChange: (missionDay: MissionDayWithRole) => void;
   onMissionChange: (mission: Mission) => void;
 }) {
@@ -519,7 +530,29 @@ export function BiocardsPage({
   const previewCard = cards.find((card) => card.key === previewKey) ?? cards[0] ?? null;
   const previewDescription =
     previewCard === null ? '' : biocardDescription(previewCard.description, language, withEnglish);
-  const preview = usePreview(templates, previewCard, settings.layout, previewDescription);
+  // Partners whose overlay can go on the cards; the default overlay never
+  // does. The participant view's partner comes first chosen, since the
+  // printed cards usually match what agents see.
+  const overlayPartners = useMemo(
+    () => partners.filter((partner) => partner.hasOverlay),
+    [partners],
+  );
+  const [overlayPartnerId, setOverlayPartnerId] = useState(() =>
+    overlayPartners.some((partner) => partner.id === missionDay.participantPartnerId)
+      ? (missionDay.participantPartnerId ?? '')
+      : '',
+  );
+  const overlayPartner = overlayPartners.find((partner) => partner.id === overlayPartnerId);
+  const overlayUrl =
+    overlayPartner === undefined ? null : partnerFileUrl(slug, overlayPartner, 'overlay');
+
+  const preview = usePreview(
+    templates,
+    previewCard,
+    settings.layout,
+    previewDescription,
+    overlayUrl,
+  );
 
   const warnings =
     templates === null
@@ -586,7 +619,7 @@ export function BiocardsPage({
   const publish = async (changes: Partial<BiocardPublication>) => {
     const next: BiocardPublication = {
       cards: missionDay.biocard.cards,
-      showOnProposals: missionDay.biocard.showOnProposals,
+      withPartnerLogo: missionDay.biocard.withPartnerLogo,
       showOnParticipantView: missionDay.biocard.showOnParticipantView,
       ...changes,
     };
@@ -629,7 +662,7 @@ export function BiocardsPage({
           card.key === GENERIC_KEY ? 0 : list[0]?.key === GENERIC_KEY ? index : index + 1;
         const description = biocardDescription(card.description, language, withEnglish);
         const sides = [
-          await drawBiocardFront(templates, card.picture, card.name, settings.layout),
+          await drawBiocardFront(templates, card.picture, card.name, settings.layout, overlayUrl),
           drawBiocardBack(templates, description, settings.layout),
         ] as const;
         if (!sides[0].fits || !sides[1].fits) {
@@ -652,6 +685,20 @@ export function BiocardsPage({
     setOverflowing(overflow);
     downloadFile(buildZip(entries), `${slug}-biocards.zip`, 'application/zip');
   };
+
+  // The same choice of overlay serves the preview and the download.
+  const overlayField = (
+    <Field label={t('biocard.overlay')} help={t('biocard.overlayHelp')}>
+      <select value={overlayPartnerId} onChange={(e) => setOverlayPartnerId(e.currentTarget.value)}>
+        <option value="">{t('biocard.noOverlay')}</option>
+        {overlayPartners.map((partner) => (
+          <option key={partner.id} value={partner.id}>
+            {partner.name}
+          </option>
+        ))}
+      </select>
+    </Field>
+  );
 
   const geometryText = (geometry: BiocardGeometry, width: number, height: number) =>
     t(geometry.bleedMm > 0 ? 'biocard.geometryBleed' : 'biocard.geometry', {
@@ -767,6 +814,7 @@ export function BiocardsPage({
                 onLanguage={setLanguage}
                 onWithEnglish={setWithEnglish}
               />
+              {overlayField}
             </div>
             <div class="biocard-sides">
               <div class="biocard-side">
@@ -920,12 +968,13 @@ export function BiocardsPage({
         <label class="check">
           <input
             type="checkbox"
-            checked={missionDay.biocard.showOnProposals}
+            checked={missionDay.biocard.withPartnerLogo}
             disabled={publishing}
-            onChange={(e) => publish({ showOnProposals: e.currentTarget.checked })}
+            onChange={(e) => publish({ withPartnerLogo: e.currentTarget.checked })}
           />
-          <span>{t('biocard.showOnProposals')}</span>
+          <span>{t('biocard.withPartnerLogo')}</span>
         </label>
+        <p class="field-help">{t('biocard.withPartnerLogoHelp')}</p>
         <label class="check">
           <input
             type="checkbox"
@@ -944,6 +993,7 @@ export function BiocardsPage({
             onLanguage={setLanguage}
             onWithEnglish={setWithEnglish}
           />
+          {overlayField}
         </div>
         {overflowing.length > 0 && (
           <p class="issue warning">

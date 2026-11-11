@@ -191,7 +191,7 @@ publicApi.get('/proposals/:token/map-screenshot', async (c) => {
 
 publicApi.get('/proposals/:token/biocard/:file', async (c) => {
   const { missionDay } = await requireProposal(c);
-  return serveBiocardFile(c, missionDay, missionDay.biocard.showOnProposals);
+  return serveBiocardFile(c, missionDay, missionDay.biocard.withPartnerLogo);
 });
 
 // The home page: what the instance is and which Mission Days it has
@@ -220,7 +220,9 @@ publicApi.get('/mission-days/:slug', async (c) => {
     findParticipantOverlay(c.env.DB, missionDay),
   ]);
   c.header('Cache-Control', 'no-cache');
-  return c.json(buildParticipantView(missionDay, missions, overlay?.tag ?? null));
+  return c.json(
+    buildParticipantView(missionDay, missions, overlay?.tag ?? null, overlay?.partner ?? false),
+  );
 });
 
 publicApi.get('/mission-days/:slug/missions/:missionId/photo', async (c) => {

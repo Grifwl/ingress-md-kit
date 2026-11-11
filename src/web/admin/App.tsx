@@ -200,6 +200,7 @@ function MissionDayArea({ route, user }: { route: MissionDayRoute; user: Current
           <BiocardsPage
             missionDay={missionDay}
             missions={missions}
+            partners={partners}
             onMissionDayChange={setMissionDay}
             onMissionChange={replaceMission}
           />
