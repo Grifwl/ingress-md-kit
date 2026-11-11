@@ -330,7 +330,7 @@
   "error.invalid_codename": "El nombre de agente es demasiado largo.",
   "error.invalid_faction": "Elige una facción válida.",
   "participant.title": "Mission Day {city} {year}",
-  "participant.intro": "{count} misiones para descubrir la ciudad. Completa al menos {medal} el día del evento para conseguir la medalla.",
+  "participant.intro": "{missions} misiones para descubrir la ciudad. Completa al menos {medal} el día del evento para conseguir la medalla.",
   "participant.orderNote": "Las misiones se pueden hacer en cualquier orden; el de abajo es solo una sugerencia.",
   "participant.start": "Empieza en",
   "participant.portals": "{count} portales",
@@ -381,6 +381,6 @@
   "error.invalid_contact_label": "El texto del contacto es demasiado largo.",
   "error.invalid_contact_url": "El enlace del contacto debe empezar por https://, http:// o mailto:.",
   "settings.participantIntro": "Presentación para los agentes",
-  "settings.participantIntroHelp": "Aparece en la página de participantes, bajo el título y la fecha, en el idioma que elija cada visitante; si no hay texto en ese idioma, se muestra otro. Por ejemplo, qué harán descubrir las misiones o dónde conviene empezar. Puedes dejarlo vacío.",
+  "settings.participantIntroHelp": "Sustituye la frase por defecto de la página de participantes («{missions} misiones para descubrir la ciudad. Completa al menos {medal}…»), que aparece bajo el título y la fecha. Cada visitante ve el texto de su idioma; donde lo dejes vacío, verá la frase por defecto en ese idioma. Puedes escribir {missions}, que se cambia por el número de misiones seleccionadas, y {medal}, que se cambia por el mínimo de misiones para conseguir la medalla.",
   "error.invalid_participant_intro": "La presentación para los agentes es demasiado larga."
 }

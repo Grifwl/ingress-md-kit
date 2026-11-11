@@ -330,7 +330,7 @@
   "error.invalid_codename": "El nom d'agent és massa llarg.",
   "error.invalid_faction": "Tria una facció vàlida.",
   "participant.title": "Mission Day {city} {year}",
-  "participant.intro": "{count} missions per descobrir la ciutat. Completa'n com a mínim {medal} el dia de l'esdeveniment per aconseguir la medalla.",
+  "participant.intro": "{missions} missions per descobrir la ciutat. Completa'n com a mínim {medal} el dia de l'esdeveniment per aconseguir la medalla.",
   "participant.orderNote": "Les missions es poden fer en qualsevol ordre; el d'aquí sota només és un suggeriment.",
   "participant.start": "Comença a",
   "participant.portals": "{count} portals",
@@ -381,6 +381,6 @@
   "error.invalid_contact_label": "El text del contacte és massa llarg.",
   "error.invalid_contact_url": "L'enllaç del contacte ha de començar per https://, http:// o mailto:.",
   "settings.participantIntro": "Presentació per als agents",
-  "settings.participantIntroHelp": "Surt a la pàgina dels participants, sota el títol i la data, en l'idioma que triï cada visitant; si no hi ha text en aquell idioma, se'n mostra un altre. Per exemple, què faran descobrir les missions o on és bo començar. Pots deixar-ho buit.",
+  "settings.participantIntroHelp": "Substitueix la frase per defecte de la pàgina dels participants («{missions} missions per descobrir la ciutat. Completa'n com a mínim {medal}…»), que surt sota el títol i la data. Cada visitant veu el text del seu idioma; on el deixis buit, veurà la frase per defecte en aquell idioma. Pots escriure {missions}, que es canvia pel nombre de missions seleccionades, i {medal}, que es canvia pel mínim de missions per aconseguir la medalla.",
   "error.invalid_participant_intro": "La presentació per als agents és massa llarga."
 }

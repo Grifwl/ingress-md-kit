@@ -330,7 +330,7 @@
   "error.invalid_codename": "The codename is too long.",
   "error.invalid_faction": "Choose a valid faction.",
   "participant.title": "Mission Day {city} {year}",
-  "participant.intro": "{count} missions to discover the city. Complete at least {medal} of them on the day of the event to earn the medal.",
+  "participant.intro": "{missions} missions to discover the city. Complete at least {medal} of them on the day of the event to earn the medal.",
   "participant.orderNote": "The missions can be done in any order; the one below is only a suggestion.",
   "participant.start": "Starts at",
   "participant.portals": "{count} portals",
@@ -381,6 +381,6 @@
   "error.invalid_contact_label": "The contact text is too long.",
   "error.invalid_contact_url": "The contact link must start with https://, http:// or mailto:.",
   "settings.participantIntro": "Presentation for agents",
-  "settings.participantIntroHelp": "Shown on the participant page, under the title and date, in each visitor's chosen language; when there is no text in that language, another one is shown. For example, what the missions let agents discover or where it is best to start. It may stay empty.",
+  "settings.participantIntroHelp": "Replaces the default sentence of the participant page (\"{missions} missions to discover the city. Complete at least {medal}…\"), shown under the title and date. Each visitor sees the text of their language; where you leave it empty, they see the default sentence in that language. You can write {missions}, replaced by the number of selected missions, and {medal}, replaced by the minimum number of missions that earns the medal.",
   "error.invalid_participant_intro": "The presentation for agents is too long."
 }
