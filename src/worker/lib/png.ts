@@ -110,3 +110,30 @@ export function detectFileType(bytes: ArrayBuffer): FileType | null {
   }
   return fourCharacters(view, 0) === '%PDF' ? 'application/pdf' : null;
 }
+
+/** Font file types accepted for Biocards. */
+export type FontType = 'font/ttf' | 'font/otf' | 'font/woff' | 'font/woff2';
+
+/**
+ * Works out the type of a font file from its first four bytes.
+ *
+ * @param bytes - Contents of the file.
+ * @returns The type, or null when it is not a font the browser can load.
+ */
+export function detectFontType(bytes: ArrayBuffer): FontType | null {
+  if (bytes.byteLength < 12) {
+    return null;
+  }
+  const view = new DataView(bytes);
+  const tag = fourCharacters(view, 0);
+  if (view.getUint32(0) === 0x00010000 || tag === 'true') {
+    return 'font/ttf';
+  }
+  if (tag === 'OTTO') {
+    return 'font/otf';
+  }
+  if (tag === 'wOFF') {
+    return 'font/woff';
+  }
+  return tag === 'wOF2' ? 'font/woff2' : null;
+}

@@ -56,6 +56,7 @@ function validMission(overrides: Partial<Mission> = {}): Mission {
     recommendedOrder: 1,
     notes: '',
     colour: '#336699',
+    biocardName: '',
     waypoints: waypoints(WAYPOINTS_MIN),
     ...overrides,
   };

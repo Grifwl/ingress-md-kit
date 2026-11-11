@@ -12,6 +12,7 @@ import { LANGUAGES, MEDAL_MISSIONS, MOSAIC_COLUMNS, type Language } from '../../
 import type { ParticipantMission, ParticipantView } from '../../shared/types';
 import { MissionMap } from '../admin/components/MissionMap';
 import { useI18n } from '../i18n';
+import { BiocardImages } from '../lib/BiocardImages';
 import { ComposedImage } from '../lib/ComposedImage';
 import { formatDate } from '../lib/dates';
 import { intelUrl } from '../lib/intel';
@@ -126,6 +127,13 @@ function Participant({ view, base }: { view: ParticipantView; base: string }) {
     () => view.missions.map(({ id, colour, waypoints }) => ({ id, colour, waypoints })),
     [view],
   );
+  const collageUrls = useMemo(
+    () =>
+      view.missions
+        .filter((mission) => mission.hasPhoto)
+        .map((mission) => `${base}/missions/${mission.id}/photo?v=${mission.photoVersion}`),
+    [view, base],
+  );
 
   useEffect(() => {
     document.title = title;
@@ -174,6 +182,20 @@ function Participant({ view, base }: { view: ParticipantView; base: string }) {
               </a>
             </p>
           )}
+        </section>
+      )}
+
+      {view.biocard !== null && (
+        <section>
+          <h2>{t('participant.biocard')}</h2>
+          <BiocardImages
+            biocard={view.biocard}
+            base={base}
+            language={language}
+            collageUrls={collageUrls}
+            frontAlt={t('biocard.front')}
+            backAlt={t('biocard.back')}
+          />
         </section>
       )}
 

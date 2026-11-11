@@ -16,6 +16,8 @@ const LETTER_SECTIONS: { key: keyof LetterSections; label: MessageKey }[] = [
   { key: 'whyThisCity', label: 'settings.whyThisCity' },
   { key: 'whyYou', label: 'settings.whyYou' },
   { key: 'logoRequest', label: 'settings.logoRequest' },
+  { key: 'whatIsBiocard', label: 'settings.whatIsBiocard' },
+  { key: 'biocardRequest', label: 'settings.biocardRequest' },
   { key: 'closing', label: 'settings.closing' },
 ];
 

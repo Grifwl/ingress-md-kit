@@ -9,6 +9,7 @@ import { ApiError, getMe, getMissionDay, listMembers, listMissions, listPartners
 import { ErrorMessage } from './components/common';
 import { useAsync } from './hooks';
 import type { Route } from './lib/routes';
+import { BiocardsPage } from './pages/BiocardsPage';
 import { ExportsPage } from './pages/ExportsPage';
 import { HomePage } from './pages/HomePage';
 import { InstanceSettingsPage } from './pages/InstanceSettingsPage';
@@ -34,6 +35,7 @@ const TABS: { name: MissionDayRoute['name']; path: string; label: MessageKey }[]
   { name: 'selection', path: 'selection', label: 'nav.selection' },
   { name: 'partners', path: 'partners', label: 'nav.partners' },
   { name: 'exports', path: 'exports', label: 'nav.exports' },
+  { name: 'biocards', path: 'biocards', label: 'nav.biocards' },
   { name: 'settings', path: 'settings', label: 'nav.settings' },
   { name: 'team', path: 'team', label: 'nav.team' },
 ];
@@ -191,6 +193,15 @@ function MissionDayArea({ route, user }: { route: MissionDayRoute; user: Current
             partners={partners}
             onMissionsChange={setMissions}
             onMissionDayChange={setMissionDay}
+          />
+        );
+      case 'biocards':
+        return (
+          <BiocardsPage
+            missionDay={missionDay}
+            missions={missions}
+            onMissionDayChange={setMissionDay}
+            onMissionChange={replaceMission}
           />
         );
       case 'partners':

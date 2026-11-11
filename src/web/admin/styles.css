@@ -688,3 +688,96 @@ a.button {
     align-items: stretch;
   }
 }
+
+/* Biocards: two sides side by side, each with its editable text box. */
+.biocard-sides {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.biocard-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.biocard-thumb {
+  width: 120px;
+  height: 168px;
+}
+
+/* The chequered background shows the parts of a template left transparent. */
+.biocard-editor {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: repeating-conic-gradient(#bfc5cc 0 25%, #ffffff 0 50%) 0 0 / 20px 20px;
+  touch-action: none;
+  user-select: none;
+}
+
+.biocard-editor img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Where the printer will cut, when the template has a margin for it. */
+.biocard-trim {
+  position: absolute;
+  border: 1px dashed #ff3b30;
+  pointer-events: none;
+}
+
+.biocard-box {
+  position: absolute;
+  border: 2px solid var(--accent);
+  background: rgb(11 110 143 / 12%);
+  cursor: move;
+}
+
+.biocard-box-handle {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: nwse-resize;
+}
+
+.biocard-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.5rem 0.75rem;
+}
+
+.biocard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.biocard-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+}
+
+.biocard-row .check {
+  flex: 1 1 14rem;
+}
+
+.biocard-row input[type='text'] {
+  flex: 1 1 12rem;
+}

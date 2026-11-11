@@ -11,6 +11,7 @@ import { MOSAIC_COLUMNS, type Language } from '../../shared/rules';
 import type { ProposalMission, ProposalView } from '../../shared/types';
 import { MissionMap } from '../admin/components/MissionMap';
 import { translate, type MessageKey, type MessageParams } from '../i18n/messages';
+import { BiocardImages } from '../lib/BiocardImages';
 import { ComposedImage } from '../lib/ComposedImage';
 import { TILE_SIZE, routeMapView } from './routeSketch';
 
@@ -35,6 +36,9 @@ const CONSENT_FIELDS: MessageKey[] = [
   'proposal.consentPosition',
   'proposal.consentDate',
 ];
+
+/** Choices the partner ticks about Biocards in the conformity block. */
+const BIOCARD_CHOICES: MessageKey[] = ['proposal.consentBiocards', 'proposal.consentOwnBiocard'];
 
 /**
  * Reads the proposal token from the address of the page.
@@ -78,9 +82,13 @@ function LetterBlock({ title, text }: { title?: string; text: string }) {
 function ConsentBlock({
   view,
   t,
+  logo,
+  biocards,
 }: {
   view: ProposalView;
   t: (key: MessageKey, params?: MessageParams) => string;
+  logo: boolean;
+  biocards: boolean;
 }) {
   const isBilingual = view.language !== 'en';
   const params = { partner: view.partnerName, city: view.city, year: view.year };
@@ -96,11 +104,22 @@ function ConsentBlock({
   return (
     <div class="consent">
       <h2>{label('proposal.consent')}</h2>
-      <p class="prose">{t('proposal.consentText', params)}</p>
-      {isBilingual && (
+      {logo && <p class="prose">{t('proposal.consentText', params)}</p>}
+      {logo && isBilingual && (
         <p class="prose" lang="en">
           {translate('en', 'proposal.consentText', params)}
         </p>
+      )}
+      {/* The partner ticks by hand what it agrees to about the cards. */}
+      {biocards && (
+        <ul class="consent-choices">
+          {BIOCARD_CHOICES.map((choice) => (
+            <li key={choice}>
+              <span class="tick-box" aria-hidden="true" />
+              {label(choice)}
+            </li>
+          ))}
+        </ul>
       )}
       <dl class="consent-fields">
         {CONSENT_FIELDS.map((field) => (
@@ -238,8 +257,18 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
   const title = t('proposal.title', { city: view.city, year: view.year });
   const overlayUrl = view.hasOverlay ? `${base}/overlay?v=${view.overlayVersion}` : null;
   const hasRequest = view.letter.logoRequest.trim() !== '';
+  const hasBiocardRequest = view.letter.biocardRequest.trim() !== '';
+  const hasConsent = hasRequest || hasBiocardRequest;
   const hasClosing = view.letter.closing.trim() !== '';
-  const hasPartnerSheet = hasRequest || hasClosing || view.letter.whyYou.trim() !== '';
+  const hasPartnerSheet = hasConsent || hasClosing || view.letter.whyYou.trim() !== '';
+  const hasBiocardSheet = view.biocard !== null || view.letter.whatIsBiocard.trim() !== '';
+  const collageUrls = useMemo(
+    () =>
+      view.missions
+        .filter((mission) => mission.hasPhoto)
+        .map((mission) => `${base}/missions/${mission.id}/photo?v=${mission.photoVersion}`),
+    [view, base],
+  );
   const mapMissions = useMemo(
     () => view.missions.map(({ id, colour, waypoints }) => ({ id, colour, waypoints })),
     [view],
@@ -271,6 +300,23 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
         ))}
       </Sheet>
 
+      {/* What a Biocard is comes before the partner is asked about them. */}
+      {hasBiocardSheet && (
+        <Sheet class="biocard-sheet">
+          <LetterBlock title={t('settings.whatIsBiocard')} text={view.letter.whatIsBiocard} />
+          {view.biocard !== null && (
+            <BiocardImages
+              biocard={view.biocard}
+              base={base}
+              language={view.language}
+              collageUrls={collageUrls}
+              frontAlt={t('biocard.front')}
+              backAlt={t('biocard.back')}
+            />
+          )}
+        </Sheet>
+      )}
+
       {/* Everything specific to this partner goes on a sheet of its own. */}
       {hasPartnerSheet && (
         <Sheet class="request">
@@ -281,13 +327,21 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
               <p class="prose">{view.letter.logoRequest}</p>
             </div>
           )}
+          {hasBiocardRequest && (
+            <div class="request-box">
+              <h2>{t('proposal.biocardRequest')}</h2>
+              <p class="prose">{view.letter.biocardRequest}</p>
+            </div>
+          )}
           {/* The farewell starts a new page, so the page break of a long
               request can never fall in the middle of it, and the block to
               sign stays right below it. */}
-          {(hasClosing || hasRequest) && (
+          {(hasClosing || hasConsent) && (
             <div class="signoff">
               <LetterBlock text={view.letter.closing} />
-              {hasRequest && <ConsentBlock view={view} t={t} />}
+              {hasConsent && (
+                <ConsentBlock view={view} t={t} logo={hasRequest} biocards={hasBiocardRequest} />
+              )}
             </div>
           )}
         </Sheet>

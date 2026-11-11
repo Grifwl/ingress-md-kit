@@ -10,7 +10,7 @@ import { HTTPException } from 'hono/http-exception';
 import { PROPOSAL_WORDS, parseProposalSegment } from '../../shared/letter';
 import { contactLink } from '../../shared/home';
 import { mayShowLogo } from '../../shared/partners';
-import type { HomeView, MissionDay, Partner } from '../../shared/types';
+import type { BiocardFileKind, HomeView, MissionDay, Partner } from '../../shared/types';
 import type { AppEnv } from '../env';
 import {
   findMission,
@@ -109,6 +109,34 @@ const noIndex: MiddlewareHandler<AppEnv> = async (c, next) => {
   c.header('X-Robots-Tag', 'noindex');
 };
 
+/** Biocard files a public page may fetch. */
+const BIOCARD_FILES: readonly BiocardFileKind[] = ['front', 'back', 'photo', 'font'];
+
+/**
+ * Answers with a file of the Mission Day's own Biocard, but only while
+ * the organisers show the card on the page asking for it.
+ *
+ * @param c - Request context.
+ * @param missionDay - The Mission Day.
+ * @param shown - Whether the page shows the card.
+ * @returns The response.
+ */
+async function serveBiocardFile(
+  c: AppContext,
+  missionDay: MissionDay,
+  shown: boolean,
+): Promise<Response> {
+  const kind = c.req.param('file') as BiocardFileKind;
+  const file =
+    shown && BIOCARD_FILES.includes(kind)
+      ? await findMissionDayFile(c.env.DB, missionDay.id, `biocard_${kind}`)
+      : null;
+  if (file === null) {
+    throw new HTTPException(404, { message: 'not_found' });
+  }
+  return serveObject(c, file.key, file.type, PUBLIC_IMAGE_CACHE);
+}
+
 const publicApi = new Hono<AppEnv>();
 publicApi.use('*', noIndex);
 
@@ -161,6 +189,11 @@ publicApi.get('/proposals/:token/map-screenshot', async (c) => {
   return serveObject(c, file.key, file.type, PUBLIC_IMAGE_CACHE);
 });
 
+publicApi.get('/proposals/:token/biocard/:file', async (c) => {
+  const { missionDay } = await requireProposal(c);
+  return serveBiocardFile(c, missionDay, missionDay.biocard.showOnProposals);
+});
+
 // The home page: what the instance is and which Mission Days it has
 // published. Partners are never listed here; their logos appear only in
 // the mission images of the participant views they gave permission for.
@@ -209,6 +242,11 @@ publicApi.get('/mission-days/:slug/overlay', async (c) => {
     throw new HTTPException(404, { message: 'not_found' });
   }
   return serveObject(c, overlay.key, overlay.type, PUBLIC_IMAGE_CACHE);
+});
+
+publicApi.get('/mission-days/:slug/biocard/:file', async (c) => {
+  const missionDay = await requirePublished(c);
+  return serveBiocardFile(c, missionDay, missionDay.biocard.showOnParticipantView);
 });
 
 /**

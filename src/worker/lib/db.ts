@@ -5,6 +5,7 @@
  * filters by it. That scoping is what keeps one Mission Day's organisers
  * from reaching another's data by guessing a mission identifier.
  */
+import { completeBiocardSettings, type BiocardSettings } from '../../shared/biocard';
 import { isPastMissionDay, sortHomeMissionDays } from '../../shared/home';
 import type {
   CropRect,
@@ -46,6 +47,15 @@ interface MissionDayRow {
   sample_key: string | null;
   sample_version: number;
   sample_partner_id: string | null;
+  biocard_json: string;
+  biocard_front_key: string | null;
+  biocard_front_version: number;
+  biocard_back_key: string | null;
+  biocard_back_version: number;
+  biocard_photo_key: string | null;
+  biocard_photo_version: number;
+  biocard_font_key: string | null;
+  biocard_font_version: number;
 }
 
 /** Row of `missions`. */
@@ -61,6 +71,7 @@ interface MissionRow {
   recommended_order: number | null;
   notes: string;
   colour: string;
+  biocard_name: string;
 }
 
 /** Row of `waypoints`. */
@@ -119,6 +130,8 @@ function parseLetterJson(json: string): LetterSections {
     whyThisCity: {},
     whyYou: {},
     logoRequest: {},
+    whatIsBiocard: {},
+    biocardRequest: {},
     closing: {},
     ...(JSON.parse(json) as Partial<LetterSections>),
   };
@@ -160,6 +173,13 @@ function toMissionDay(row: MissionDayRow): MissionDay {
     hasSample: row.sample_key !== null,
     sampleVersion: row.sample_version,
     samplePartnerId: row.sample_partner_id,
+    biocard: completeBiocardSettings(JSON.parse(row.biocard_json) as Partial<BiocardSettings>),
+    biocardFiles: {
+      front: row.biocard_front_key === null ? null : row.biocard_front_version,
+      back: row.biocard_back_key === null ? null : row.biocard_back_version,
+      photo: row.biocard_photo_key === null ? null : row.biocard_photo_version,
+      font: row.biocard_font_key === null ? null : row.biocard_font_version,
+    },
   };
 }
 
@@ -200,6 +220,7 @@ function toMission(row: MissionRow, waypoints: Waypoint[]): Mission {
     recommendedOrder: row.recommended_order,
     notes: row.notes,
     colour: row.colour,
+    biocardName: row.biocard_name,
     waypoints,
   };
 }
@@ -272,8 +293,15 @@ export async function findMissionDayById(
   return row === null ? null : toMissionDay(row);
 }
 
-/** The images stored for a Mission Day as a whole. */
-export type MissionDayFileKind = 'default_overlay' | 'map_screenshot' | 'sample';
+/** The files stored for a Mission Day as a whole. */
+export type MissionDayFileKind =
+  | 'default_overlay'
+  | 'map_screenshot'
+  | 'sample'
+  | 'biocard_front'
+  | 'biocard_back'
+  | 'biocard_photo'
+  | 'biocard_font';
 
 /**
  * Finds a Mission Day by its address, regardless of who is asking. Only
@@ -383,6 +411,65 @@ export async function saveMissionDayFile(
       `UPDATE mission_days SET ${kind}_key = ?, ${kind}_type = ?, ${kind}_version = ? WHERE id = ?`,
     )
     .bind(key, type, version, missionDayId)
+    .run();
+}
+
+/**
+ * Reads the version number of a file of a Mission Day, which outlives the
+ * file itself: a file uploaded after a deletion gets a new number, so
+ * browsers can never show the one that was deleted.
+ *
+ * @param db - D1 binding.
+ * @param missionDayId - Mission Day already checked by the caller.
+ * @param kind - Which file; a literal chosen by the routes.
+ * @returns The last version used; 0 when there never was one.
+ */
+export async function findMissionDayFileVersion(
+  db: D1Database,
+  missionDayId: string,
+  kind: MissionDayFileKind,
+): Promise<number> {
+  const version = await db
+    .prepare(`SELECT ${kind}_version AS version FROM mission_days WHERE id = ?`)
+    .bind(missionDayId)
+    .first<number>('version');
+  return version ?? 0;
+}
+
+/**
+ * Forgets a file of a Mission Day, which the caller then removes from
+ * storage. `kind` is a literal chosen by the routes, as above.
+ *
+ * @param db - D1 binding.
+ * @param missionDayId - Mission Day already checked by the caller.
+ * @param kind - Which file.
+ */
+export async function clearMissionDayFile(
+  db: D1Database,
+  missionDayId: string,
+  kind: MissionDayFileKind,
+): Promise<void> {
+  await db
+    .prepare(`UPDATE mission_days SET ${kind}_key = NULL, ${kind}_type = NULL WHERE id = ?`)
+    .bind(missionDayId)
+    .run();
+}
+
+/**
+ * Saves the layout and texts of a Mission Day's Biocards.
+ *
+ * @param db - D1 binding.
+ * @param missionDayId - Mission Day already checked by the caller.
+ * @param settings - Validated settings.
+ */
+export async function saveBiocardSettings(
+  db: D1Database,
+  missionDayId: string,
+  settings: BiocardSettings,
+): Promise<void> {
+  await db
+    .prepare('UPDATE mission_days SET biocard_json = ? WHERE id = ?')
+    .bind(JSON.stringify(settings), missionDayId)
     .run();
 }
 
@@ -675,7 +762,8 @@ export async function updateMission(
   const next = { ...mission, ...patch };
   await db
     .prepare(
-      `UPDATE missions SET landmark = ?, description_json = ?, notes = ?, colour = ?
+      `UPDATE missions SET landmark = ?, description_json = ?, notes = ?, colour = ?,
+         biocard_name = ?
        WHERE id = ? AND mission_day_id = ?`,
     )
     .bind(
@@ -683,6 +771,7 @@ export async function updateMission(
       JSON.stringify(next.description),
       next.notes,
       next.colour,
+      next.biocardName,
       mission.id,
       mission.missionDayId,
     )

@@ -242,6 +242,8 @@ describe('default letter texts', () => {
     whyThisCity: {},
     whyYou: {},
     logoRequest: { ca: 'Ens deixeu fer servir el logotip?' },
+    whatIsBiocard: {},
+    biocardRequest: {},
     closing: {},
   };
 

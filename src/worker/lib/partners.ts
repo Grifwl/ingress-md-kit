@@ -2,7 +2,7 @@
  * Access to the partners stored in D1. As with missions, every read and
  * write that comes from an organiser is scoped to one Mission Day.
  */
-import type { PartnerKind, PartnerStatus } from '../../shared/partners';
+import type { BiocardAnswer, PartnerKind, PartnerStatus } from '../../shared/partners';
 import type { Language } from '../../shared/rules';
 import type { MissionDay, Partner, PartnerStatusChange } from '../../shared/types';
 import type { PartnerPatch } from './input';
@@ -17,6 +17,8 @@ interface PartnerRow {
   contact_email: string;
   why_you_json: string;
   logo_request_json: string;
+  biocard_request_json: string;
+  biocard_answer: BiocardAnswer;
   letter_language: Language;
   proposal_token: string;
   status: PartnerStatus;
@@ -96,6 +98,8 @@ function toPartner(row: PartnerRow, statusHistory: PartnerStatusChange[]): Partn
     contactEmail: row.contact_email,
     whyYou: JSON.parse(row.why_you_json),
     logoRequest: JSON.parse(row.logo_request_json),
+    biocardRequest: JSON.parse(row.biocard_request_json),
+    biocardAnswer: row.biocard_answer,
     letterLanguage: row.letter_language,
     proposalToken: row.proposal_token,
     status: row.status,
@@ -235,8 +239,9 @@ export async function createPartner(
     db
       .prepare(
         `INSERT INTO partners (id, mission_day_id, name, kind, contact_person, contact_email,
-           why_you_json, logo_request_json, letter_language, proposal_token)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           why_you_json, logo_request_json, biocard_request_json, letter_language,
+           proposal_token)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .bind(
         id,
@@ -247,6 +252,7 @@ export async function createPartner(
         input.contactEmail ?? '',
         JSON.stringify(input.whyYou ?? missionDay.letter.whyYou),
         JSON.stringify(input.logoRequest ?? missionDay.letter.logoRequest),
+        JSON.stringify(input.biocardRequest ?? missionDay.letter.biocardRequest),
         input.letterLanguage,
         generateProposalToken(),
       ),
@@ -272,7 +278,8 @@ export async function updatePartner(
     .prepare(
       `UPDATE partners
        SET name = ?, kind = ?, contact_person = ?, contact_email = ?, why_you_json = ?,
-           logo_request_json = ?, letter_language = ?
+           logo_request_json = ?, biocard_request_json = ?, biocard_answer = ?,
+           letter_language = ?
        WHERE id = ? AND mission_day_id = ?`,
     )
     .bind(
@@ -282,6 +289,8 @@ export async function updatePartner(
       next.contactEmail,
       JSON.stringify(next.whyYou),
       JSON.stringify(next.logoRequest),
+      JSON.stringify(next.biocardRequest),
+      next.biocardAnswer,
       next.letterLanguage,
       partner.id,
       partner.missionDayId,

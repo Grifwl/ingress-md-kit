@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { detectFileType, readPngInfo } from './png';
+import { detectFileType, detectFontType, readPngInfo } from './png';
 
 /**
  * Builds a PNG made of a header and the given extra chunks.
@@ -67,5 +67,32 @@ describe('detectFileType', () => {
   it('refuses anything else, including SVG', () => {
     expect(detectFileType(ascii('<svg xmlns="x">'))).toBeNull();
     expect(detectFileType(new ArrayBuffer(2))).toBeNull();
+  });
+});
+
+describe('detectFontType', () => {
+  /**
+   * Builds a file starting with the given bytes.
+   *
+   * @param start - First bytes.
+   * @returns The file contents.
+   */
+  const file = (start: number[]) => {
+    const bytes = new Uint8Array(16);
+    bytes.set(start);
+    return bytes.buffer;
+  };
+  const ascii = (tag: string) => [...tag].map((character) => character.charCodeAt(0));
+
+  it('recognises the font formats browsers load', () => {
+    expect(detectFontType(file([0, 1, 0, 0]))).toBe('font/ttf');
+    expect(detectFontType(file(ascii('OTTO')))).toBe('font/otf');
+    expect(detectFontType(file(ascii('wOFF')))).toBe('font/woff');
+    expect(detectFontType(file(ascii('wOF2')))).toBe('font/woff2');
+  });
+
+  it('refuses anything else', () => {
+    expect(detectFontType(file([0x89, 0x50, 0x4e, 0x47]))).toBeNull();
+    expect(detectFontType(new ArrayBuffer(4))).toBeNull();
   });
 });

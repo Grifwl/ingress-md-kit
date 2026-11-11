@@ -2,8 +2,10 @@
  * Client of the private API.
  */
 import type { PartnerStatus } from '../../shared/partners';
+import type { BiocardSettings } from '../../shared/biocard';
 import type { Language, MissionFormat } from '../../shared/rules';
 import type {
+  BiocardFileKind,
   CropRect,
   CurrentUser,
   Faction,
@@ -310,7 +312,7 @@ export function createMission(slug: string, landmark: string): Promise<Mission> 
 export function updateMission(
   slug: string,
   missionId: string,
-  patch: Pick<Partial<Mission>, 'landmark' | 'description' | 'notes' | 'colour'>,
+  patch: Pick<Partial<Mission>, 'landmark' | 'description' | 'notes' | 'colour' | 'biocardName'>,
 ): Promise<Mission> {
   return request(missionPath(slug, missionId), json('PATCH', patch));
 }
@@ -490,6 +492,8 @@ export function updatePartner(
       | 'contactEmail'
       | 'whyYou'
       | 'logoRequest'
+      | 'biocardRequest'
+      | 'biocardAnswer'
       | 'letterLanguage'
     >
   >,
@@ -595,6 +599,60 @@ export function uploadDefaultOverlay(slug: string, file: File): Promise<MissionD
  */
 export function uploadMapScreenshot(slug: string, file: File): Promise<MissionDayWithRole> {
   return request(`${dayPath(slug)}/map-screenshot`, { method: 'PUT', body: file });
+}
+
+/**
+ * Saves the layout and texts of a Mission Day's Biocards.
+ *
+ * @param slug - Mission Day slug.
+ * @param settings - The complete settings.
+ * @returns The updated Mission Day.
+ */
+export function saveBiocardSettings(
+  slug: string,
+  settings: BiocardSettings,
+): Promise<MissionDayWithRole> {
+  return request(`${dayPath(slug)}/biocard`, json('PUT', settings));
+}
+
+/**
+ * Uploads a file of a Mission Day's Biocards.
+ *
+ * @param slug - Mission Day slug.
+ * @param kind - Which file.
+ * @param file - The file.
+ * @returns The updated Mission Day.
+ */
+export function uploadBiocardFile(
+  slug: string,
+  kind: BiocardFileKind,
+  file: File,
+): Promise<MissionDayWithRole> {
+  return request(`${dayPath(slug)}/biocard/${kind}`, { method: 'PUT', body: file });
+}
+
+/**
+ * Removes a Mission Day's own font, so that cards use the default one.
+ *
+ * @param slug - Mission Day slug.
+ * @returns The updated Mission Day.
+ */
+export function deleteBiocardFont(slug: string): Promise<MissionDayWithRole> {
+  return request(`${dayPath(slug)}/biocard/font`, { method: 'DELETE' });
+}
+
+/**
+ * Builds the address of a Biocard file.
+ *
+ * @param missionDay - The Mission Day.
+ * @param kind - Which file.
+ * @returns The address, or null when there is none.
+ */
+export function biocardFileUrl(missionDay: MissionDay, kind: BiocardFileKind): string | null {
+  const version = missionDay.biocardFiles[kind];
+  return version === null
+    ? null
+    : `${BASE}${dayPath(missionDay.slug)}/biocard/${kind}?v=${version}`;
 }
 
 /**

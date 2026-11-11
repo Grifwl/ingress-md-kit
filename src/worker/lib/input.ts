@@ -8,13 +8,25 @@
  */
 import { HTTPException } from 'hono/http-exception';
 import {
+  BIOCARD_GENERIC_PHOTOS,
+  BIOCARD_TEXT_ALIGNS,
+  BIOCARD_VERTICAL_ALIGNS,
+  type BiocardGenericPhoto,
+  type BiocardSettings,
+  type BiocardTextAlign,
+  type BiocardTextBox,
+  type BiocardVerticalAlign,
+} from '../../shared/biocard';
+import {
   CONTACT_LABEL_MAX_LENGTH,
   CONTACT_URL_MAX_LENGTH,
   isAllowedContactUrl,
 } from '../../shared/home';
 import {
+  BIOCARD_ANSWERS,
   PARTNER_KINDS,
   PARTNER_STATUSES,
+  type BiocardAnswer,
   type PartnerKind,
   type PartnerStatus,
 } from '../../shared/partners';
@@ -84,6 +96,7 @@ export interface MissionPatch {
   description?: LocalizedText;
   notes?: string;
   colour?: string;
+  biocardName?: string;
 }
 
 /** Fields of a partner that can be edited. */
@@ -94,6 +107,8 @@ export interface PartnerPatch {
   contactEmail?: string;
   whyYou?: LocalizedText;
   logoRequest?: LocalizedText;
+  biocardRequest?: LocalizedText;
+  biocardAnswer?: BiocardAnswer;
   letterLanguage?: Language;
 }
 
@@ -340,6 +355,9 @@ function letter(value: unknown): LetterSections {
     whyThisCity: localizedText(object.whyThisCity, 'letter'),
     whyYou: localizedText(object.whyYou, 'letter'),
     logoRequest: localizedText(object.logoRequest, 'letter'),
+    // Added with Biocards: a client that predates them may leave them out.
+    whatIsBiocard: localizedText(object.whatIsBiocard ?? {}, 'letter'),
+    biocardRequest: localizedText(object.biocardRequest ?? {}, 'letter'),
     closing: localizedText(object.closing, 'letter'),
   };
 }
@@ -515,6 +533,9 @@ export function parseMissionPatch(body: unknown): MissionPatch {
     }
     patch.colour = object.colour;
   }
+  if (object.biocardName !== undefined) {
+    patch.biocardName = text(object.biocardName, 'biocard_name');
+  }
   return patch;
 }
 
@@ -547,6 +568,15 @@ export function parsePartnerPatch(body: unknown): PartnerPatch {
   if (object.logoRequest !== undefined) {
     patch.logoRequest = localizedText(object.logoRequest, 'logo_request');
   }
+  if (object.biocardRequest !== undefined) {
+    patch.biocardRequest = localizedText(object.biocardRequest, 'biocard_request');
+  }
+  if (object.biocardAnswer !== undefined) {
+    if (!BIOCARD_ANSWERS.includes(object.biocardAnswer as BiocardAnswer)) {
+      badRequest('invalid_biocard_answer');
+    }
+    patch.biocardAnswer = object.biocardAnswer as BiocardAnswer;
+  }
   if (object.letterLanguage !== undefined) {
     if (!LANGUAGES.includes(object.letterLanguage as Language)) {
       badRequest('invalid_letter_language');
@@ -554,6 +584,88 @@ export function parsePartnerPatch(body: unknown): PartnerPatch {
     patch.letterLanguage = object.letterLanguage as Language;
   }
   return patch;
+}
+
+/**
+ * Validates a number within limits.
+ *
+ * @param value - Candidate value.
+ * @param min - Smallest value allowed.
+ * @param max - Largest value allowed.
+ * @returns The number.
+ */
+function boundedNumber(value: unknown, min: number, max: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < min || value > max) {
+    badRequest('invalid_biocard');
+  }
+  return value;
+}
+
+/**
+ * Validates one value of a fixed list.
+ *
+ * @param value - Candidate value.
+ * @param allowed - The list.
+ * @returns The value.
+ */
+function oneOf<T extends string>(value: unknown, allowed: readonly T[]): T {
+  if (!allowed.includes(value as T)) {
+    badRequest('invalid_biocard');
+  }
+  return value as T;
+}
+
+/**
+ * Validates a text box of a Biocard. A box may reach past the edges of
+ * the template, which is harmless, but must have a size.
+ *
+ * @param value - Candidate value.
+ * @returns The box.
+ */
+function biocardTextBox(value: unknown): BiocardTextBox {
+  const object = asObject(value);
+  const colour = object.colour;
+  if (typeof colour !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(colour)) {
+    badRequest('invalid_biocard');
+  }
+  return {
+    x: boundedNumber(object.x, -1, 1),
+    y: boundedNumber(object.y, -1, 1),
+    width: boundedNumber(object.width, 0.01, 2),
+    height: boundedNumber(object.height, 0.01, 2),
+    fontSizePt: boundedNumber(object.fontSizePt, 1, 200),
+    colour,
+    align: oneOf<BiocardTextAlign>(object.align, BIOCARD_TEXT_ALIGNS),
+    verticalAlign: oneOf<BiocardVerticalAlign>(object.verticalAlign, BIOCARD_VERTICAL_ALIGNS),
+  };
+}
+
+/**
+ * Validates the layout and texts of a Mission Day's Biocards.
+ *
+ * @param body - Parsed JSON.
+ * @returns The complete settings.
+ */
+export function parseBiocardSettings(body: unknown): BiocardSettings {
+  const object = asObject(body);
+  const layout = asObject(object.layout);
+  if (
+    typeof object.showOnProposals !== 'boolean' ||
+    typeof object.showOnParticipantView !== 'boolean'
+  ) {
+    badRequest('invalid_biocard');
+  }
+  return {
+    layout: {
+      name: biocardTextBox(layout.name),
+      description: biocardTextBox(layout.description),
+    },
+    genericName: text(object.genericName, 'biocard'),
+    genericPhoto: oneOf<BiocardGenericPhoto>(object.genericPhoto, BIOCARD_GENERIC_PHOTOS),
+    genericDescription: localizedText(object.genericDescription, 'biocard'),
+    showOnProposals: object.showOnProposals,
+    showOnParticipantView: object.showOnParticipantView,
+  };
 }
 
 /**

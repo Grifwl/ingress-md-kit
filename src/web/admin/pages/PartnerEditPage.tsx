@@ -5,8 +5,10 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { proposalPath } from '../../../shared/letter';
 import {
+  BIOCARD_ANSWERS,
   PARTNER_KINDS,
   PARTNER_STATUSES,
+  type BiocardAnswer,
   type PartnerKind,
   type PartnerStatus,
 } from '../../../shared/partners';
@@ -208,6 +210,8 @@ export function PartnerEditPage({
   const [contactEmail, setContactEmail] = useState(partner.contactEmail);
   const [whyYou, setWhyYou] = useState<LocalizedText>(partner.whyYou);
   const [logoRequest, setLogoRequest] = useState<LocalizedText>(partner.logoRequest);
+  const [biocardRequest, setBiocardRequest] = useState<LocalizedText>(partner.biocardRequest);
+  const [biocardAnswer, setBiocardAnswer] = useState<BiocardAnswer>(partner.biocardAnswer);
   const [letterLanguage, setLetterLanguage] = useState<Language>(partner.letterLanguage);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -239,6 +243,8 @@ export function PartnerEditPage({
           contactEmail,
           whyYou,
           logoRequest,
+          biocardRequest,
+          biocardAnswer,
           letterLanguage,
         }),
       );
@@ -342,6 +348,30 @@ export function PartnerEditPage({
                 setLogoRequest({ ...logoRequest, [letterLanguage]: e.currentTarget.value })
               }
             />
+          </Field>
+          <Field
+            label={`${t('partner.biocardRequest')} (${letterLanguage.toUpperCase()})`}
+            help={t('partner.inheritedTextHelp')}
+          >
+            <textarea
+              rows={4}
+              value={biocardRequest[letterLanguage] ?? ''}
+              onInput={(e) =>
+                setBiocardRequest({ ...biocardRequest, [letterLanguage]: e.currentTarget.value })
+              }
+            />
+          </Field>
+          <Field label={t('partner.biocardAnswer')} help={t('partner.biocardAnswerHelp')}>
+            <select
+              value={biocardAnswer}
+              onChange={(e) => setBiocardAnswer(e.currentTarget.value as BiocardAnswer)}
+            >
+              {BIOCARD_ANSWERS.map((answer) => (
+                <option key={answer} value={answer}>
+                  {t(`biocardAnswer.${answer}`)}
+                </option>
+              ))}
+            </select>
           </Field>
           <p class="field-help">{t('settings.placeholdersHelp')}</p>
         </section>

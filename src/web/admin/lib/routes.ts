@@ -17,6 +17,7 @@ export type Route =
   | { name: 'map'; slug: string }
   | { name: 'selection'; slug: string }
   | { name: 'exports'; slug: string }
+  | { name: 'biocards'; slug: string }
   | { name: 'settings'; slug: string }
   | { name: 'notFound' };
 
@@ -80,6 +81,9 @@ export function parseRoute(pathname: string): Route {
   }
   if (missionId === undefined && section === 'exports') {
     return { name: 'exports', slug };
+  }
+  if (missionId === undefined && section === 'biocards') {
+    return { name: 'biocards', slug };
   }
   if (missionId === undefined && section === 'settings') {
     return { name: 'settings', slug };

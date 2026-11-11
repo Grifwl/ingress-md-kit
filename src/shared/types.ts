@@ -4,7 +4,8 @@
  * These describe the JSON the API exchanges, not the database rows: the
  * Worker maps snake_case columns and JSON columns to these shapes.
  */
-import type { PartnerKind, PartnerStatus } from './partners';
+import type { BiocardGenericPhoto, BiocardSettings } from './biocard';
+import type { BiocardAnswer, PartnerKind, PartnerStatus } from './partners';
 import type { Language, MissionFormat } from './rules';
 
 /** Text kept per language, keyed by language code such as `en`. */
@@ -46,6 +47,10 @@ export interface LetterSections {
   whyThisCity: LocalizedText;
   whyYou: LocalizedText;
   logoRequest: LocalizedText;
+  /** What a Biocard is; shown next to the Mission Day's own card. */
+  whatIsBiocard: LocalizedText;
+  /** Asks a partner whether it wants to appear on the cards. */
+  biocardRequest: LocalizedText;
   closing: LocalizedText;
 }
 
@@ -79,7 +84,20 @@ export interface MissionDay {
   sampleVersion: number;
   /** Partner whose logo the picture shows; null for the default overlay. */
   samplePartnerId: string | null;
+  /** Layout and texts of the Biocards. */
+  biocard: BiocardSettings;
+  /** Files of the Biocards; a version of 0 means the file was never uploaded. */
+  biocardFiles: BiocardFileVersions;
 }
+
+/** The files of a Mission Day's Biocards. */
+export type BiocardFileKind = 'front' | 'back' | 'photo' | 'font';
+
+/**
+ * Version of each Biocard file, or null when there is none. The version
+ * goes in the address of the file, so that browsers never keep an old one.
+ */
+export type BiocardFileVersions = Record<BiocardFileKind, number | null>;
 
 /** A Mission Day together with the role of the person requesting it. */
 export interface MissionDayWithRole extends MissionDay {
@@ -120,6 +138,8 @@ export interface Mission {
   recommendedOrder: number | null;
   notes: string;
   colour: string;
+  /** Shorter name for its Biocard; empty to use the landmark. */
+  biocardName: string;
   waypoints: Waypoint[];
 }
 
@@ -145,6 +165,10 @@ export interface Partner {
   contactEmail: string;
   whyYou: LocalizedText;
   logoRequest: LocalizedText;
+  /** Copied from the Mission Day on creation, like the logo request. */
+  biocardRequest: LocalizedText;
+  /** What the partner answered about appearing on the Biocards. */
+  biocardAnswer: BiocardAnswer;
   letterLanguage: Language;
   proposalToken: string;
   status: PartnerStatus;
@@ -192,12 +216,34 @@ export interface ProposalView {
     whyThisCity: string;
     whyYou: string;
     logoRequest: string;
+    whatIsBiocard: string;
+    biocardRequest: string;
     closing: string;
   };
   missions: ProposalMission[];
   myMapsUrl: string | null;
   hasMapScreenshot: boolean;
   mapScreenshotVersion: number;
+  /** The Mission Day's own card, when the organisers show it. */
+  biocard: PublicBiocard | null;
+}
+
+/**
+ * The Mission Day's own Biocard, as public pages compose it. It is only
+ * sent once both templates and the photo exist, so it can always be drawn.
+ */
+export interface PublicBiocard {
+  layout: BiocardSettings['layout'];
+  name: string;
+  /** Its own photo, or a collage of the photos of the missions on the page. */
+  photo: BiocardGenericPhoto;
+  /** Description per language; a proposal sends only its own language. */
+  description: LocalizedText;
+  frontVersion: number;
+  backVersion: number;
+  photoVersion: number;
+  /** Version of the Mission Day's own font, or null for the default one. */
+  fontVersion: number | null;
 }
 
 /**
@@ -233,6 +279,8 @@ export interface ParticipantView {
    * when the switch is between two files with the same version number.
    */
   overlayTag: string | null;
+  /** The Mission Day's own card, when the organisers show it. */
+  biocard: PublicBiocard | null;
 }
 
 /**

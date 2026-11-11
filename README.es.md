@@ -33,8 +33,9 @@ Una sola instancia puede alojar **varios Mission Days** (p. ej. `/example-2027`,
   - un **mosaico de 6 columnas** con las 18 o 24 imágenes de las misiones, con el logotipo del colaborador ya aplicado como ejemplo;
   - el mapa de todas las misiones y la ruta de cada una, con líneas rectas entre sus portales y nunca entre misiones (mapa interactivo + imagen estática + enlace al Google My Maps compartido);
   - la petición de permiso para usar el logotipo y las fotos del colaborador: un texto por defecto que hereda cada colaborador nuevo y que se puede adaptar a cada uno.
+  - qué es una Biocard, con la carta del Mission Day si los organizadores quieren mostrarla, y una petición que pregunta al colaborador si quiere aparecer en las cartas y le ofrece una carta propia; el bloque para firmar tiene una casilla para marcar cada respuesta.
   - Una hoja de estilo de impresión para que la página se pueda guardar como PDF y adjuntar a un correo.
-- **Vista para participantes** (cuando un propietario la publica, normalmente después de la aprobación): lo que los agentes necesitan para jugar, pensado para el móvil. Incluye una presentación con las palabras de los organizadores (un texto por idioma, en la Configuración, donde `{missions}` y `{medal}` se cambian por el número de misiones y el mínimo para la medalla; en un idioma que se deje vacío, aparece una frase por defecto), las misiones seleccionadas en el orden recomendado, el mosaico, el mapa con cada ruta, el enlace a My Maps y, de cada misión, la descripción en el idioma del visitante, el portal de inicio y los portales con enlaces a Intel. Mientras no se publica, su dirección solo dice que el Mission Day aún no se ha publicado. Las imágenes llevan la capa predeterminada o la de un colaborador que elija un propietario entre los que han aceptado con el permiso firmado; si ese permiso decae, la capa predeterminada vuelve sola.
+- **Vista para participantes** (cuando un propietario la publica, normalmente después de la aprobación): lo que los agentes necesitan para jugar, pensado para el móvil. Incluye una presentación con las palabras de los organizadores (un texto por idioma, en la Configuración, donde `{missions}` y `{medal}` se cambian por el número de misiones y el mínimo para la medalla; en un idioma que se deje vacío, aparece una frase por defecto), las misiones seleccionadas en el orden recomendado, el mosaico, el mapa con cada ruta, el enlace a My Maps y, de cada misión, la descripción en el idioma del visitante, el portal de inicio y los portales con enlaces a Intel. Mientras no se publica, su dirección solo dice que el Mission Day aún no se ha publicado. Las imágenes llevan la capa predeterminada o la de un colaborador que elija un propietario entre los que han aceptado con el permiso firmado; si ese permiso decae, la capa predeterminada vuelve sola. Si los organizadores lo quieren, también muestra la Biocard del Mission Day.
 
 Todas las páginas públicas, salvo la de inicio, son `noindex`. Las de propuesta, además, no están listadas, porque muestran logotipos que todavía no tienes permiso para usar; la vista para participantes está pensada para compartirla donde quieras, como los canales de tus agentes.
 
@@ -47,6 +48,7 @@ Todas las páginas públicas, salvo la de inicio, son `noindex`. Las de propuest
 - **Selección y orden**: elige qué 18 o 24 candidatas forman el conjunto final, arrástralas para fijar el orden recomendado y mira el mosaico de 6 columnas en directo.
 - **Gestor de colaboradores**: colaboradores candidatos con datos de contacto, logotipo, PNG de la capa, el texto «por qué vosotros», estado (sin contactar → contactado → en conversaciones → aceptado / rechazado) y el documento de permiso firmado.
 - **Compositor de imágenes**: construye cada PNG de 512×512: la foto de la misión (512×512) con una capa PNG encima (512×512, transparente donde debe verse la foto). La capa se prepara fuera de la herramienta a partir de la plantilla oficial del Mission Day: una por colaborador, más una por defecto sin colaborador. Puedes previsualizarlo para cada colaborador antes de pedirles nada.
+- **Biocards**: tarjetas impresas para recordar el evento, de 63 × 88 mm: una del Mission Day entero y una por cada misión que elijas. Se suben una plantilla de anverso y una de reverso preparadas fuera de la herramienta (con la ciudad y el logotipo del colaborador, si lo hay): el anverso es un PNG transparente donde debe verse la imagen, normalmente un cuadrado en la parte de arriba. El tamaño de la plantilla decide el tamaño de impresión, y el margen de corte se deduce de sus proporciones (por ejemplo, 69 × 94 mm es un margen de 3 mm por lado). La herramienta solo añade la parte dinámica: la foto (para la carta del Mission Day, una foto propia o un collage de las fotos de las misiones seleccionadas), el nombre del anverso (el punto de interés, o un nombre más corto escrito para la carta) y la descripción del reverso, en un idioma o seguida del inglés. Arrastra un rectángulo sobre cada cara para colocar los textos, que se hacen pequeños solos para caber; usan Coda, una fuente libre, si no subes una propia. Las cartas se descargan en un ZIP de PNG que indican su resolución de impresión. De cada colaborador se anota si acepta aparecer en las cartas.
 - **Validación**: comprueba el conjunto con las reglas de la guía (ver más abajo) y señala los problemas antes de exportar.
 - **Exportaciones**
   - ZIP con el PNG final de 512×512 de cada misión seleccionada, para el colaborador elegido;
@@ -158,6 +160,7 @@ npm run dev                 # después abre /admin
 6. Envía a cada colaborador el enlace de su propuesta (o el PDF). Haz el seguimiento de las respuestas.
 7. Cuando un colaborador diga que sí: sube su aprobación escrita, genera los PNG finales y la hoja de misiones, y rellena la solicitud de Niantic con el ayudante de solicitud.
 8. Después de la aprobación: crea las misiones en la Mission Authoring Tool con el archivo UMM y el ZIP de PNG, publica la vista para participantes en Configuración y comparte su dirección con los agentes.
+9. Prepara las plantillas de las Biocards, coloca los textos en la pestaña Biocards y descarga las cartas para imprimirlas.
 
 ---
 
@@ -204,7 +207,8 @@ La hoja de misiones (CSV) sigue disponible como lista de comprobación imprimibl
 - [x] v0.3 — Importación/exportación UMM, otras exportaciones (ZIP de PNG, hoja de misiones, KML, ayudante de solicitud)
 - [ ] v0.4 — (opcional) complemento propio para IITC con sincronización en directo
 - [x] v0.5 — Vista para participantes, varios organizadores por Mission Day
+- [x] v0.6 — Biocards
 
 ## Licencia
 
-MIT. Ingress, sus logotipos y las plantillas de Mission Day pertenecen a Niantic Spatial; los logotipos de los colaboradores pertenecen a sus propietarios.
+MIT. Ingress, sus logotipos y las plantillas de Mission Day pertenecen a Niantic Spatial; los logotipos de los colaboradores pertenecen a sus propietarios. La fuente por defecto de las Biocards, Coda, tiene la licencia SIL Open Font License (`src/web/fonts/Coda-OFL.txt`).

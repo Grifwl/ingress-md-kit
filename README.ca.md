@@ -33,8 +33,9 @@ Una sola instància pot allotjar **diversos Mission Days** (p. ex. `/example-202
   - un **mosaic de 6 columnes** amb les 18 o 24 imatges de les missions, amb el logotip del col·laborador ja aplicat com a exemple;
   - el mapa de totes les missions i la ruta de cadascuna, amb línies rectes entre els seus portals i mai entre missions (mapa interactiu + imatge estàtica + enllaç al Google My Maps compartit);
   - la petició de permís per fer servir el logotip i les fotos del col·laborador: un text per defecte que hereta cada col·laborador nou i que es pot adaptar a cadascun.
+  - què és una Biocard, amb la carta del Mission Day si els organitzadors la volen mostrar, i una petició que pregunta al col·laborador si vol aparèixer a les cartes i li ofereix una carta pròpia; el bloc per signar té una casella per marcar cada resposta.
   - Un full d'estil d'impressió perquè la pàgina es pugui desar com a PDF i adjuntar a un correu.
-- **Vista per als participants** (quan un propietari la publica, normalment després de l'aprovació): el que els agents necessiten per jugar, pensat per al mòbil. Hi ha una presentació amb les paraules dels organitzadors (un text per idioma, a la Configuració, on `{missions}` i `{medal}` es canvien pel nombre de missions i pel mínim per a la medalla; en un idioma que es deixi buit, surt una frase per defecte), les missions seleccionades en l'ordre recomanat, el mosaic, el mapa amb cada ruta, l'enllaç a My Maps i, de cada missió, la descripció en l'idioma del visitant, el portal d'inici i els portals amb enllaços a Intel. Mentre no es publica, la seva adreça només diu que el Mission Day encara no s'ha publicat. Les imatges porten la capa per defecte o la d'un col·laborador que triï un propietari entre els que han acceptat amb el permís signat; si aquest permís decau, la capa per defecte torna sola.
+- **Vista per als participants** (quan un propietari la publica, normalment després de l'aprovació): el que els agents necessiten per jugar, pensat per al mòbil. Hi ha una presentació amb les paraules dels organitzadors (un text per idioma, a la Configuració, on `{missions}` i `{medal}` es canvien pel nombre de missions i pel mínim per a la medalla; en un idioma que es deixi buit, surt una frase per defecte), les missions seleccionades en l'ordre recomanat, el mosaic, el mapa amb cada ruta, l'enllaç a My Maps i, de cada missió, la descripció en l'idioma del visitant, el portal d'inici i els portals amb enllaços a Intel. Mentre no es publica, la seva adreça només diu que el Mission Day encara no s'ha publicat. Les imatges porten la capa per defecte o la d'un col·laborador que triï un propietari entre els que han acceptat amb el permís signat; si aquest permís decau, la capa per defecte torna sola. Si els organitzadors ho volen, també mostra la Biocard del Mission Day.
 
 Totes les pàgines públiques, menys la d'inici, són `noindex`. Les de proposta, a més, no estan llistades, perquè mostren logotips que encara no tens permís per fer servir; la vista per als participants està pensada per compartir-la on vulguis, com els canals dels teus agents.
 
@@ -47,6 +48,7 @@ Totes les pàgines públiques, menys la d'inici, són `noindex`. Les de proposta
 - **Selecció i ordre**: tria quines 18 o 24 candidates formen el conjunt final, arrossega-les per fixar l'ordre recomanat i mira el mosaic de 6 columnes en directe.
 - **Gestor de col·laboradors**: col·laboradors candidats amb dades de contacte, logotip, PNG de la capa, el text «per què vosaltres», estat (sense contactar → contactat → en converses → acceptat / rebutjat) i el document de permís signat.
 - **Compositor d'imatges**: construeix cada PNG de 512×512: la foto de la missió (512×512) amb una capa PNG al damunt (512×512, transparent on s'ha de veure la foto). La capa es prepara fora de l'eina a partir de la plantilla oficial del Mission Day: una per col·laborador, més una per defecte sense col·laborador. Pots previsualitzar-ho per a cada col·laborador abans de demanar-los res.
+- **Biocards**: targetes impreses per recordar l'esdeveniment, de 63 × 88 mm: una del Mission Day sencer i una per cada missió que triïs. Es pugen una plantilla de davant i una de darrere preparades fora de l'eina (amb la ciutat i el logotip del col·laborador, si n'hi ha): el davant és un PNG transparent allà on s'ha de veure la imatge, normalment un quadrat a la part de dalt. La mida de la plantilla decideix la mida d'impressió, i el marge de tall es dedueix de les seves proporcions (per exemple, 69 × 94 mm és un marge de 3 mm per costat). L'eina només hi afegeix la part dinàmica: la foto (per a la carta del Mission Day, una foto pròpia o un collage de les fotos de les missions seleccionades), el nom de davant (el punt d'interès, o un nom més curt escrit per a la carta) i la descripció de darrere, en un idioma o seguit de l'anglès. Arrossega un rectangle sobre cada cara per col·locar els textos, que es fan petits sols per cabre-hi; fan servir Coda, una font lliure, si no en puges una de pròpia. Les cartes es descarreguen en un ZIP de PNG que indiquen la seva resolució d'impressió. De cada col·laborador s'anota si accepta aparèixer a les cartes.
 - **Validació**: comprova el conjunt amb les regles de la guia (vegeu més avall) i assenyala els problemes abans d'exportar.
 - **Exportacions**
   - ZIP amb el PNG final de 512×512 de cada missió seleccionada, per al col·laborador triat;
@@ -158,6 +160,7 @@ npm run dev                 # després obre /admin
 6. Envia a cada col·laborador l'enllaç de la seva proposta (o el PDF). Fes el seguiment de les respostes.
 7. Quan un col·laborador digui que sí: puja la seva aprovació escrita, genera els PNG finals i el full de missions, i omple la sol·licitud de Niantic amb l'ajudant de sol·licitud.
 8. Després de l'aprovació: crea les missions a la Mission Authoring Tool amb el fitxer UMM i el ZIP de PNG, publica la vista per als participants a Configuració i comparteix-ne l'adreça amb els agents.
+9. Prepara les plantilles de les Biocards, col·loca-hi els textos a la pestanya Biocards i descarrega les cartes per imprimir-les.
 
 ---
 
@@ -204,7 +207,8 @@ El full de missions (CSV) continua disponible com a llista de comprovació impri
 - [x] v0.3 — Importació/exportació UMM, altres exportacions (ZIP de PNG, full de missions, KML, ajudant de sol·licitud)
 - [ ] v0.4 — (opcional) connector propi per a IITC amb sincronització en directe
 - [x] v0.5 — Vista per als participants, diversos organitzadors per Mission Day
+- [x] v0.6 — Biocards
 
 ## Llicència
 
-MIT. Ingress, els seus logotips i les plantilles de Mission Day pertanyen a Niantic Spatial; els logotips dels col·laboradors pertanyen als seus propietaris.
+MIT. Ingress, els seus logotips i les plantilles de Mission Day pertanyen a Niantic Spatial; els logotips dels col·laboradors pertanyen als seus propietaris. La font per defecte de les Biocards, Coda, té la llicència SIL Open Font License (`src/web/fonts/Coda-OFL.txt`).

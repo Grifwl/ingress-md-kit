@@ -186,6 +186,46 @@ a {
   height: 5.5rem;
 }
 
+/* Boxes the partner ticks by hand about the Biocards. */
+.consent-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.consent-choices li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.tick-box {
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 1.5px solid var(--text);
+  border-radius: 2px;
+}
+
+/* Front and back of a Biocard, side by side like a card turned over. */
+.biocard-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.biocard-pair img {
+  width: min(16rem, 100%);
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 18%);
+}
+
 .medal {
   width: 100%;
   aspect-ratio: 1;
@@ -305,6 +345,12 @@ a {
 
   .signoff {
     break-before: page;
+  }
+
+  /* About the size of a printed card, so the partner sees it as it is. */
+  .biocard-pair img {
+    width: 63mm;
+    box-shadow: none;
   }
 
   /*

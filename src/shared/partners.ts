@@ -40,3 +40,12 @@ export type PartnerStatus = (typeof PARTNER_STATUSES)[number];
 export function mayShowLogo(partner: { status: PartnerStatus; hasApproval: boolean }): boolean {
   return partner.status === 'accepted' && partner.hasApproval;
 }
+
+/**
+ * A partner's answer about Biocards: not given yet, no, yes, or yes and
+ * it would also like a card of its own.
+ */
+export const BIOCARD_ANSWERS = ['pending', 'no', 'yes', 'own'] as const;
+
+/** A partner's answer about Biocards. */
+export type BiocardAnswer = (typeof BIOCARD_ANSWERS)[number];

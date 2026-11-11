@@ -10,12 +10,14 @@
  */
 import { Hono, type MiddlewareHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
+import { BIOCARD_FONT_MAX_BYTES, BIOCARD_TEMPLATE_MAX_PX } from '../../shared/biocard';
 import { mayShowLogo } from '../../shared/partners';
 import { DOCUMENT_MAX_BYTES, IMAGE_MAX_BYTES, IMAGE_SIZE_PX } from '../../shared/rules';
-import type { CurrentUser, MissionDay } from '../../shared/types';
+import type { BiocardFileKind, CurrentUser, MissionDay } from '../../shared/types';
 import type { AppEnv } from '../env';
 import { isInstanceAdmin, resolveEmail } from '../lib/access';
 import {
+  clearMissionDayFile,
   countOwnMissions,
   createMission,
   createMissionDay,
@@ -23,6 +25,7 @@ import {
   deleteMissionDay,
   findMission,
   findMissionDayFile,
+  findMissionDayFileVersion,
   findMissionDayForOrganiser,
   findPhotoKey,
   getInstanceSettings,
@@ -31,6 +34,7 @@ import {
   listMissionDaysForOrganiser,
   listMissions,
   replaceWaypoints,
+  saveBiocardSettings,
   saveInstanceSettings,
   saveLetterDefaults,
   saveMissionDayFile,
@@ -45,6 +49,7 @@ import {
   type MissionDayFileKind,
 } from '../lib/db';
 import {
+  parseBiocardSettings,
   parseCrop,
   parseInstanceSettings,
   parseLetterDefaults,
@@ -58,7 +63,13 @@ import {
 } from '../lib/input';
 import { getProfile, listAllMissionDays, saveProfile } from '../lib/members';
 import { findPartner } from '../lib/partners';
-import { detectFileType, readPngInfo, type FileType } from '../lib/png';
+import {
+  detectFileType,
+  detectFontType,
+  readPngInfo,
+  type FileType,
+  type FontType,
+} from '../lib/png';
 import {
   PRIVATE_IMMUTABLE,
   assertOwner,
@@ -176,7 +187,7 @@ async function storeMissionDayFile(
   c: AppContext,
   kind: MissionDayFileKind,
   bytes: ArrayBuffer,
-  type: FileType,
+  type: FileType | FontType,
   currentVersion: number,
 ): Promise<Response> {
   const { id } = c.get('missionDay');
@@ -206,6 +217,60 @@ async function serveMissionDayFile(c: AppContext, kind: MissionDayFileKind): Pro
     throw new HTTPException(404, { message: 'not_found' });
   }
   return serveObject(c, file.key, file.type, { 'Cache-Control': PRIVATE_IMMUTABLE });
+}
+
+/** Where each Biocard file is kept among the files of a Mission Day. */
+const BIOCARD_FILES: Record<BiocardFileKind, MissionDayFileKind> = {
+  front: 'biocard_front',
+  back: 'biocard_back',
+  photo: 'biocard_photo',
+  font: 'biocard_font',
+};
+
+/**
+ * Reads which Biocard file a path names.
+ *
+ * @param c - Request context.
+ * @returns The kind of file.
+ */
+function requireBiocardFile(c: AppContext): BiocardFileKind {
+  const file = c.req.param('file') ?? '';
+  if (!Object.hasOwn(BIOCARD_FILES, file)) {
+    throw new HTTPException(404, { message: 'not_found' });
+  }
+  return file as BiocardFileKind;
+}
+
+/**
+ * Checks an uploaded Biocard file. The front must be a PNG with
+ * transparency, since the photo shows through it; the back can be any
+ * picture; templates have a bounded size so that composing them never
+ * exhausts a browser. Proportions are only warned about, in the browser.
+ *
+ * @param kind - Which file.
+ * @param bytes - Contents of the file.
+ * @returns Its verified type.
+ */
+function checkBiocardFile(kind: BiocardFileKind, bytes: ArrayBuffer): FileType | FontType {
+  if (kind === 'font') {
+    const fontType = detectFontType(bytes);
+    if (fontType === null || bytes.byteLength > BIOCARD_FONT_MAX_BYTES) {
+      throw new HTTPException(415, { message: 'invalid_font' });
+    }
+    return fontType;
+  }
+  const type = detectFileType(bytes);
+  const info = readPngInfo(bytes);
+  const tooLarge =
+    info !== null &&
+    (info.width > BIOCARD_TEMPLATE_MAX_PX || info.height > BIOCARD_TEMPLATE_MAX_PX);
+  if (kind === 'front' && (info === null || !info.hasAlpha || tooLarge)) {
+    throw new HTTPException(415, { message: 'invalid_biocard_front' });
+  }
+  if (type === null || type === 'application/pdf' || tooLarge) {
+    throw new HTTPException(415, { message: 'invalid_file' });
+  }
+  return type;
 }
 
 const scoped = new Hono<AppEnv>();
@@ -241,6 +306,36 @@ scoped.put('/map-screenshot', async (c) => {
 });
 
 scoped.get('/map-screenshot', (c) => serveMissionDayFile(c, 'map_screenshot'));
+
+scoped.put('/biocard', async (c) => {
+  const missionDay = c.get('missionDay');
+  const settings = parseBiocardSettings(await jsonBody(c));
+  await saveBiocardSettings(c.env.DB, missionDay.id, settings);
+  return c.json({ ...missionDay, biocard: settings, role: c.get('role') });
+});
+
+scoped.put('/biocard/:file', async (c) => {
+  const kind = requireBiocardFile(c);
+  const bytes = await readUpload(c, kind === 'font' ? BIOCARD_FONT_MAX_BYTES : DOCUMENT_MAX_BYTES);
+  const type = checkBiocardFile(kind, bytes);
+  const column = BIOCARD_FILES[kind];
+  const version = await findMissionDayFileVersion(c.env.DB, c.get('missionDay').id, column);
+  return storeMissionDayFile(c, column, bytes, type, version);
+});
+
+scoped.get('/biocard/:file', (c) => serveMissionDayFile(c, BIOCARD_FILES[requireBiocardFile(c)]));
+
+// Only the font can be removed, to go back to the default one; the other
+// files are needed by every card and are replaced rather than removed.
+scoped.delete('/biocard/font', async (c) => {
+  const { id, slug } = c.get('missionDay');
+  const file = await findMissionDayFile(c.env.DB, id, 'biocard_font');
+  await clearMissionDayFile(c.env.DB, id, 'biocard_font');
+  if (file !== null) {
+    await c.env.BUCKET.delete(file.key);
+  }
+  return c.json(await findMissionDayForOrganiser(c.env.DB, slug, c.get('email')));
+});
 
 // The browser composes the picture, since the Worker never processes
 // images; from here on it is an ordinary file served at a fixed address.

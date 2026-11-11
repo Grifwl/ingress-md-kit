@@ -33,8 +33,9 @@ One instance can host **several Mission Days** (e.g. `/example-2027`, `/sample-t
   - a **6-column mosaic** of the 18 or 24 mission images, with the partner's logo already applied as an example;
   - the map of all missions and the route of each one — straight lines between its portals, never between missions (interactive map + static image + link to the shared Google My Maps);
   - the request for permission to use the partner's logo and photos: a default text every new partner inherits and that can be adapted to each one.
+  - what a Biocard is, with the Mission Day's own card when the organisers choose to show it, and a request asking the partner whether it wants to appear on the cards and offering it a card of its own; the block to sign has a box to tick for each answer.
   - A print stylesheet so the page can be saved as PDF and attached to an email.
-- **Participant view** (once an owner publishes it, usually after approval) — what agents need to play, laid out for phones: a presentation in the organisers' own words (one text per language, set in Settings, where `{missions}` and `{medal}` stand for the number of missions and the minimum that earns the medal; in a language left empty, a default sentence is shown instead), the selected missions in recommended order, the mosaic, the map with each route, the My Maps link, and for every mission its description in the visitor's language, its start portal and its portals with Intel links. Until it is published, its address only says that the Mission Day is not published yet. Its images carry the default overlay, or the overlay of one partner chosen by an owner among those that accepted with a signed permission; if that permission lapses, the default overlay comes back by itself.
+- **Participant view** (once an owner publishes it, usually after approval) — what agents need to play, laid out for phones: a presentation in the organisers' own words (one text per language, set in Settings, where `{missions}` and `{medal}` stand for the number of missions and the minimum that earns the medal; in a language left empty, a default sentence is shown instead), the selected missions in recommended order, the mosaic, the map with each route, the My Maps link, and for every mission its description in the visitor's language, its start portal and its portals with Intel links. Until it is published, its address only says that the Mission Day is not published yet. Its images carry the default overlay, or the overlay of one partner chosen by an owner among those that accepted with a signed permission; if that permission lapses, the default overlay comes back by itself. When the organisers choose so, it also shows the Mission Day's own Biocard.
 
 All public pages except the home page are `noindex`. Proposal pages are also unlisted, because they show logos you do not have permission to use yet; the participant view is meant to be shared wherever you choose, such as your agents' channels.
 
@@ -47,6 +48,7 @@ All public pages except the home page are `noindex`. Proposal pages are also unl
 - **Selection and order** — choose which 18 or 24 candidates make the final set, drag to set the recommended order, see the 6-column mosaic live.
 - **Partner manager** — candidate partners with contact info, logo, overlay PNG, the "why you" text, status (not contacted → contacted → in talks → accepted / declined) and the signed permission document.
 - **Image composer** — builds each 512×512 PNG: the mission photo (512×512) with an overlay PNG on top (512×512, transparent where the photo must show). The overlay is prepared outside the tool from the official Mission Day template: one per partner, plus a default one without partner. Preview for every partner before you ask any of them.
+- **Biocards** — printed cards to remember the event, 63 × 88 mm: one for the Mission Day as a whole and one for any mission you choose. Upload a front and a back template prepared outside the tool (city and any partner logo included): the front is a PNG transparent where the picture must show, usually a square at the top. The size of the template sets the print size, so a cut margin is read from its proportions (for example 69 × 94 mm is a 3 mm margin per side). The tool adds the dynamic part only: the photo (for the Mission Day's card, a photo of its own or a collage of the selected missions' photos), the name on the front (the landmark, or a shorter name written for the card) and the description on the back, in one language or followed by English. Drag a box over each side to place the texts, which shrink by themselves to fit; they use Coda, a free font, unless you upload your own. The cards download as a ZIP of PNG files that state their print resolution. Partners record whether they agree to appear on the cards.
 - **Validation** — checks the set against the handbook rules (see below) and flags problems before you export.
 - **Exports**
   - ZIP with the final 512×512 PNG of every selected mission, for the chosen partner;
@@ -158,6 +160,7 @@ npm run dev                 # then open /admin
 6. Send each partner its proposal link (or the PDF). Track the answers.
 7. When a partner says yes: upload their written approval, generate the final PNGs and the mission sheet, and fill in the Niantic application with the application helper.
 8. After approval: create the missions in the Mission Authoring Tool with the UMM file and the PNG ZIP, publish the participant view in Settings and share its address with the agents.
+9. Prepare the Biocard templates, place the texts in the Biocards tab and download the cards for printing.
 
 ---
 
@@ -204,7 +207,8 @@ The mission sheet (CSV) is still there as a printable checklist.
 - [x] v0.3 — UMM import/export, other exports (PNG ZIP, mission sheet, KML, application helper)
 - [ ] v0.4 — (optional) own IITC plugin with live sync
 - [x] v0.5 — Participant view, several organisers per Mission Day
+- [x] v0.6 — Biocards
 
 ## License
 
-MIT. Ingress, its logos and the Mission Day templates belong to Niantic Spatial; partner logos belong to their owners.
+MIT. Ingress, its logos and the Mission Day templates belong to Niantic Spatial; partner logos belong to their owners. The default Biocard font, Coda, is under the SIL Open Font License (`src/web/fonts/Coda-OFL.txt`).
