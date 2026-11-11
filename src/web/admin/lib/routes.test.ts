@@ -9,6 +9,8 @@ describe('parseRoute', () => {
     ['/admin/new/extra', { name: 'notFound' }],
     ['/admin/letter-defaults', { name: 'letterDefaults' }],
     ['/admin/letter-defaults/extra', { name: 'notFound' }],
+    ['/admin/instance', { name: 'instanceSettings' }],
+    ['/admin/instance/extra', { name: 'notFound' }],
     ['/admin/example-2027', { name: 'missions', slug: 'example-2027' }],
     ['/admin/example-2027/missions', { name: 'missions', slug: 'example-2027' }],
     ['/admin/example-2027/missions/m1', { name: 'mission', slug: 'example-2027', missionId: 'm1' }],

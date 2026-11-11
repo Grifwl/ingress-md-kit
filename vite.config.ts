@@ -34,6 +34,7 @@ export default defineConfig({
         rollupOptions: {
           input: {
             admin: resolve(projectRoot, 'src/web/admin/index.html'),
+            home: resolve(projectRoot, 'src/web/home/index.html'),
             public: resolve(projectRoot, 'src/web/public/index.html'),
             participant: resolve(projectRoot, 'src/web/participant/index.html'),
           },

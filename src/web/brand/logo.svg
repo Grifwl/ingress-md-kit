@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Ingress MD Kit">
+  <!--
+    Six mission medals in two rows, as the scanner shows a Mission Day.
+    The bottom-right medal stands out: it is where the first mission sits.
+    The drawing is original; it borrows nothing from any game artwork.
+  -->
+  <rect width="64" height="64" rx="14" fill="#0b6e8f"/>
+  <g fill="#dff3f9">
+    <circle cx="15" cy="23" r="7.5"/>
+    <circle cx="32" cy="23" r="7.5"/>
+    <circle cx="49" cy="23" r="7.5"/>
+    <circle cx="15" cy="41" r="7.5"/>
+    <circle cx="32" cy="41" r="7.5"/>
+  </g>
+  <circle cx="49" cy="41" r="7.5" fill="#f2b134"/>
+  <circle cx="49" cy="41" r="3" fill="#0b6e8f"/>
+</svg>

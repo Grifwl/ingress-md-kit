@@ -19,12 +19,14 @@ Una sola instància pot allotjar **diversos Mission Days** (p. ex. `/example-202
 
 | Camí | Què és |
 |---|---|
+| `/` | Pàgina d'inici: què fa l'eina, els Mission Days publicats i un contacte per demanar-ne l'accés |
 | `/<md-slug>` | Pàgina del Mission Day (vista per als participants, un cop publicada) |
 | `/<md-slug>/proposta-<token>` | Proposta per a un col·laborador candidat (no llistada). La paraula segueix l'idioma de la carta: `proposta`, `propuesta`, `proposal`; totes tres funcionen |
 | `/<md-slug>/sample` | L'única imatge de logotip o medalla enllaçada a la sol·licitud de Niantic, generada des d'Exportacions. Només mostra el logotip d'un col·laborador amb el seu permís signat |
 | `/admin` | Àrea privada (Cloudflare Access) |
 
 ### Part pública (sense accés amb usuari)
+- **Pàgina d'inici**: explica què és un Mission Day i què fa l'eina, amb les mateixes paraules neutres per a qualsevol comunitat, i enllaça tots els Mission Days amb la vista per als participants publicada: primer els propers i després els anteriors. Acaba amb un contacte, que fixen els administradors de la instància, per a qui vulgui fer servir l'eina. Mai no hi surten els col·laboradors.
 - **Propostes a les entitats col·laboradores**: una pàgina per a cada entitat col·laboradora candidata (ajuntament, universitat, ens de turisme, museu…), accessible només amb un enllaç impossible d'endevinar. Conté:
   - una carta de presentació: qui som, què és Ingress, què és un Mission Day, per què aquesta ciutat, per què aquest col·laborador;
   - la proposta completa de missions: cada missió amb nom, descripció, foto i ruta;
@@ -34,10 +36,11 @@ Una sola instància pot allotjar **diversos Mission Days** (p. ex. `/example-202
   - Un full d'estil d'impressió perquè la pàgina es pugui desar com a PDF i adjuntar a un correu.
 - **Vista per als participants** (quan un propietari la publica, normalment després de l'aprovació): el que els agents necessiten per jugar, pensat per al mòbil. Hi ha les missions seleccionades en l'ordre recomanat, el mosaic, el mapa amb cada ruta, l'enllaç a My Maps i, de cada missió, la descripció en l'idioma del visitant, el portal d'inici i els portals amb enllaços a Intel. Mentre no es publica, la seva adreça només diu que el Mission Day encara no s'ha publicat. Les imatges porten la capa per defecte o la d'un col·laborador que triï un propietari entre els que han acceptat amb el permís signat; si aquest permís decau, la capa per defecte torna sola.
 
-Totes les pàgines públiques són `noindex`. Les de proposta, a més, no estan llistades, perquè mostren logotips que encara no tens permís per fer servir; la vista per als participants està pensada per compartir-la on vulguis, com els canals dels teus agents.
+Totes les pàgines públiques, menys la d'inici, són `noindex`. Les de proposta, a més, no estan llistades, perquè mostren logotips que encara no tens permís per fer servir; la vista per als participants està pensada per compartir-la on vulguis, com els canals dels teus agents.
 
 ### Part privada (administració, darrere de Cloudflare Access)
 - **Mission Days**: en pots crear diversos; cadascun té la seva adreça, ciutat, any, data, format (18 / 24, o 6 per a Lite), equip (els punts de contacte d'ENL i RES), capa per defecte (sense col·laborador) i textos compartits de la carta.
+- **Configuració de la instància**: el contacte que surt a la pàgina d'inici (un correu, una adreça web o un text), editable pels administradors de la instància.
 - **Textos per defecte de la carta**: textos de tota la instància (qui som, què és Ingress…) que cada Mission Day nou copia en crear-se i després pot adaptar.
 - **Organitzadors**: cada Mission Day té el seu equip, que es gestiona a la pestanya Organitzadors. Els propietaris hi afegeixen gent pel correu amb què entrarà, en canvien el rol i la treuen; els editors poden canviar tota la resta, però no gestionar l'equip ni esborrar res. Un Mission Day sempre conserva com a mínim un propietari, i qualsevol pot sortir d'un equip. Cada organitzador només veu els Mission Days dels quals forma part, tret que els administradors de la instància poden gestionar l'equip de qualsevol. Cada organitzador té un perfil (nom d'agent i facció) que es mostra a la llista de l'equip i a l'historial dels col·laboradors.
 - **Gestor de missions**: crea *totes les missions candidates que vulguis* (més de 24): nom, descripció, punt d'interès o tema, foto, portals i ruta.

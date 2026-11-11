@@ -19,12 +19,14 @@ Una sola instancia puede alojar **varios Mission Days** (p. ej. `/example-2027`,
 
 | Ruta | Qué es |
 |---|---|
+| `/` | Página de inicio: qué hace la herramienta, los Mission Days publicados y un contacto para pedir acceso |
 | `/<md-slug>` | Página del Mission Day (vista para participantes, una vez publicada) |
 | `/<md-slug>/proposta-<token>` | Propuesta para un colaborador candidato (no listada). La palabra sigue el idioma de la carta: `proposta`, `propuesta`, `proposal`; las tres funcionan |
 | `/<md-slug>/sample` | La única imagen de logotipo o medalla enlazada en la solicitud de Niantic, generada desde Exportaciones. Solo muestra el logotipo de un colaborador con su permiso firmado |
 | `/admin` | Área privada (Cloudflare Access) |
 
 ### Parte pública (sin inicio de sesión)
+- **Página de inicio**: explica qué es un Mission Day y qué hace la herramienta, con las mismas palabras neutras para cualquier comunidad, y enlaza todos los Mission Days con la vista para participantes publicada: primero los próximos y después los anteriores. Termina con un contacto, que fijan los administradores de la instancia, para quien quiera usar la herramienta. Nunca aparecen los colaboradores.
 - **Propuestas a las entidades colaboradoras**: una página para cada entidad colaboradora candidata (ayuntamiento, universidad, ente de turismo, museo…), accesible solo con un enlace imposible de adivinar. Contiene:
   - una carta de presentación: quiénes somos, qué es Ingress, qué es un Mission Day, por qué esta ciudad, por qué este colaborador;
   - la propuesta completa de misiones: cada misión con nombre, descripción, foto y ruta;
@@ -34,10 +36,11 @@ Una sola instancia puede alojar **varios Mission Days** (p. ej. `/example-2027`,
   - Una hoja de estilo de impresión para que la página se pueda guardar como PDF y adjuntar a un correo.
 - **Vista para participantes** (cuando un propietario la publica, normalmente después de la aprobación): lo que los agentes necesitan para jugar, pensado para el móvil. Incluye las misiones seleccionadas en el orden recomendado, el mosaico, el mapa con cada ruta, el enlace a My Maps y, de cada misión, la descripción en el idioma del visitante, el portal de inicio y los portales con enlaces a Intel. Mientras no se publica, su dirección solo dice que el Mission Day aún no se ha publicado. Las imágenes llevan la capa predeterminada o la de un colaborador que elija un propietario entre los que han aceptado con el permiso firmado; si ese permiso decae, la capa predeterminada vuelve sola.
 
-Todas las páginas públicas son `noindex`. Las de propuesta, además, no están listadas, porque muestran logotipos que todavía no tienes permiso para usar; la vista para participantes está pensada para compartirla donde quieras, como los canales de tus agentes.
+Todas las páginas públicas, salvo la de inicio, son `noindex`. Las de propuesta, además, no están listadas, porque muestran logotipos que todavía no tienes permiso para usar; la vista para participantes está pensada para compartirla donde quieras, como los canales de tus agentes.
 
 ### Parte privada (administración, detrás de Cloudflare Access)
 - **Mission Days**: puedes crear varios; cada uno tiene su dirección, ciudad, año, fecha, formato (18 / 24, o 6 para Lite), equipo (los puntos de contacto de ENL y RES), capa por defecto (sin colaborador) y textos compartidos de la carta.
+- **Configuración de la instancia**: el contacto que aparece en la página de inicio (un correo, una dirección web o un texto), editable por los administradores de la instancia.
 - **Textos por defecto de la carta**: textos de toda la instancia (quiénes somos, qué es Ingress…) que cada Mission Day nuevo copia al crearse y después puede adaptar.
 - **Organizadores**: cada Mission Day tiene su equipo, que se gestiona en la pestaña Organizadores. Los propietarios añaden personas por el correo con el que entrarán, cambian su rol y las quitan; los editores pueden cambiar todo lo demás, pero no gestionar el equipo ni borrar nada. Un Mission Day siempre conserva al menos un propietario, y cualquiera puede salir de un equipo. Cada organizador solo ve los Mission Days de los que forma parte, salvo que los administradores de la instancia pueden gestionar el equipo de cualquiera. Cada organizador tiene un perfil (nombre de agente y facción) que se muestra en la lista del equipo y en el historial de los colaboradores.
 - **Gestor de misiones**: crea *todas las misiones candidatas que quieras* (más de 24): nombre, descripción, punto de interés o tema, foto, portales y ruta.

@@ -19,12 +19,14 @@ One instance can host **several Mission Days** (e.g. `/example-2027`, `/sample-t
 
 | Path | What |
 |---|---|
+| `/` | Home page: what the tool does, the published Mission Days and a contact to ask for access |
 | `/<md-slug>` | Mission Day page (participant view, once published) |
 | `/<md-slug>/proposta-<token>` | Proposal for one candidate partner (unlisted). The word follows the letter language: `proposta`, `propuesta`, `proposal` — all three work |
 | `/<md-slug>/sample` | The single logo/medal picture linked from the Niantic application, generated from Exports. It only shows a partner's logo with its signed permission |
 | `/admin` | Private area (Cloudflare Access) |
 
 ### Public side (no login)
+- **Home page** — explains what a Mission Day is and what the tool does, in the same neutral words for every community, and links to every Mission Day whose participant view is published: upcoming ones first, then past ones. It ends with a contact, set by the instance administrators, for anyone who would like to use the tool. Partners are never listed there.
 - **Partner proposals** — one page per candidate partner (city council, university, tourism board, museum…), reachable only through an unguessable link. It contains:
   - a cover letter: who we are, what Ingress is, what a Mission Day is, why this city, why this partner;
   - the full mission proposal: every mission with name, description, photo and route;
@@ -34,10 +36,11 @@ One instance can host **several Mission Days** (e.g. `/example-2027`, `/sample-t
   - A print stylesheet so the page can be saved as PDF and attached to an email.
 - **Participant view** (once an owner publishes it, usually after approval) — what agents need to play, laid out for phones: the selected missions in recommended order, the mosaic, the map with each route, the My Maps link, and for every mission its description in the visitor's language, its start portal and its portals with Intel links. Until it is published, its address only says that the Mission Day is not published yet. Its images carry the default overlay, or the overlay of one partner chosen by an owner among those that accepted with a signed permission; if that permission lapses, the default overlay comes back by itself.
 
-All public pages are `noindex`. Proposal pages are also unlisted, because they show logos you do not have permission to use yet; the participant view is meant to be shared wherever you choose, such as your agents' channels.
+All public pages except the home page are `noindex`. Proposal pages are also unlisted, because they show logos you do not have permission to use yet; the participant view is meant to be shared wherever you choose, such as your agents' channels.
 
 ### Private side (admin, behind Cloudflare Access)
 - **Mission Days** — create several; each has its slug, city, year, date, format (18 / 24, or 6 for Lite), team (both ENL and RES Points of Contact), default overlay (no partner) and shared letter texts.
+- **Instance settings** — the contact shown on the home page (an email, a web address or plain text), editable by instance administrators.
 - **Default letter texts** — instance-wide texts (who we are, what Ingress is…) that every new Mission Day copies when it is created and can then adapt.
 - **Organisers** — each Mission Day has its own team, managed in its Organisers tab. Owners add people by the email they sign in with, change their role and remove them; editors can change everything else, but cannot manage the team or delete things. A Mission Day always keeps at least one owner, and anyone can leave a team. An organiser only sees the Mission Days they belong to, except that instance administrators can manage the team of any of them. Each organiser has a profile (codename, faction) that the team list and the partner history show.
 - **Mission manager** — create *as many candidate missions as you want* (more than 24): name, description, landmark/theme, photo, portals (waypoints) and route.

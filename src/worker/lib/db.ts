@@ -5,8 +5,11 @@
  * filters by it. That scoping is what keeps one Mission Day's organisers
  * from reaching another's data by guessing a mission identifier.
  */
+import { isPastMissionDay, sortHomeMissionDays } from '../../shared/home';
 import type {
   CropRect,
+  HomeMissionDay,
+  InstanceSettings,
   LetterSections,
   Mission,
   MissionDay,
@@ -416,6 +419,65 @@ export async function saveLetterDefaults(db: D1Database, letter: LetterSections)
     .prepare('UPDATE instance_settings SET letter_defaults_json = ? WHERE id = 1')
     .bind(JSON.stringify(letter))
     .run();
+}
+
+/**
+ * Reads the settings of the instance that its administrators edit.
+ *
+ * @param db - D1 binding.
+ * @returns The settings.
+ */
+export async function getInstanceSettings(db: D1Database): Promise<InstanceSettings> {
+  const contact = await db
+    .prepare('SELECT contact FROM instance_settings WHERE id = 1')
+    .first<string>('contact');
+  return { contact: contact ?? '' };
+}
+
+/**
+ * Saves the settings of the instance that its administrators edit.
+ *
+ * @param db - D1 binding.
+ * @param settings - The settings.
+ */
+export async function saveInstanceSettings(
+  db: D1Database,
+  settings: InstanceSettings,
+): Promise<void> {
+  await db
+    .prepare('UPDATE instance_settings SET contact = ? WHERE id = 1')
+    .bind(settings.contact)
+    .run();
+}
+
+/**
+ * Lists the Mission Days whose participant view is published, which are
+ * the only ones the home page may name. Each field is copied on purpose,
+ * so that nothing else about them can reach the public page.
+ *
+ * @param db - D1 binding.
+ * @param today - Today's date in `YYYY-MM-DD` form.
+ * @returns The Mission Days, upcoming first.
+ */
+export async function listPublishedMissionDays(
+  db: D1Database,
+  today: string,
+): Promise<HomeMissionDay[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT slug, city, year, date, status FROM mission_days
+       WHERE participant_view_enabled = 1`,
+    )
+    .all<Pick<MissionDayRow, 'slug' | 'city' | 'year' | 'date' | 'status'>>();
+  return sortHomeMissionDays(
+    results.map((row) => ({
+      slug: row.slug,
+      city: row.city,
+      year: row.year,
+      date: row.date,
+      past: isPastMissionDay(row, today),
+    })),
+  );
 }
 
 /**

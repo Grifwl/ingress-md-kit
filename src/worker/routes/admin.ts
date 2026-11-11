@@ -25,11 +25,13 @@ import {
   findMissionDayFile,
   findMissionDayForOrganiser,
   findPhotoKey,
+  getInstanceSettings,
   getLetterDefaults,
   getUmmManifest,
   listMissionDaysForOrganiser,
   listMissions,
   replaceWaypoints,
+  saveInstanceSettings,
   saveLetterDefaults,
   saveMissionDayFile,
   saveParticipantView,
@@ -44,6 +46,7 @@ import {
 } from '../lib/db';
 import {
   parseCrop,
+  parseInstanceSettings,
   parseLetterDefaults,
   parseMissionDayCreate,
   parseMissionDayPatch,
@@ -434,6 +437,18 @@ admin.get('/mission-days', async (c) =>
 admin.get('/instance/mission-days', async (c) => {
   assertInstanceAdmin(c);
   return c.json(await listAllMissionDays(c.env.DB, c.get('email')));
+});
+
+admin.get('/instance/settings', async (c) => {
+  assertInstanceAdmin(c);
+  return c.json(await getInstanceSettings(c.env.DB));
+});
+
+admin.put('/instance/settings', async (c) => {
+  assertInstanceAdmin(c);
+  const settings = parseInstanceSettings(await jsonBody(c));
+  await saveInstanceSettings(c.env.DB, settings);
+  return c.json(settings);
 });
 
 admin.get('/letter-defaults', async (c) => {

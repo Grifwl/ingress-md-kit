@@ -8,6 +8,7 @@ import type {
   CurrentUser,
   Faction,
   InstanceMissionDay,
+  InstanceSettings,
   LetterSections,
   Member,
   MembershipRole,
@@ -179,6 +180,25 @@ export function setMemberRole(
  */
 export function removeMember(slug: string, email: string): Promise<Member[]> {
   return request(memberPath(slug, email), { method: 'DELETE' });
+}
+
+/**
+ * Reads the settings of the instance.
+ *
+ * @returns The settings.
+ */
+export function getInstanceSettings(): Promise<InstanceSettings> {
+  return request('/instance/settings');
+}
+
+/**
+ * Saves the settings of the instance.
+ *
+ * @param settings - The settings.
+ * @returns The saved settings.
+ */
+export function saveInstanceSettings(settings: InstanceSettings): Promise<InstanceSettings> {
+  return request('/instance/settings', json('PUT', settings));
 }
 
 /**

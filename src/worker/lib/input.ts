@@ -7,6 +7,7 @@
  * in `shared/rules.ts` will warn about it.
  */
 import { HTTPException } from 'hono/http-exception';
+import { CONTACT_MAX_LENGTH } from '../../shared/home';
 import {
   PARTNER_KINDS,
   PARTNER_STATUSES,
@@ -23,6 +24,7 @@ import {
 import type {
   CropRect,
   Faction,
+  InstanceSettings,
   LetterSections,
   LocalizedText,
   MembershipRole,
@@ -345,6 +347,17 @@ function letter(value: unknown): LetterSections {
  */
 export function parseLetterDefaults(body: unknown): LetterSections {
   return letter(body);
+}
+
+/**
+ * Validates the settings of the instance.
+ *
+ * @param body - Parsed JSON.
+ * @returns The validated settings, with the contact trimmed.
+ */
+export function parseInstanceSettings(body: unknown): InstanceSettings {
+  const object = asObject(body);
+  return { contact: text(object.contact, 'contact', CONTACT_MAX_LENGTH).trim() };
 }
 
 /**

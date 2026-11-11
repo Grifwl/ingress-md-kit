@@ -9,7 +9,7 @@ import { Hono, type MiddlewareHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { PROPOSAL_WORDS, parseProposalSegment } from '../../shared/letter';
 import { mayShowLogo } from '../../shared/partners';
-import type { MissionDay, Partner } from '../../shared/types';
+import type { HomeView, MissionDay, Partner } from '../../shared/types';
 import type { AppEnv } from '../env';
 import {
   findMission,
@@ -17,7 +17,9 @@ import {
   findMissionDayBySlug,
   findMissionDayFile,
   findPhotoKey,
+  getInstanceSettings,
   listMissions,
+  listPublishedMissionDays,
 } from '../lib/db';
 import { findPartner, findPartnerByToken, findPartnerFile } from '../lib/partners';
 import { buildParticipantView, findParticipantOverlay } from '../lib/participant';
@@ -158,6 +160,20 @@ publicApi.get('/proposals/:token/map-screenshot', async (c) => {
   return serveObject(c, file.key, file.type, PUBLIC_IMAGE_CACHE);
 });
 
+// The home page: what the instance is and which Mission Days it has
+// published. Partners are never listed here; their logos appear only in
+// the mission images of the participant views they gave permission for.
+publicApi.get('/home', async (c) => {
+  const today = new Date().toISOString().slice(0, 10);
+  const [missionDays, settings] = await Promise.all([
+    listPublishedMissionDays(c.env.DB, today),
+    getInstanceSettings(c.env.DB),
+  ]);
+  const view: HomeView = { missionDays, contact: settings.contact };
+  c.header('Cache-Control', 'no-cache');
+  return c.json(view);
+});
+
 // The participant view: shared only through chosen channels, so it is kept
 // out of search engines like everything else here.
 publicApi.get('/mission-days/:slug', async (c) => {
@@ -190,6 +206,25 @@ publicApi.get('/mission-days/:slug/overlay', async (c) => {
   }
   return serveObject(c, overlay.key, overlay.type, PUBLIC_IMAGE_CACHE);
 });
+
+/**
+ * Answers `/`, the home page of the instance. Unlike every other public
+ * page it may appear in search engines: it is the instance's front door
+ * and shows nothing that its published participant views do not already.
+ *
+ * @param c - Request context.
+ * @returns The page.
+ */
+export async function serveHomePage(c: AppContext): Promise<Response> {
+  const url = new URL(c.req.url);
+  url.pathname = '/home/';
+  url.search = '';
+  const asset = await c.env.ASSETS.fetch(new Request(url, c.req.raw));
+  const page = new Response(asset.body, asset);
+  page.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  page.headers.set('Cache-Control', 'no-cache');
+  return page;
+}
 
 /**
  * Answers `/:slug`, the participant view. A Mission Day whose view is not

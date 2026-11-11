@@ -232,6 +232,36 @@ export interface ParticipantView {
 }
 
 /**
+ * A Mission Day as the home page lists it: only what its published
+ * participant view already shows, plus whether it is over.
+ */
+export interface HomeMissionDay {
+  slug: string;
+  city: string;
+  year: number;
+  date: string | null;
+  /** True once its date has passed or its organisers marked it as done. */
+  past: boolean;
+}
+
+/**
+ * Everything the home page of the instance shows. Like the other public
+ * views, it is built field by field.
+ */
+export interface HomeView {
+  /** Mission Days whose participant view is published, upcoming first. */
+  missionDays: HomeMissionDay[];
+  /** How to reach whoever runs the instance; empty when not set. */
+  contact: string;
+}
+
+/** Settings of the whole instance that its administrators edit. */
+export interface InstanceSettings {
+  /** Contact shown on the home page: an email, a web address or plain text. */
+  contact: string;
+}
+
+/**
  * What an organiser says about themself. It belongs to the person, not to
  * a Mission Day, so it is the same in every team they are part of.
  */

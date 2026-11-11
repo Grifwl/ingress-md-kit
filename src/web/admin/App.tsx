@@ -11,6 +11,7 @@ import { useAsync } from './hooks';
 import type { Route } from './lib/routes';
 import { ExportsPage } from './pages/ExportsPage';
 import { HomePage } from './pages/HomePage';
+import { InstanceSettingsPage } from './pages/InstanceSettingsPage';
 import { LetterDefaultsPage } from './pages/LetterDefaultsPage';
 import { MapPage } from './pages/MapPage';
 import { MissionEditPage } from './pages/MissionEditPage';
@@ -292,6 +293,7 @@ export function App() {
       )}
       {me.data !== undefined && route.name === 'home' && <HomePage user={me.data} />}
       {me.data !== undefined && route.name === 'letterDefaults' && <LetterDefaultsPage />}
+      {me.data !== undefined && route.name === 'instanceSettings' && <InstanceSettingsPage />}
       {me.data !== undefined && route.name === 'profile' && (
         <ProfilePage user={me.data} onChange={me.setData} />
       )}

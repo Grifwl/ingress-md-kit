@@ -53,6 +53,8 @@ export const RESERVED_SLUGS: readonly string[] = [
   'admin',
   'api',
   'assets',
+  'home',
+  'instance',
   'letter-defaults',
   'new',
   'participant',

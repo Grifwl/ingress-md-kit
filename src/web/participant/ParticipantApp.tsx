@@ -12,6 +12,7 @@ import type { ParticipantMission, ParticipantView } from '../../shared/types';
 import { MissionMap } from '../admin/components/MissionMap';
 import { useI18n } from '../i18n';
 import { ComposedImage } from '../lib/ComposedImage';
+import { formatDate } from '../lib/dates';
 import { intelUrl } from '../lib/intel';
 
 /**
@@ -21,18 +22,6 @@ import { intelUrl } from '../lib/intel';
  */
 function readSlug(): string {
   return location.pathname.split('/').filter(Boolean)[0] ?? '';
-}
-
-/**
- * Writes a date in the visitor's language. Noon is used so that no time
- * zone can move it to the previous or next day.
- *
- * @param date - Date in `YYYY-MM-DD` form.
- * @param language - Language of the page.
- * @returns The formatted date.
- */
-function formatDate(date: string, language: Language): string {
-  return new Date(`${date}T12:00:00`).toLocaleDateString(language, { dateStyle: 'long' });
 }
 
 /**

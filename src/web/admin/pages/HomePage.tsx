@@ -60,6 +60,9 @@ export function HomePage({ user }: { user: CurrentUser }) {
         <h1>{t('home.title')}</h1>
         {user.isInstanceAdmin && (
           <div class="actions">
+            <Link href="/admin/instance" class="button">
+              {t('instance.title')}
+            </Link>
             <Link href="/admin/letter-defaults" class="button">
               {t('letterDefaults.title')}
             </Link>
