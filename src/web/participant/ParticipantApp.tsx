@@ -185,20 +185,6 @@ function Participant({ view, base }: { view: ParticipantView; base: string }) {
         </section>
       )}
 
-      {view.biocards !== null && (
-        <section>
-          <h2>{t('participant.biocard')}</h2>
-          <BiocardGallery
-            biocards={view.biocards}
-            base={base}
-            language={language}
-            collageUrls={collageUrls}
-            frontAlt={t('biocard.front')}
-            backAlt={t('biocard.back')}
-          />
-        </section>
-      )}
-
       {view.missions.length > 0 && (
         <section>
           <h2>{t('proposal.missions')}</h2>
@@ -208,6 +194,20 @@ function Participant({ view, base }: { view: ParticipantView; base: string }) {
               <MissionItem key={mission.id} mission={mission} base={base} overlayUrl={overlayUrl} />
             ))}
           </ol>
+        </section>
+      )}
+
+      {view.biocards !== null && (
+        <section>
+          <h2>{t('proposal.biocards')}</h2>
+          <BiocardGallery
+            biocards={view.biocards}
+            base={base}
+            language={language}
+            collageUrls={collageUrls}
+            frontAlt={t('biocard.front')}
+            backAlt={t('biocard.back')}
+          />
         </section>
       )}
     </>

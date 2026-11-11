@@ -399,7 +399,7 @@
   "proposal.biocardRequest": "The Biocards",
   "proposal.consentBiocards": "We agree to appear on the Biocards of the Mission Day.",
   "proposal.consentOwnBiocard": "We would like a Biocard of our own.",
-  "participant.biocard": "The Biocards",
+  "proposal.biocards": "The Biocards",
   "biocard.front": "Front",
   "biocard.back": "Back",
   "biocard.title": "Biocards",

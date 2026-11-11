@@ -399,7 +399,7 @@
   "proposal.biocardRequest": "Les Biocards",
   "proposal.consentBiocards": "Acceptem aparèixer a les Biocards del Mission Day.",
   "proposal.consentOwnBiocard": "Ens agradaria tenir una Biocard pròpia.",
-  "participant.biocard": "Les Biocards",
+  "proposal.biocards": "Les Biocards",
   "biocard.front": "Davant",
   "biocard.back": "Darrere",
   "biocard.title": "Biocards",

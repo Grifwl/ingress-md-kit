@@ -3,7 +3,7 @@
  * language, whatever the language of the visitor's browser, and it is laid
  * out so that printing it produces a document ready to attach to an email.
  */
-import { Fragment, type ComponentChildren } from 'preact';
+import type { ComponentChildren } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { languageOfProposalWord, parseProposalSegment } from '../../shared/letter';
 import { mosaicCells } from '../../shared/mosaic';
@@ -22,11 +22,16 @@ const SKETCH_PADDING = 28;
 /** Missions on each printed sheet; every format is a multiple of this. */
 const MISSIONS_PER_SHEET = 6;
 
-/** Sections of the letter common to every partner of the Mission Day. */
+/**
+ * Sections of the letter common to every partner of the Mission Day. What
+ * a Biocard is follows what a Mission Day is, and comes before the partner
+ * is asked about them; the cards themselves close the document.
+ */
 const INTRODUCTION: { key: keyof ProposalView['letter']; title: MessageKey }[] = [
   { key: 'aboutUs', title: 'settings.aboutUs' },
   { key: 'whatIsIngress', title: 'settings.whatIsIngress' },
   { key: 'whatIsMissionDay', title: 'settings.whatIsMissionDay' },
+  { key: 'whatIsBiocard', title: 'settings.whatIsBiocard' },
   { key: 'whyThisCity', title: 'settings.whyThisCity' },
 ];
 
@@ -239,48 +244,6 @@ function Sheet({
 }
 
 /**
- * What a Biocard is, with the cards the organisers show on proposals.
- * The title stays when only the cards are shown, so they never appear
- * unexplained under the previous section.
- *
- * @param props - The proposal, the root of its API, a translation
- *   function and the photos for a collage.
- * @returns The block, or nothing when there is neither text nor cards.
- */
-function BiocardBlock({
-  view,
-  base,
-  t,
-  collageUrls,
-}: {
-  view: ProposalView;
-  base: string;
-  t: (key: MessageKey) => string;
-  collageUrls: readonly string[];
-}) {
-  const text = view.letter.whatIsBiocard;
-  if (text.trim() === '' && view.biocards === null) {
-    return null;
-  }
-  return (
-    <div class="letter-block">
-      <h2>{t('settings.whatIsBiocard')}</h2>
-      {text.trim() !== '' && <p class="prose">{text}</p>}
-      {view.biocards !== null && (
-        <BiocardGallery
-          biocards={view.biocards}
-          base={base}
-          language={view.language}
-          collageUrls={collageUrls}
-          frontAlt={t('biocard.front')}
-          backAlt={t('biocard.back')}
-        />
-      )}
-    </div>
-  );
-}
-
-/**
  * Displays a loaded proposal.
  *
  * @param props - The proposal and the root of its API.
@@ -337,14 +300,7 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
         <h1>{title}</h1>
         <p class="subtitle">{t('proposal.forPartner', { partner: view.partnerName })}</p>
         {INTRODUCTION.map(({ key, title: blockTitle }) => (
-          <Fragment key={key}>
-            <LetterBlock title={t(blockTitle)} text={view.letter[key]} />
-            {/* What a Biocard is follows what a Mission Day is, in the same
-                flow of text, and comes before the partner is asked about them. */}
-            {key === 'whatIsMissionDay' && (
-              <BiocardBlock view={view} base={base} t={t} collageUrls={collageUrls} />
-            )}
-          </Fragment>
+          <LetterBlock key={key} title={t(blockTitle)} text={view.letter[key]} />
         ))}
       </Sheet>
 
@@ -398,6 +354,28 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
         </Sheet>
       )}
 
+      {/* Same order as the participant view: mosaic, map, missions, cards. */}
+      {view.missions.length > 0 && (
+        <Sheet title={t('proposal.map')} class="map-sheet">
+          <div class="map-interactive">
+            <MissionMap missions={mapMissions} fitKey="proposal" />
+          </div>
+          {view.hasMapScreenshot && (
+            <img
+              class="map-screenshot"
+              src={`${base}/map-screenshot?v=${view.mapScreenshotVersion}`}
+              alt={t('proposal.map')}
+            />
+          )}
+          {view.myMapsUrl !== null && (
+            <p>
+              <a href={view.myMapsUrl} target="_blank" rel="noopener">
+                {t('proposal.openMyMaps')}
+              </a>
+            </p>
+          )}
+        </Sheet>
+      )}
       {view.missions.length > 0 && (
         <Sheet title={t('proposal.missions')}>
           <ol class="missions">
@@ -424,25 +402,16 @@ function Proposal({ view, base }: { view: ProposalView; base: string }) {
         </Sheet>
       )}
 
-      {view.missions.length > 0 && (
-        <Sheet title={t('proposal.map')} class="map-sheet">
-          <div class="map-interactive">
-            <MissionMap missions={mapMissions} fitKey="proposal" />
-          </div>
-          {view.hasMapScreenshot && (
-            <img
-              class="map-screenshot"
-              src={`${base}/map-screenshot?v=${view.mapScreenshotVersion}`}
-              alt={t('proposal.map')}
-            />
-          )}
-          {view.myMapsUrl !== null && (
-            <p>
-              <a href={view.myMapsUrl} target="_blank" rel="noopener">
-                {t('proposal.openMyMaps')}
-              </a>
-            </p>
-          )}
+      {view.biocards !== null && (
+        <Sheet title={t('proposal.biocards')}>
+          <BiocardGallery
+            biocards={view.biocards}
+            base={base}
+            language={view.language}
+            collageUrls={collageUrls}
+            frontAlt={t('biocard.front')}
+            backAlt={t('biocard.back')}
+          />
         </Sheet>
       )}
     </main>
