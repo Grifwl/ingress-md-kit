@@ -40,7 +40,7 @@ Totes les pàgines públiques, menys la d'inici, són `noindex`. Les de proposta
 
 ### Part privada (administració, darrere de Cloudflare Access)
 - **Mission Days**: en pots crear diversos; cadascun té la seva adreça, ciutat, any, data, format (18 / 24, o 6 per a Lite), equip (els punts de contacte d'ENL i RES), capa per defecte (sense col·laborador) i textos compartits de la carta.
-- **Configuració de la instància**: el contacte que surt a la pàgina d'inici (un correu, una adreça web o un text), editable pels administradors de la instància.
+- **Configuració de la instància**: el contacte que surt a la pàgina d'inici (un text com `@codename` i l'enllaç on porta, `https:` o `mailto:`), editable pels administradors de la instància.
 - **Textos per defecte de la carta**: textos de tota la instància (qui som, què és Ingress…) que cada Mission Day nou copia en crear-se i després pot adaptar.
 - **Organitzadors**: cada Mission Day té el seu equip, que es gestiona a la pestanya Organitzadors. Els propietaris hi afegeixen gent pel correu amb què entrarà, en canvien el rol i la treuen; els editors poden canviar tota la resta, però no gestionar l'equip ni esborrar res. Un Mission Day sempre conserva com a mínim un propietari, i qualsevol pot sortir d'un equip. Cada organitzador només veu els Mission Days dels quals forma part, tret que els administradors de la instància poden gestionar l'equip de qualsevol. Cada organitzador té un perfil (nom d'agent i facció) que es mostra a la llista de l'equip i a l'historial dels col·laboradors.
 - **Gestor de missions**: crea *totes les missions candidates que vulguis* (més de 24): nom, descripció, punt d'interès o tema, foto, portals i ruta.

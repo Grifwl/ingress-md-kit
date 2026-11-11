@@ -369,7 +369,15 @@
   "site.organisers": "Organiser sign-in",
   "instance.title": "Instance settings",
   "instance.help": "Options that affect the whole instance. The public home page shows the Mission Days whose participant view is published, and this contact.",
-  "instance.contact": "Contact",
-  "instance.contactHelp": "How people can ask to use the tool: an email, a web address (such as a Telegram link) or plain text. It appears on the home page, which is public and shows up in search engines. Leave it empty to hide it.",
-  "instance.viewHome": "View the home page"
+  "instance.viewHome": "View the home page",
+  "instance.contactTitle": "Contact",
+  "instance.contactHelp": "Shown on the home page so that people can ask to use the tool. The page is public and shows up in search engines. Leave both fields empty to hide it.",
+  "instance.contactLabel": "Text shown",
+  "instance.contactLabelHelp": "For example @codename. If empty, the link itself is shown.",
+  "instance.contactUrl": "Link",
+  "instance.contactUrlHelp": "An https:// address (such as https://t.me/codename) or a mailto: one (such as mailto:someone@example.org). If empty, the text is shown without a link.",
+  "instance.preview": "It will look like this:",
+  "instance.noContact": "no contact",
+  "error.invalid_contact_label": "The contact text is too long.",
+  "error.invalid_contact_url": "The contact link must start with https://, http:// or mailto:."
 }

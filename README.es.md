@@ -40,7 +40,7 @@ Todas las páginas públicas, salvo la de inicio, son `noindex`. Las de propuest
 
 ### Parte privada (administración, detrás de Cloudflare Access)
 - **Mission Days**: puedes crear varios; cada uno tiene su dirección, ciudad, año, fecha, formato (18 / 24, o 6 para Lite), equipo (los puntos de contacto de ENL y RES), capa por defecto (sin colaborador) y textos compartidos de la carta.
-- **Configuración de la instancia**: el contacto que aparece en la página de inicio (un correo, una dirección web o un texto), editable por los administradores de la instancia.
+- **Configuración de la instancia**: el contacto que aparece en la página de inicio (un texto como `@codename` y el enlace al que lleva, `https:` o `mailto:`), editable por los administradores de la instancia.
 - **Textos por defecto de la carta**: textos de toda la instancia (quiénes somos, qué es Ingress…) que cada Mission Day nuevo copia al crearse y después puede adaptar.
 - **Organizadores**: cada Mission Day tiene su equipo, que se gestiona en la pestaña Organizadores. Los propietarios añaden personas por el correo con el que entrarán, cambian su rol y las quitan; los editores pueden cambiar todo lo demás, pero no gestionar el equipo ni borrar nada. Un Mission Day siempre conserva al menos un propietario, y cualquiera puede salir de un equipo. Cada organizador solo ve los Mission Days de los que forma parte, salvo que los administradores de la instancia pueden gestionar el equipo de cualquiera. Cada organizador tiene un perfil (nombre de agente y facción) que se muestra en la lista del equipo y en el historial de los colaboradores.
 - **Gestor de misiones**: crea *todas las misiones candidatas que quieras* (más de 24): nombre, descripción, punto de interés o tema, foto, portales y ruta.

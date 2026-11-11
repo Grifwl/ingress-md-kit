@@ -428,10 +428,10 @@ export async function saveLetterDefaults(db: D1Database, letter: LetterSections)
  * @returns The settings.
  */
 export async function getInstanceSettings(db: D1Database): Promise<InstanceSettings> {
-  const contact = await db
-    .prepare('SELECT contact FROM instance_settings WHERE id = 1')
-    .first<string>('contact');
-  return { contact: contact ?? '' };
+  const row = await db
+    .prepare('SELECT contact_label, contact_url FROM instance_settings WHERE id = 1')
+    .first<{ contact_label: string; contact_url: string }>();
+  return { contactLabel: row?.contact_label ?? '', contactUrl: row?.contact_url ?? '' };
 }
 
 /**
@@ -445,8 +445,8 @@ export async function saveInstanceSettings(
   settings: InstanceSettings,
 ): Promise<void> {
   await db
-    .prepare('UPDATE instance_settings SET contact = ? WHERE id = 1')
-    .bind(settings.contact)
+    .prepare('UPDATE instance_settings SET contact_label = ?, contact_url = ? WHERE id = 1')
+    .bind(settings.contactLabel, settings.contactUrl)
     .run();
 }
 

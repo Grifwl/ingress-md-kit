@@ -8,6 +8,7 @@
 import { Hono, type MiddlewareHandler } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { PROPOSAL_WORDS, parseProposalSegment } from '../../shared/letter';
+import { contactLink } from '../../shared/home';
 import { mayShowLogo } from '../../shared/partners';
 import type { HomeView, MissionDay, Partner } from '../../shared/types';
 import type { AppEnv } from '../env';
@@ -169,7 +170,10 @@ publicApi.get('/home', async (c) => {
     listPublishedMissionDays(c.env.DB, today),
     getInstanceSettings(c.env.DB),
   ]);
-  const view: HomeView = { missionDays, contact: settings.contact };
+  const view: HomeView = {
+    missionDays,
+    contact: contactLink(settings.contactLabel, settings.contactUrl),
+  };
   c.header('Cache-Control', 'no-cache');
   return c.json(view);
 });

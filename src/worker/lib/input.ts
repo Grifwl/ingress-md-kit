@@ -7,7 +7,11 @@
  * in `shared/rules.ts` will warn about it.
  */
 import { HTTPException } from 'hono/http-exception';
-import { CONTACT_MAX_LENGTH } from '../../shared/home';
+import {
+  CONTACT_LABEL_MAX_LENGTH,
+  CONTACT_URL_MAX_LENGTH,
+  isAllowedContactUrl,
+} from '../../shared/home';
 import {
   PARTNER_KINDS,
   PARTNER_STATUSES,
@@ -353,11 +357,17 @@ export function parseLetterDefaults(body: unknown): LetterSections {
  * Validates the settings of the instance.
  *
  * @param body - Parsed JSON.
- * @returns The validated settings, with the contact trimmed.
+ * @returns The validated settings, trimmed. The link must be a web or
+ *   email address, because it ends up in a public page.
  */
 export function parseInstanceSettings(body: unknown): InstanceSettings {
   const object = asObject(body);
-  return { contact: text(object.contact, 'contact', CONTACT_MAX_LENGTH).trim() };
+  const contactLabel = text(object.contactLabel, 'contact_label', CONTACT_LABEL_MAX_LENGTH).trim();
+  const contactUrl = text(object.contactUrl, 'contact_url', CONTACT_URL_MAX_LENGTH).trim();
+  if (contactUrl !== '' && !isAllowedContactUrl(contactUrl)) {
+    badRequest('invalid_contact_url');
+  }
+  return { contactLabel, contactUrl };
 }
 
 /**

@@ -5,9 +5,8 @@
  * the instance itself, so nothing here names a city or a person.
  */
 import { useEffect, useState } from 'preact/hooks';
-import { contactLink } from '../../shared/home';
 import { LANGUAGES, MEDAL_MISSIONS, type Language } from '../../shared/rules';
-import type { HomeMissionDay, HomeView } from '../../shared/types';
+import type { HomeContact, HomeMissionDay, HomeView } from '../../shared/types';
 import logoUrl from '../brand/logo.svg';
 import { useI18n } from '../i18n';
 import type { MessageKey } from '../i18n/messages';
@@ -55,15 +54,11 @@ function MissionDayList({ title, days }: { title: string; days: HomeMissionDay[]
 /**
  * The "want to use it?" block, shown only when the instance has a contact.
  *
- * @param props - The contact as the administrators wrote it.
- * @returns The section, or nothing.
+ * @param props - The contact, already checked and shaped by the Worker.
+ * @returns The section.
  */
-function ContactSection({ contact }: { contact: string }) {
+function ContactSection({ contact: link }: { contact: HomeContact }) {
   const { t } = useI18n();
-  const link = contactLink(contact);
-  if (link === null) {
-    return null;
-  }
   return (
     <section class="card">
       <h2>{t('site.useTitle')}</h2>
@@ -153,7 +148,7 @@ export function HomeApp() {
       <MissionDayList title={t('site.upcoming')} days={upcoming} />
       <MissionDayList title={t('site.past')} days={past} />
 
-      {view !== null && <ContactSection contact={view.contact} />}
+      {view !== null && view.contact !== null && <ContactSection contact={view.contact} />}
 
       <footer class="footer">
         <p>{t('site.disclaimer')}</p>

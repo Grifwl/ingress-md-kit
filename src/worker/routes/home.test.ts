@@ -82,7 +82,7 @@ beforeEach(async () => {
   await env.DB.batch([
     env.DB.prepare('DELETE FROM mission_days'),
     env.DB.prepare('DELETE FROM organisers'),
-    env.DB.prepare(`UPDATE instance_settings SET contact = ''`),
+    env.DB.prepare(`UPDATE instance_settings SET contact_label = '', contact_url = ''`),
   ]);
 });
 
@@ -108,7 +108,7 @@ describe('home page', () => {
         { slug: 'upcoming', city: 'upcoming', year: 2027, date: '2999-05-01', past: false },
         { slug: 'finished', city: 'finished', year: 2027, date: null, past: true },
       ],
-      contact: '',
+      contact: null,
     });
   });
 });
@@ -118,31 +118,38 @@ describe('instance settings', () => {
     expect((await send('/api/admin/instance/settings')).status).toBe(403);
     const refused = await send('/api/admin/instance/settings', {
       method: 'PUT',
-      body: { contact: 'someone@example.org' },
+      body: { contactLabel: '@someone', contactUrl: '' },
     });
     expect(refused.status).toBe(403);
   });
 
-  it('saves a trimmed contact that the home page then shows', async () => {
+  it('saves a trimmed label and link that the home page then shows', async () => {
     const saved = await send('/api/admin/instance/settings', {
       method: 'PUT',
       as: ADMIN,
-      body: { contact: '  https://t.me/someone  ' },
+      body: { contactLabel: ' @someone ', contactUrl: '  https://t.me/someone  ' },
     });
-    expect(await saved.json()).toEqual({ contact: 'https://t.me/someone' });
+    const expected = { contactLabel: '@someone', contactUrl: 'https://t.me/someone' };
+    expect(await saved.json()).toEqual(expected);
 
     const read = await send('/api/admin/instance/settings', { as: ADMIN });
-    expect(await read.json()).toEqual({ contact: 'https://t.me/someone' });
+    expect(await read.json()).toEqual(expected);
     const home = (await (await visit('/api/public/home')).json()) as HomeView;
-    expect(home.contact).toBe('https://t.me/someone');
+    expect(home.contact).toEqual({ label: '@someone', href: 'https://t.me/someone' });
   });
 
-  it('refuses a contact that is too long', async () => {
-    const response = await send('/api/admin/instance/settings', {
-      method: 'PUT',
-      as: ADMIN,
-      body: { contact: 'x'.repeat(201) },
-    });
-    expect(response.status).toBe(400);
+  it('refuses links that are not web or email addresses, and long labels', async () => {
+    for (const body of [
+      { contactLabel: '@someone', contactUrl: 'javascript:alert(1)' },
+      { contactLabel: '@someone', contactUrl: 't.me/someone' },
+      { contactLabel: 'x'.repeat(201), contactUrl: '' },
+    ]) {
+      const response = await send('/api/admin/instance/settings', {
+        method: 'PUT',
+        as: ADMIN,
+        body,
+      });
+      expect(response.status).toBe(400);
+    }
   });
 });

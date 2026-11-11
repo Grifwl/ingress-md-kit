@@ -244,6 +244,14 @@ export interface HomeMissionDay {
   past: boolean;
 }
 
+/** The contact of the instance, ready to display. */
+export interface HomeContact {
+  /** Text to show. */
+  label: string;
+  /** Address it links to, or null to show the text alone. */
+  href: string | null;
+}
+
 /**
  * Everything the home page of the instance shows. Like the other public
  * views, it is built field by field.
@@ -251,14 +259,16 @@ export interface HomeMissionDay {
 export interface HomeView {
   /** Mission Days whose participant view is published, upcoming first. */
   missionDays: HomeMissionDay[];
-  /** How to reach whoever runs the instance; empty when not set. */
-  contact: string;
+  /** How to reach whoever runs the instance; null when not set. */
+  contact: HomeContact | null;
 }
 
 /** Settings of the whole instance that its administrators edit. */
 export interface InstanceSettings {
-  /** Contact shown on the home page: an email, a web address or plain text. */
-  contact: string;
+  /** Contact text shown on the home page, such as `@someone`. */
+  contactLabel: string;
+  /** Where that text links to: an `https:`, `http:` or `mailto:` address, or empty. */
+  contactUrl: string;
 }
 
 /**

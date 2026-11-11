@@ -40,7 +40,7 @@ All public pages except the home page are `noindex`. Proposal pages are also unl
 
 ### Private side (admin, behind Cloudflare Access)
 - **Mission Days** — create several; each has its slug, city, year, date, format (18 / 24, or 6 for Lite), team (both ENL and RES Points of Contact), default overlay (no partner) and shared letter texts.
-- **Instance settings** — the contact shown on the home page (an email, a web address or plain text), editable by instance administrators.
+- **Instance settings** — the contact shown on the home page (a text such as `@codename` and the link it points to, `https:` or `mailto:`), editable by instance administrators.
 - **Default letter texts** — instance-wide texts (who we are, what Ingress is…) that every new Mission Day copies when it is created and can then adapt.
 - **Organisers** — each Mission Day has its own team, managed in its Organisers tab. Owners add people by the email they sign in with, change their role and remove them; editors can change everything else, but cannot manage the team or delete things. A Mission Day always keeps at least one owner, and anyone can leave a team. An organiser only sees the Mission Days they belong to, except that instance administrators can manage the team of any of them. Each organiser has a profile (codename, faction) that the team list and the partner history show.
 - **Mission manager** — create *as many candidate missions as you want* (more than 24): name, description, landmark/theme, photo, portals (waypoints) and route.

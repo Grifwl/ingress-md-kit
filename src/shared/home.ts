@@ -1,11 +1,15 @@
 /**
  * Rules of the instance home page, shared by the Worker, which decides
- * what is listed, and the browser, which decides how a contact is linked.
+ * what is listed and how the contact is shown, and the admin screen,
+ * which checks the contact before saving it.
  */
-import type { HomeMissionDay, MissionDayStatus } from './types';
+import type { HomeContact, HomeMissionDay, MissionDayStatus } from './types';
 
-/** Longest contact text an administrator may set. */
-export const CONTACT_MAX_LENGTH = 200;
+/** Longest contact label an administrator may set. */
+export const CONTACT_LABEL_MAX_LENGTH = 200;
+
+/** Longest contact address an administrator may set. */
+export const CONTACT_URL_MAX_LENGTH = 500;
 
 /** What deciding whether a Mission Day is over needs to know. */
 interface MissionDayTiming {
@@ -64,37 +68,60 @@ export function sortHomeMissionDays(days: readonly HomeMissionDay[]): HomeMissio
   });
 }
 
-/** A contact turned into something the page can display. */
-export interface ContactLink {
-  /** Text to show. */
-  label: string;
-  /** Address to link to, or null to show the text alone. */
-  href: string | null;
+/** Addresses a contact link may use; any other scheme is refused. */
+export const CONTACT_URL_PROTOCOLS: readonly string[] = ['https:', 'http:', 'mailto:'];
+
+/**
+ * Tells whether an address may be used as the contact link. Only web and
+ * email addresses are allowed, so that nothing typed into the setting can
+ * ever run in a visitor's browser.
+ *
+ * @param url - Candidate address.
+ * @returns True when it parses and uses an allowed scheme.
+ */
+export function isAllowedContactUrl(url: string): boolean {
+  if (url.length > CONTACT_URL_MAX_LENGTH || /\s/.test(url)) {
+    return false;
+  }
+  try {
+    return CONTACT_URL_PROTOCOLS.includes(new URL(url).protocol);
+  } catch {
+    return false;
+  }
 }
 
 /**
- * Decides how to display the contact of the instance. Only email
- * addresses and http(s) addresses become links, so that no other scheme
- * typed into the setting can ever run in a visitor's browser.
+ * Text that stands in for the label when only an address was given: the
+ * email without `mailto:`, or the host and path of a web address.
  *
- * @param contact - The contact as the administrators wrote it.
- * @returns The text and link, or null when there is no contact.
+ * @param url - An allowed address.
+ * @returns A readable form of it.
  */
-export function contactLink(contact: string): ContactLink | null {
-  const label = contact.trim();
-  if (label === '') {
+function readableUrl(url: string): string {
+  const parsed = new URL(url);
+  if (parsed.protocol === 'mailto:') {
+    return decodeURIComponent(parsed.pathname);
+  }
+  return parsed.host + (parsed.pathname === '/' ? '' : parsed.pathname);
+}
+
+/**
+ * Decides how the home page displays the contact of the instance: the
+ * label linking to the address. Without an address the label is plain
+ * text; without a label the address is shown in a readable form. An
+ * address that is not allowed is ignored, as a second line of defence
+ * behind the check made when it is saved.
+ *
+ * @param label - Text to show, as the administrators wrote it.
+ * @param url - Address to link to, or an empty string.
+ * @returns The contact to display, or null when there is none.
+ */
+export function contactLink(label: string, url: string): HomeContact | null {
+  const text = label.trim();
+  const address = url.trim();
+  const href = address !== '' && isAllowedContactUrl(address) ? address : null;
+  if (text === '' && href === null) {
     return null;
   }
-  if (/^[^@\s/:]+@[^@\s/]+\.[^@\s/]+$/.test(label)) {
-    return { label, href: `mailto:${label}` };
-  }
-  if (/^https?:\/\/\S+$/i.test(label)) {
-    try {
-      const url = new URL(label);
-      return { label: url.host + (url.pathname === '/' ? '' : url.pathname), href: url.href };
-    } catch {
-      return { label, href: null };
-    }
-  }
-  return { label, href: null };
+  return { label: text !== '' ? text : readableUrl(href!), href };
 }

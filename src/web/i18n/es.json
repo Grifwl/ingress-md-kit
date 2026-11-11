@@ -369,7 +369,15 @@
   "site.organisers": "Acceso para organizadores",
   "instance.title": "Configuración de la instancia",
   "instance.help": "Opciones que afectan a toda la instancia. La página de inicio pública muestra los Mission Days con la vista de participantes publicada y este contacto.",
-  "instance.contact": "Contacto",
-  "instance.contactHelp": "Cómo te pueden pedir usar la herramienta: un correo, una dirección web (por ejemplo un enlace de Telegram) o un texto. Aparece en la página de inicio, que es pública y sale en los buscadores. Déjalo vacío para no mostrarlo.",
-  "instance.viewHome": "Ver la página de inicio"
+  "instance.viewHome": "Ver la página de inicio",
+  "instance.contactTitle": "Contacto",
+  "instance.contactHelp": "Aparece en la página de inicio para que te puedan pedir usar la herramienta. La página es pública y sale en los buscadores. Deja los dos campos vacíos para no mostrarlo.",
+  "instance.contactLabel": "Texto que se muestra",
+  "instance.contactLabelHelp": "Por ejemplo @codename. Si lo dejas vacío, se muestra el enlace.",
+  "instance.contactUrl": "Enlace",
+  "instance.contactUrlHelp": "Una dirección https:// (por ejemplo https://t.me/codename) o mailto: (por ejemplo mailto:alguien@example.org). Si lo dejas vacío, el texto aparece sin enlace.",
+  "instance.preview": "Se verá así:",
+  "instance.noContact": "sin contacto",
+  "error.invalid_contact_label": "El texto del contacto es demasiado largo.",
+  "error.invalid_contact_url": "El enlace del contacto debe empezar por https://, http:// o mailto:."
 }

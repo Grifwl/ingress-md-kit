@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contactLink, isPastMissionDay, sortHomeMissionDays } from './home';
+import { contactLink, isAllowedContactUrl, isPastMissionDay, sortHomeMissionDays } from './home';
 import type { HomeMissionDay } from './types';
 
 const TODAY = '2027-05-10';
@@ -59,30 +59,53 @@ describe('sortHomeMissionDays', () => {
   });
 });
 
+describe('isAllowedContactUrl', () => {
+  it('accepts web and email addresses only', () => {
+    expect(isAllowedContactUrl('https://t.me/someone')).toBe(true);
+    expect(isAllowedContactUrl('http://example.org')).toBe(true);
+    expect(isAllowedContactUrl('mailto:someone@example.org')).toBe(true);
+    expect(isAllowedContactUrl('javascript:alert(1)')).toBe(false);
+    expect(isAllowedContactUrl('t.me/someone')).toBe(false);
+    expect(isAllowedContactUrl('https://t.me/some one')).toBe(false);
+  });
+});
+
 describe('contactLink', () => {
-  it('links email addresses and web addresses', () => {
-    expect(contactLink(' someone@example.org ')).toEqual({
-      label: 'someone@example.org',
-      href: 'mailto:someone@example.org',
-    });
-    expect(contactLink('https://t.me/someone')).toEqual({
-      label: 't.me/someone',
+  it('shows the label linking to the address', () => {
+    expect(contactLink(' @someone ', ' https://t.me/someone ')).toEqual({
+      label: '@someone',
       href: 'https://t.me/someone',
+    });
+    expect(contactLink('Mission Day team', 'mailto:team@example.org')).toEqual({
+      label: 'Mission Day team',
+      href: 'mailto:team@example.org',
     });
   });
 
-  it('never links other schemes', () => {
-    expect(contactLink('javascript:alert(1)')).toEqual({
-      label: 'javascript:alert(1)',
+  it('shows a readable address when there is no label', () => {
+    expect(contactLink('', 'https://t.me/someone')).toEqual({
+      label: 't.me/someone',
+      href: 'https://t.me/someone',
+    });
+    expect(contactLink('', 'mailto:team@example.org')).toEqual({
+      label: 'team@example.org',
+      href: 'mailto:team@example.org',
+    });
+  });
+
+  it('shows the label alone when there is no usable address', () => {
+    expect(contactLink('@someone on Telegram', '')).toEqual({
+      label: '@someone on Telegram',
       href: null,
     });
-    expect(contactLink('@someone on Telegram')).toEqual({
-      label: '@someone on Telegram',
+    expect(contactLink('@someone', 'javascript:alert(1)')).toEqual({
+      label: '@someone',
       href: null,
     });
   });
 
   it('returns null when there is no contact', () => {
-    expect(contactLink('   ')).toBeNull();
+    expect(contactLink('   ', '')).toBeNull();
+    expect(contactLink('', 'javascript:alert(1)')).toBeNull();
   });
 });

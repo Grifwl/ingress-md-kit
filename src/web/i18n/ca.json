@@ -369,7 +369,15 @@
   "site.organisers": "Accés per a organitzadors",
   "instance.title": "Configuració de la instància",
   "instance.help": "Opcions que afecten tota la instància. La pàgina d'inici pública mostra els Mission Days amb la vista de participants publicada i aquest contacte.",
-  "instance.contact": "Contacte",
-  "instance.contactHelp": "Com et poden demanar fer servir l'eina: un correu, una adreça web (per exemple un enllaç de Telegram) o un text. Surt a la pàgina d'inici, que és pública i apareix als cercadors. Deixa-ho buit per no mostrar-lo.",
-  "instance.viewHome": "Mostra la pàgina d'inici"
+  "instance.viewHome": "Mostra la pàgina d'inici",
+  "instance.contactTitle": "Contacte",
+  "instance.contactHelp": "Surt a la pàgina d'inici perquè et puguin demanar fer servir l'eina. La pàgina és pública i apareix als cercadors. Deixa els dos camps buits per no mostrar-lo.",
+  "instance.contactLabel": "Text que es mostra",
+  "instance.contactLabelHelp": "Per exemple @codename. Si el deixes buit, es mostra l'enllaç.",
+  "instance.contactUrl": "Enllaç",
+  "instance.contactUrlHelp": "Una adreça https:// (per exemple https://t.me/codename) o mailto: (per exemple mailto:algu@example.org). Si el deixes buit, el text surt sense enllaç.",
+  "instance.preview": "Es veurà així:",
+  "instance.noContact": "sense contacte",
+  "error.invalid_contact_label": "El text del contacte és massa llarg.",
+  "error.invalid_contact_url": "L'enllaç del contacte ha de començar per https://, http:// o mailto:."
 }
